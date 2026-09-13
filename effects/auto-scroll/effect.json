@@ -1,0 +1,57 @@
+{
+  "$schema": "../../schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.auto-scroll",
+  "version": "1.0.0",
+  "name": {
+    "en": "Auto scroll",
+    "th": "เลื่อนอัตโนมัติ"
+  },
+  "description": {
+    "en": "Scrolls the page at a steady pace. Touch the screen to pause.",
+    "th": "เลื่อนหน้าด้วยความเร็วคงที่ แตะจอเพื่อหยุดชั่วคราว"
+  },
+  "author": {
+    "name": "redevrx",
+    "url": "https://github.com/redevrx"
+  },
+  "type": "toggle",
+  "category": "reading",
+  "icon": "swap_vert",
+  "entry": "main.js",
+  "runAt": "manual",
+  "matches": [
+    "*://*/*"
+  ],
+  "engines": [
+    "any"
+  ],
+  "permissions": [
+    "toast"
+  ],
+  "options": [
+    {
+      "key": "speed",
+      "type": "slider",
+      "label": {
+        "en": "Speed",
+        "th": "ความเร็ว"
+      },
+      "min": 10,
+      "max": 400,
+      "step": 10,
+      "default": 60,
+      "unit": "px/s"
+    },
+    {
+      "key": "pauseOnTouch",
+      "type": "boolean",
+      "label": {
+        "en": "Pause while touching",
+        "th": "หยุดระหว่างแตะจอ"
+      },
+      "default": true
+    }
+  ],
+  "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/auto-scroll"
+}

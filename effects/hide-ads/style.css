@@ -1,0 +1,25 @@
+/* Hide ads — selectors that name an ad network or an ad slot outright.
+   Generic class names like .ad or .banner are left alone: reading sites use them for
+   chapter art and navigation too often. */
+
+ins.adsbygoogle,
+.adsbygoogle,
+[id^="google_ads_"],
+[id^="div-gpt-ad"],
+iframe[src*="doubleclick.net"],
+iframe[src*="googlesyndication.com"],
+iframe[src*="adservice.google"],
+iframe[src*="amazon-adsystem.com"],
+iframe[src*="exoclick.com"],
+iframe[src*="juicyads.com"],
+iframe[src*="popads.net"],
+iframe[src*="propellerads"],
+[id^="taboola-"],
+.trc_related_container,
+[class^="OUTBRAIN"],
+.OUTBRAIN,
+[data-ad-slot],
+[data-ad-client],
+[data-google-query-id] {
+  display: none !important;
+}

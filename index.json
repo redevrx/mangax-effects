@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "effects": [
+    {
+      "id": "redevrx.auto-scroll",
+      "path": "effects/auto-scroll",
+      "version": "1.0.0",
+      "category": "reading"
+    },
+    {
+      "id": "redevrx.hide-ads",
+      "path": "effects/hide-ads",
+      "version": "1.0.0",
+      "category": "cleanup"
+    }
+  ]
+}

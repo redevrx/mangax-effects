@@ -1,0 +1,29 @@
+{
+  "$schema": "../../schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.hide-ads",
+  "version": "1.0.0",
+  "name": {
+    "en": "Hide ads",
+    "th": "ซ่อนโฆษณา"
+  },
+  "description": {
+    "en": "Hides common ad slots and banners. CSS only, so nothing on the page runs.",
+    "th": "ซ่อนช่องโฆษณาและแบนเนอร์ที่พบบ่อย ใช้แค่ CSS ไม่มีสคริปต์ทำงาน"
+  },
+  "author": {
+    "name": "redevrx",
+    "url": "https://github.com/redevrx"
+  },
+  "type": "style",
+  "category": "cleanup",
+  "icon": "block",
+  "style": "style.css",
+  "matches": [
+    "*://*/*"
+  ],
+  "engines": [
+    "any"
+  ],
+  "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/hide-ads"
+}

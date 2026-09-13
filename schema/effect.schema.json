@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/redevrx/mangax-effects/main/schema/effect.schema.json",
+  "title": "MangaX effect manifest (schema 1)",
+  "description": "Editor help for effect.json. The app's ManifestValidator is the authority; this mirrors its rules.",
+  "type": "object",
+  "required": ["schema", "id", "version", "name", "type"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": 1 },
+    "id": {
+      "type": "string",
+      "maxLength": 100,
+      "pattern": "^[a-z0-9][a-z0-9-]*(\\.[a-z0-9][a-z0-9-]*)+$",
+      "description": "owner.effect-name. The redevrx. prefix installs only from github.com/redevrx."
+    },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+([-+][0-9A-Za-z.-]+)?$" },
+    "name": { "$ref": "#/$defs/text" },
+    "description": { "$ref": "#/$defs/text" },
+    "author": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "pattern": "^https://" }
+      }
+    },
+    "type": { "enum": ["style", "action", "toggle"] },
+    "category": { "enum": ["reading", "cleanup", "appearance", "navigation", "utility"] },
+    "icon": {
+      "enum": ["swap_vert", "block", "visibility_off", "dark_mode", "light_mode", "contrast", "palette", "speed",
+               "timer", "text_fields", "format_size", "close", "bolt", "touch_app", "skip_next", "auto_fix_high"]
+    },
+    "entry": { "$ref": "#/$defs/file" },
+    "style": { "$ref": "#/$defs/file" },
+    "runAt": { "enum": ["manual", "pageLoad", "documentStart"] },
+    "matches": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/pattern" } },
+    "excludes": { "type": "array", "items": { "$ref": "#/$defs/pattern" } },
+    "engines": { "type": "array", "minItems": 1, "items": { "enum": ["any", "manga", "novel"] } },
+    "permissions": { "type": "array", "items": { "enum": ["toast"] } },
+    "options": { "type": "array", "maxItems": 20, "items": { "$ref": "#/$defs/option" } },
+    "minApp": { "type": "string" },
+    "homepage": { "type": "string", "pattern": "^https://" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "style" } } },
+      "then": { "required": ["style"], "not": { "required": ["entry"] } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "action" } } },
+      "then": {
+        "required": ["entry"],
+        "not": { "required": ["style"] },
+        "properties": { "runAt": { "const": "manual" } }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "toggle" } } },
+      "then": { "required": ["entry"] }
+    }
+  ],
+  "$defs": {
+    "text": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } }
+      ]
+    },
+    "file": { "type": "string", "maxLength": 200, "pattern": "^(?!/)(?!.*(^|/)\\.\\.?(/|$))[A-Za-z0-9._@+/-]+$" },
+    "pattern": {
+      "type": "string",
+      "pattern": "^(<all_urls>|(\\*|https?)://(\\*|\\*\\.[^/*]+|[^/*]+)/.*)$"
+    },
+    "option": {
+      "type": "object",
+      "required": ["key", "type", "label"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,39}$" },
+        "type": { "enum": ["boolean", "slider", "select", "text"] },
+        "label": { "$ref": "#/$defs/text" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "boolean" } } },
+          "then": { "properties": { "default": { "type": "boolean" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "slider" } } },
+          "then": {
+            "required": ["min", "max", "default"],
+            "properties": {
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "step": { "type": "number", "exclusiveMinimum": 0 },
+              "default": { "type": "number" },
+              "unit": { "type": "string" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "select" } } },
+          "then": {
+            "required": ["choices", "default"],
+            "properties": {
+              "choices": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["value", "label"],
+                  "properties": { "value": { "type": "string" }, "label": { "$ref": "#/$defs/text" } }
+                }
+              },
+              "default": { "type": "string" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "text" } } },
+          "then": {
+            "properties": {
+              "default": { "type": "string" },
+              "placeholder": { "$ref": "#/$defs/text" },
+              "maxLength": { "type": "integer", "minimum": 1, "maximum": 2000 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
