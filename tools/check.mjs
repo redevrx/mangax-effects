@@ -1,4 +1,6 @@
-// Checks every effect in this repository the way the app will when someone installs it.
+// Checks every effect in this repository the way the app will when someone installs it, and
+// writes index.json — the list the MangaX effect market reads. Works for any effects
+// repository with the same layout, not only the official one.
 //
 //   node tools/check.mjs          check everything
 //   node tools/check.mjs --fix    also rewrite index.json from the effect folders
@@ -44,7 +46,7 @@ function check(dir) {
 
   if (m.schema !== 1) problems.push('schema must be 1');
   if (typeof m.id !== 'string' || m.id.length > 100 || !ID.test(m.id)) problems.push(`id "${m.id}" must look like owner.effect-name`);
-  if (m.id !== `redevrx.${dir}`) problems.push(`id should be "redevrx.${dir}" to match its folder`);
+  if (typeof m.id === 'string' && m.id.split('.').pop() !== dir) problems.push(`id should end with ".${dir}" to match its folder`);
   if (!VERSION.test(m.version ?? '')) problems.push(`version "${m.version}" must be semver`);
   if (!isText(m.name)) problems.push('name is empty');
   if (!TYPES.includes(m.type)) problems.push(`type must be one of ${TYPES.join(', ')}`);
@@ -80,6 +82,11 @@ function check(dir) {
   for (const e of m.engines ?? ['any']) if (!ENGINES.includes(e)) problems.push(`engine "${e}" is unknown`);
   for (const p of m.permissions ?? []) if (!PERMISSIONS.includes(p)) problems.push(`permission "${p}" is not known to the app`);
   for (const u of [m.homepage, m.author?.url].filter(Boolean)) if (!u.startsWith('https://')) problems.push(`"${u}" must be https`);
+
+  if (m.keywords !== undefined && !(Array.isArray(m.keywords) && m.keywords.length <= 20 &&
+      m.keywords.every((k) => typeof k === 'string' && k.length <= 40))) {
+    problems.push('keywords must be at most 20 strings of up to 40 characters');
+  }
 
   const options = m.options ?? [];
   if (options.length > 20) problems.push('at most 20 options');
@@ -120,7 +127,39 @@ for (const dir of dirs) {
     console.log(`✗ ${dir}\n${problems.map((p) => `   • ${p}`).join('\n')}`);
   } else {
     console.log(`✓ ${dir}  ${manifest.version}`);
-    entries.push({ id: manifest.id, path: `effects/${dir}`, version: manifest.version, category: manifest.category ?? 'utility' });
+    // Everything the market lists and searches, so it never has to open each manifest.
+    entries.push({
+      id: manifest.id,
+      path: `effects/${dir}`,
+      version: manifest.version,
+      name: manifest.name,
+      description: manifest.description ?? '',
+      type: manifest.type,
+      category: manifest.category ?? 'utility',
+      icon: manifest.icon,
+      author: manifest.author?.name,
+      engines: manifest.engines ?? ['any'],
+      keywords: manifest.keywords ?? [],
+    });
+  }
+}
+
+const registryPath = join(ROOT, 'registry.json');
+if (existsSync(registryPath)) {
+  try {
+    const registry = JSON.parse(readFileSync(registryPath, 'utf8'));
+    const seen = new Set();
+    for (const r of registry.repositories ?? []) {
+      if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9._-]{1,100}$/.test(r.repo ?? '')) {
+        failed++; console.log(`✗ registry.json: "${r.repo}" should look like owner/repository`);
+      } else if (seen.has(r.repo.toLowerCase())) {
+        failed++; console.log(`✗ registry.json: ${r.repo} is listed twice`);
+      }
+      seen.add((r.repo ?? '').toLowerCase());
+    }
+    console.log(`✓ registry.json  ${seen.size} repositories`);
+  } catch (e) {
+    failed++; console.log(`✗ registry.json: ${e.message}`);
   }
 }
 

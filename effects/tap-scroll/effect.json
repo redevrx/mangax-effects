@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.tap-scroll",
+  "version": "1.0.0",
+  "name": { "en": "Tap to turn", "th": "แตะเพื่อเลื่อนหน้า" },
+  "description": {
+    "en": "Tap the bottom of the screen to move down a screen, the top to move back. Links still work.",
+    "th": "แตะด้านล่างของจอเพื่อเลื่อนลงหนึ่งหน้าจอ แตะด้านบนเพื่อย้อนกลับ ลิงก์ยังกดได้ตามปกติ"
+  },
+  "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
+  "type": "toggle",
+  "category": "navigation",
+  "icon": "touch_app",
+  "entry": "main.js",
+  "matches": ["*://*/*"],
+  "engines": ["any"],
+  "keywords": ["page turn", "tap", "one hand", "แตะ", "พลิกหน้า"],
+  "options": [
+    {
+      "key": "distance",
+      "type": "slider",
+      "label": { "en": "Distance", "th": "ระยะเลื่อน" },
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "default": 85,
+      "unit": "% screen"
+    },
+    {
+      "key": "smooth",
+      "type": "boolean",
+      "label": { "en": "Smooth scrolling", "th": "เลื่อนแบบนุ่มนวล" },
+      "default": true
+    }
+  ],
+  "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/tap-scroll"
+}

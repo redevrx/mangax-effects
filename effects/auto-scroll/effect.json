@@ -26,6 +26,13 @@
   "engines": [
     "any"
   ],
+  "keywords": [
+    "scroll",
+    "hands free",
+    "reading",
+    "เลื่อน",
+    "อัตโนมัติ"
+  ],
   "permissions": [
     "toast"
   ],

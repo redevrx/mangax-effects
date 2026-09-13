@@ -25,5 +25,11 @@
   "engines": [
     "any"
   ],
+  "keywords": [
+    "ads",
+    "advert",
+    "banner",
+    "โฆษณา"
+  ],
   "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/hide-ads"
 }

@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "repositories": [
+    { "repo": "redevrx/mangax-effects", "ref": "main" }
+  ]
+}

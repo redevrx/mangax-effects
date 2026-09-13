@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.dark-page",
+  "version": "1.0.0",
+  "name": { "en": "Dark page", "th": "หน้าเว็บโหมดมืด" },
+  "description": {
+    "en": "Turns a bright page dark for night reading. Pictures keep their colours.",
+    "th": "เปลี่ยนหน้าเว็บสว่าง ๆ ให้มืดสำหรับอ่านตอนกลางคืน รูปภาพยังคงสีเดิม"
+  },
+  "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
+  "type": "toggle",
+  "category": "appearance",
+  "icon": "dark_mode",
+  "entry": "main.js",
+  "matches": ["*://*/*"],
+  "engines": ["novel"],
+  "keywords": ["night", "dark mode", "invert", "กลางคืน", "มืด"],
+  "options": [
+    {
+      "key": "mode",
+      "type": "select",
+      "label": { "en": "Mode", "th": "รูปแบบ" },
+      "default": "invert",
+      "choices": [
+        { "value": "invert", "label": { "en": "Dark", "th": "มืด" } },
+        { "value": "dim", "label": { "en": "Dim", "th": "หรี่แสง" } }
+      ]
+    },
+    {
+      "key": "strength",
+      "type": "slider",
+      "label": { "en": "Strength", "th": "ความเข้ม" },
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "default": 90,
+      "unit": "%"
+    }
+  ],
+  "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/dark-page"
+}

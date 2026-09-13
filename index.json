@@ -5,13 +5,135 @@
       "id": "redevrx.auto-scroll",
       "path": "effects/auto-scroll",
       "version": "1.0.0",
-      "category": "reading"
+      "name": {
+        "en": "Auto scroll",
+        "th": "เลื่อนอัตโนมัติ"
+      },
+      "description": {
+        "en": "Scrolls the page at a steady pace. Touch the screen to pause.",
+        "th": "เลื่อนหน้าด้วยความเร็วคงที่ แตะจอเพื่อหยุดชั่วคราว"
+      },
+      "type": "toggle",
+      "category": "reading",
+      "icon": "swap_vert",
+      "author": "redevrx",
+      "engines": [
+        "any"
+      ],
+      "keywords": [
+        "scroll",
+        "hands free",
+        "reading",
+        "เลื่อน",
+        "อัตโนมัติ"
+      ]
+    },
+    {
+      "id": "redevrx.dark-page",
+      "path": "effects/dark-page",
+      "version": "1.0.0",
+      "name": {
+        "en": "Dark page",
+        "th": "หน้าเว็บโหมดมืด"
+      },
+      "description": {
+        "en": "Turns a bright page dark for night reading. Pictures keep their colours.",
+        "th": "เปลี่ยนหน้าเว็บสว่าง ๆ ให้มืดสำหรับอ่านตอนกลางคืน รูปภาพยังคงสีเดิม"
+      },
+      "type": "toggle",
+      "category": "appearance",
+      "icon": "dark_mode",
+      "author": "redevrx",
+      "engines": [
+        "novel"
+      ],
+      "keywords": [
+        "night",
+        "dark mode",
+        "invert",
+        "กลางคืน",
+        "มืด"
+      ]
     },
     {
       "id": "redevrx.hide-ads",
       "path": "effects/hide-ads",
       "version": "1.0.0",
-      "category": "cleanup"
+      "name": {
+        "en": "Hide ads",
+        "th": "ซ่อนโฆษณา"
+      },
+      "description": {
+        "en": "Hides common ad slots and banners. CSS only, so nothing on the page runs.",
+        "th": "ซ่อนช่องโฆษณาและแบนเนอร์ที่พบบ่อย ใช้แค่ CSS ไม่มีสคริปต์ทำงาน"
+      },
+      "type": "style",
+      "category": "cleanup",
+      "icon": "block",
+      "author": "redevrx",
+      "engines": [
+        "any"
+      ],
+      "keywords": [
+        "ads",
+        "advert",
+        "banner",
+        "โฆษณา"
+      ]
+    },
+    {
+      "id": "redevrx.kill-popups",
+      "path": "effects/kill-popups",
+      "version": "1.0.0",
+      "name": {
+        "en": "Kill pop-ups",
+        "th": "ปิดป๊อปอัป"
+      },
+      "description": {
+        "en": "Removes overlays, cookie walls and boxes covering the page, and lets it scroll again.",
+        "th": "ลบกล่องที่บังหน้าเว็บ เช่น ป๊อปอัปหรือแจ้งเตือนคุกกี้ แล้วทำให้หน้าเลื่อนได้อีกครั้ง"
+      },
+      "type": "action",
+      "category": "cleanup",
+      "icon": "close",
+      "author": "redevrx",
+      "engines": [
+        "any"
+      ],
+      "keywords": [
+        "popup",
+        "overlay",
+        "cookie",
+        "modal",
+        "ป๊อปอัป"
+      ]
+    },
+    {
+      "id": "redevrx.tap-scroll",
+      "path": "effects/tap-scroll",
+      "version": "1.0.0",
+      "name": {
+        "en": "Tap to turn",
+        "th": "แตะเพื่อเลื่อนหน้า"
+      },
+      "description": {
+        "en": "Tap the bottom of the screen to move down a screen, the top to move back. Links still work.",
+        "th": "แตะด้านล่างของจอเพื่อเลื่อนลงหนึ่งหน้าจอ แตะด้านบนเพื่อย้อนกลับ ลิงก์ยังกดได้ตามปกติ"
+      },
+      "type": "toggle",
+      "category": "navigation",
+      "icon": "touch_app",
+      "author": "redevrx",
+      "engines": [
+        "any"
+      ],
+      "keywords": [
+        "page turn",
+        "tap",
+        "one hand",
+        "แตะ",
+        "พลิกหน้า"
+      ]
     }
   ]
 }
