@@ -2,7 +2,7 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.kill-popups",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": { "en": "Kill pop-ups", "th": "ปิดป๊อปอัป" },
   "description": {
     "en": "Removes overlays, cookie walls and boxes covering the page, and lets it scroll again.",

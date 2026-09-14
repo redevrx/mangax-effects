@@ -8,6 +8,20 @@ mangax.effect(function (ctx) {
   var CONTENT = '[data-tl-id], [data-manga-idx], [data-manga-url]';
   var removed = 0;
 
+  // Before the app has scanned a page, a site's own full-screen reader looks like any other
+  // overlay. It holds a page-sized picture (manga) or a lot of text (novel); a pop-up does not.
+  function isReader(box) {
+    if ((box.innerText || '').length > 4000) return true;
+    var media = box.querySelectorAll('img, canvas, picture, video');
+    var pictures = 0;
+    for (var j = 0; j < media.length; j++) {
+      var r = media[j].getBoundingClientRect();
+      if (r.width >= window.innerWidth * 0.6 && r.height >= window.innerHeight * 0.4) return true;
+      if (r.width >= 150 && r.height >= 150) pictures++;
+    }
+    return pictures >= 3;
+  }
+
   var candidates = document.querySelectorAll('body *');
   for (var i = 0; i < candidates.length; i++) {
     var el = candidates[i];
@@ -22,6 +36,7 @@ mangax.effect(function (ctx) {
     var zIndex = parseInt(style.zIndex, 10) || 0;
     if (visibleArea < screenArea * 0.3 || zIndex < 10) continue;
     if (el.matches(CONTENT) || el.querySelector(CONTENT)) continue;
+    if (isReader(el)) continue;
 
     el.remove();
     removed++;

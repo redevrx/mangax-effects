@@ -2,11 +2,11 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.dark-page",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": { "en": "Dark page", "th": "หน้าเว็บโหมดมืด" },
   "description": {
-    "en": "Turns a bright page dark for night reading. Pictures keep their colours.",
-    "th": "เปลี่ยนหน้าเว็บสว่าง ๆ ให้มืดสำหรับอ่านตอนกลางคืน รูปภาพยังคงสีเดิม"
+    "en": "Turns a bright page dark for night reading, on manga and novel sites. Pictures keep their colours.",
+    "th": "เปลี่ยนหน้าเว็บสว่าง ๆ ให้มืดสำหรับอ่านตอนกลางคืน ใช้ได้ทั้งมังงะและนิยาย รูปภาพยังคงสีเดิม"
   },
   "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
   "type": "toggle",
@@ -14,8 +14,8 @@
   "icon": "dark_mode",
   "entry": "main.js",
   "matches": ["*://*/*"],
-  "engines": ["novel"],
-  "keywords": ["night", "dark mode", "invert", "กลางคืน", "มืด"],
+  "engines": ["any"],
+  "keywords": ["night", "dark mode", "invert", "manga", "novel", "กลางคืน", "มืด"],
   "options": [
     {
       "key": "mode",

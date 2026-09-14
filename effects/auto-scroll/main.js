@@ -9,8 +9,36 @@ mangax.effect(function (ctx) {
   var carry = 0;
   var frame = 0;
 
+  // Manga readers often scroll a box inside the page rather than the page itself: use the
+  // scrollable box under the middle of the screen, else the page. Every layer at that point
+  // is tried, so a banner floating over the reader does not hide it.
   function scroller() {
-    return document.scrollingElement || document.documentElement;
+    var page = document.scrollingElement || document.documentElement;
+    var stack = document.elementsFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+    for (var i = 0; i < stack.length; i++) {
+      for (var el = stack[i]; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        if (el.scrollHeight - el.clientHeight < 2) continue;
+        var overflow = getComputedStyle(el).overflowY;
+        if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') return el;
+      }
+    }
+    return page;
+  }
+
+  // Looked up every half second, not every frame: the page rarely swaps its scroller.
+  var target = null;
+  var targetAt = -1e9;
+  function currentScroller(now) {
+    if (!target || !target.isConnected || now - targetAt > 500) {
+      target = scroller();
+      targetAt = now;
+    }
+    return target;
+  }
+
+  function scrollBy(el, dy) {
+    if (el === (document.scrollingElement || document.documentElement)) window.scrollBy(0, dy);
+    else el.scrollTop += dy;
   }
 
   function step(now) {
@@ -34,9 +62,9 @@ mangax.effect(function (ctx) {
       var whole = Math.floor(carry);
       if (whole >= 1) {
         carry -= whole;
-        var el = scroller();
+        var el = currentScroller(now);
         var before = el.scrollTop;
-        window.scrollBy(0, whole);
+        scrollBy(el, whole);
         if (el.scrollTop === before) {
           // Nothing moved: the end of the page, or a page still loading more below.
           if (!atEndSince) atEndSince = now;

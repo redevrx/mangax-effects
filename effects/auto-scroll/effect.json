@@ -2,7 +2,7 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.auto-scroll",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": {
     "en": "Auto scroll",
     "th": "เลื่อนอัตโนมัติ"

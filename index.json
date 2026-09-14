@@ -4,7 +4,7 @@
     {
       "id": "redevrx.auto-scroll",
       "path": "effects/auto-scroll",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "name": {
         "en": "Auto scroll",
         "th": "เลื่อนอัตโนมัติ"
@@ -31,26 +31,28 @@
     {
       "id": "redevrx.dark-page",
       "path": "effects/dark-page",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "name": {
         "en": "Dark page",
         "th": "หน้าเว็บโหมดมืด"
       },
       "description": {
-        "en": "Turns a bright page dark for night reading. Pictures keep their colours.",
-        "th": "เปลี่ยนหน้าเว็บสว่าง ๆ ให้มืดสำหรับอ่านตอนกลางคืน รูปภาพยังคงสีเดิม"
+        "en": "Turns a bright page dark for night reading, on manga and novel sites. Pictures keep their colours.",
+        "th": "เปลี่ยนหน้าเว็บสว่าง ๆ ให้มืดสำหรับอ่านตอนกลางคืน ใช้ได้ทั้งมังงะและนิยาย รูปภาพยังคงสีเดิม"
       },
       "type": "toggle",
       "category": "appearance",
       "icon": "dark_mode",
       "author": "redevrx",
       "engines": [
-        "novel"
+        "any"
       ],
       "keywords": [
         "night",
         "dark mode",
         "invert",
+        "manga",
+        "novel",
         "กลางคืน",
         "มืด"
       ]
@@ -84,7 +86,7 @@
     {
       "id": "redevrx.kill-popups",
       "path": "effects/kill-popups",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "name": {
         "en": "Kill pop-ups",
         "th": "ปิดป๊อปอัป"
@@ -111,7 +113,7 @@
     {
       "id": "redevrx.tap-scroll",
       "path": "effects/tap-scroll",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "name": {
         "en": "Tap to turn",
         "th": "แตะเพื่อเลื่อนหน้า"

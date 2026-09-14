@@ -10,7 +10,7 @@ where the files were downloaded (a repository owned by `redevrx`), never from wh
 |---|---|---|---|
 | [Auto scroll](effects/auto-scroll) | reading | toggle | Scrolls at a steady pace; touch to pause |
 | [Tap to turn](effects/tap-scroll) | navigation | toggle | Tap the bottom or top of the screen to move a screen |
-| [Dark page](effects/dark-page) | appearance | toggle | Dark or dimmed pages for night reading (Novel) |
+| [Dark page](effects/dark-page) | appearance | toggle | Dark or dimmed pages for night reading |
 | [Hide ads](effects/hide-ads) | cleanup | style | Hides common ad slots with CSS only |
 | [Kill pop-ups](effects/kill-popups) | cleanup | action | Removes overlays and cookie walls covering the page |
 
