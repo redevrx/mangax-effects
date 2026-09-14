@@ -82,6 +82,18 @@ mangax.effect(function(ctx) {
     }
   }
 
+  function hideOverflowHiddenElements() {
+    const overflowElements = ctx.site.querySelectorAll("*");
+    overflowElements.forEach(function(el) {
+      const computedStyle = getComputedStyle(el);
+      if (computedStyle.overflow === "hidden" || 
+          computedStyle.overflowY === "hidden" || 
+          computedStyle.overflowX === "hidden") {
+        el.classList.add("hidden");
+      }
+    });
+  }
+
   function createStyles() {
     const styleId = "mynovel-bypass-login-styles";
     if (ctx.site.getElementById(styleId)) return;
@@ -102,5 +114,9 @@ mangax.effect(function(ctx) {
 
   createStyles();
   setupDirectDetection();
+  hideOverflowHiddenElements();
   setupObserver();
+  ctx.on("stop", function() {
+    hideOverflowHiddenElements();
+  });
 });
