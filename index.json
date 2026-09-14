@@ -111,6 +111,33 @@
       ]
     },
     {
+      "id": "redevrx.mynovel-bypass-login",
+      "path": "effects/mynovel-bypass-login",
+      "version": "1.0.0",
+      "name": {
+        "en": "Bypass login (mynovel.co)",
+        "th": "ข้ามล็อกอิน (my novel.co)"
+      },
+      "description": {
+        "en": "Allows reading on mynovel.co without being forced to login when you have coins.",
+        "th": "อ่าน mynovel.co ได้โดยไม่ต้องล็อกอินเมื่อมีเหรียญเพียงพอ"
+      },
+      "type": "toggle",
+      "category": "reading",
+      "icon": "open_in_new",
+      "author": "redevrx",
+      "engines": [
+        "any"
+      ],
+      "keywords": [
+        "mynovel",
+        "login",
+        "coins",
+        "bypass",
+        "my novel co"
+      ]
+    },
+    {
       "id": "redevrx.tap-scroll",
       "path": "effects/tap-scroll",
       "version": "1.1.0",

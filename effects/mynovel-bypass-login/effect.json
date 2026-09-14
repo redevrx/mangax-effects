@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/redevrx/mangax-effects/main/schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.mynovel-bypass-login",
+  "version": "1.0.0",
+  "name": {
+    "en": "Bypass login (mynovel.co)",
+    "th": "ข้ามล็อกอิน (my novel.co)"
+  },
+  "description": {
+    "en": "Allows reading on mynovel.co without being forced to login when you have coins.",
+    "th": "อ่าน mynovel.co ได้โดยไม่ต้องล็อกอินเมื่อมีเหรียญเพียงพอ"
+  },
+  "author": {
+    "name": "redevrx",
+    "url": "https://github.com/redevrx"
+  },
+  "type": "toggle",
+  "category": "reading",
+  "icon": "open_in_new",
+  "entry": "main.js",
+  "matches": ["*://mynovel.co/*"],
+  "runAt": "documentStart",
+  "engines": ["any"],
+  "keywords": ["mynovel", "login", "coins", "bypass", "my novel co"]
+}
