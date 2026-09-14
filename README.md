@@ -55,7 +55,9 @@ mangax-effects/
 ├── index.json                  what the market lists (generated — do not edit by hand)
 ├── registry.json               other repositories the market reads
 ├── schema/effect.schema.json   editor help for effect.json
+├── AGENTS.md                   the full effect API and rules — for AI assistants and people
 ├── tools/check.mjs             checks every effect the way the app will
+├── tools/devtools-runner.js    runs an effect in desktop Chrome with the app's ctx
 └── effects/
     ├── auto-scroll/
     │   ├── effect.json
@@ -77,9 +79,11 @@ One folder per effect. The folder name is the effect's id without the `redevrx.`
    node tools/check.mjs --fix
    ```
 
-3. Try it on a phone by installing from your branch:
+3. Try it on the real site in desktop Chrome: paste [`tools/devtools-runner.js`](tools/devtools-runner.js)
+   into the DevTools console, then paste your `main.js`. `mangaxTest.stop()` switches it off.
+4. Try it on a phone by installing from your branch:
    `https://github.com/redevrx/mangax-effects/tree/<branch>/effects/<name>`
-4. Commit, push, merge.
+5. Commit, push, merge.
 
 When changing an existing effect, bump its `version` — the app shows it on the install screen.
 
@@ -169,9 +173,62 @@ Declared in `effect.json`; the app draws the settings and passes the values in `
   you schedule yourself (`requestAnimationFrame`, `setTimeout`) are not caught — guard them.
 - Match only the sites an effect is for when it is site-specific: `https://*.example.com/read/*`.
 
+## Writing an effect with AI
+
+AI assistants write effects well — once they know the API. Left to guess, they invent members
+that do not exist (`ctx.on('stop')`, `ctx.storage`, `GM_addStyle`), use selectors that hide half
+the page, or forget to undo what they changed. The script then fails the moment it is switched on.
+
+[`AGENTS.md`](AGENTS.md) is the complete contract — every `ctx` member, the manifest fields, the
+rules and a checklist. Claude Code, Codex, Cursor, Copilot and opencode read it automatically when
+they work in this repository (Claude Code through [`CLAUDE.md`](CLAUDE.md)). With a chat assistant
+(ChatGPT, Claude.ai, Gemini) paste `AGENTS.md` into the conversation first.
+
+### What to give it
+
+The AI cannot see the site. Give it what you would give a person:
+
+- the site URL, and whether you read it in **manga** or **novel** mode
+- what should happen, and what must **not** break (the reader, images, chapter buttons)
+- the real HTML of the part to change: DevTools → right-click the element → **Copy → Copy
+  outerHTML**. Screenshots alone lead to guessed selectors
+- for a fix: the error the app showed, and what the page looked like
+
+### A prompt that works
+
+```text
+Read AGENTS.md. Write a MangaX effect in effects/<name>/.
+
+Site: https://example.com/novel/123/chapter-4  (novel mode; the site also uses www.example.com)
+Goal: hide the "download our app" bar pinned to the bottom of the chapter. Toggle, off by default.
+Must keep: the chapter text, the next/previous chapter buttons.
+HTML of the bar:
+<div class="app-promo sticky-bottom">...</div>
+
+Use only the ctx API in AGENTS.md. When done, run `node tools/check.mjs --fix` and show me
+how to test it with tools/devtools-runner.js.
+```
+
+### Check what it wrote
+
+Before you commit, even when it "works":
+
+- `node tools/check.mjs --fix` prints ✓ for the effect
+- every `ctx.…` in `main.js` is listed in the `ctx` table in [`AGENTS.md`](AGENTS.md#ctx--the-complete-api)
+- run it with `tools/devtools-runner.js`, then `mangaxTest.stop()` — the page must look exactly as
+  before. The runner reports wrong `ctx` calls the way the app would
+- no broad selectors (`*`, `body *`, `[class*='modal']`), no `fetch`, nothing reading cookies or
+  login data
+- `version` bumped if the effect already existed
+
+When something fails on the phone, give the AI the error text from the app and the HTML, not only
+"it doesn't work".
+
 ## ภาษาไทยสั้น ๆ
 
 - ติดตั้งในแอพ: **Effects → เลือกดูในตลาดเอฟเฟกต์** ค้นหาหรือเลือกหมวด แล้วกดติดตั้ง
 - ลง repo ของตัวเอง: ทำโครงเดียวกับ repo นี้ → รัน `node tools/check.mjs --fix` → ลองเพิ่มในแอพ (ไอคอน repository) → เปิด PR เพิ่มชื่อ repo ลง `registry.json` ให้ทุกคนเห็น
 - เพิ่ม effect ใหม่: สร้างโฟลเดอร์ใน `effects/` → รัน `node tools/check.mjs --fix` → ลองติดตั้งจาก branch → merge
 - effect จาก repo นี้ได้ป้าย **Official** เพราะมาจาก `github.com/redevrx` เท่านั้น
+- เขียนด้วย AI: ให้ AI อ่าน [`AGENTS.md`](AGENTS.md) ก่อน (Claude Code / Codex / Cursor อ่านเองอัตโนมัติ ส่วน ChatGPT หรือ Claude.ai ให้แปะไฟล์นี้ให้) บอก URL เว็บ, โหมด manga หรือ novel, สิ่งที่อยากให้เกิดและสิ่งที่ห้ามพัง แล้ว **copy outerHTML** ส่วนที่จะแก้จาก DevTools ไปให้ด้วย อย่าส่งแค่ภาพหน้าจอ
+- ก่อน commit งานที่ AI เขียน: รัน `node tools/check.mjs --fix` → ลองบน Chrome ด้วย `tools/devtools-runner.js` แล้ว `mangaxTest.stop()` หน้าเว็บต้องกลับเหมือนเดิม → เช็กว่า `ctx` ที่ใช้มีอยู่จริงในตารางของ AGENTS.md → ถ้าแก้ effect เดิมให้ขึ้น `version`
