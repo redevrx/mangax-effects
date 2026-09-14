@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/redevrx/mangax-effects/main/schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.mynovel-bypass-login",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "name": {
     "en": "Bypass login (mynovel.co)",
     "th": "ข้ามล็อกอิน (my novel.co)"
