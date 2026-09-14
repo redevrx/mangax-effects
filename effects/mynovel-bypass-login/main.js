@@ -1,15 +1,15 @@
 mangax.effect(function(ctx) {
   const CONFIG = {
-    MIN_COINS: 10, // minimum coins threshold to allow reading
-    MODAL_SELECTORS: ["[data-modal=\"login\"]", "[data-modal=\"auth\"]", ".login-modal", ".modal-login", "#login-modal"],
-    COIN_SELECTORS: ["[data-coin]", "[data-credits]", ".coin-count", ".credits", "[data-coins]", ".coins"],
+    MIN_COINS: 10,
+    MODAL_SELECTORS: [".coin-count", "[data-coin]", "[data-credits]", ".credits", "[data-coins]", ".coins", "[class*='modal']", "[class*='popup']", "[class*='login']", "#coin-modal", "[data-modal]", ".modal-overlay", ".modal-backdrop"],
+    COIN_SELECTORS: ["[data-coin]", "[data-credits]", ".coin-count", ".credits", "[data-coins]", ".coins", "[class*='coin']", "[class*='credits']", "#coin-counter"],
   };
 
   let isBypassed = false;
 
   function getCoinCount() {
     for (const selector of CONFIG.COIN_SELECTORS) {
-      const el = ctx.site.querySelector(selector);
+      const el = document.querySelector(selector);
       if (el) {
         const text = el.textContent || el.innerText || "";
         const match = text.match(/(\d+)/);
@@ -26,14 +26,14 @@ mangax.effect(function(ctx) {
   }
 
   function hideModal(modal) {
-    if (modal.hidden) return;
+    if (modal.classList.contains("hidden")) return;
     modal.classList.add("hidden");
     modal.style.display = "none";
     modal.setAttribute("aria-hidden", "true");
   }
 
   function restoreModal(modal) {
-    if (!modal.hidden) return;
+    if (!modal.classList.contains("hidden")) return;
     modal.classList.remove("hidden");
     modal.style.display = "";
     modal.removeAttribute("aria-hidden");
@@ -70,10 +70,10 @@ mangax.effect(function(ctx) {
 
   function setupDirectDetection() {
     for (const selector of CONFIG.MODAL_SELECTORS) {
-      const modals = ctx.site.querySelectorAll(selector);
+      const modals = document.querySelectorAll(selector);
       modals.forEach(function(modal) {
         setTimeout(function() {
-          if (shouldBypass() && !modal.hidden && !isBypassed) {
+          if (shouldBypass() && !modal.classList.contains("hidden") && !isBypassed) {
             hideModal(modal);
             isBypassed = true;
           }
@@ -83,7 +83,7 @@ mangax.effect(function(ctx) {
   }
 
   function hideOverflowHiddenElements() {
-    const overflowElements = ctx.site.querySelectorAll("*");
+    const overflowElements = document.querySelectorAll("*");
     overflowElements.forEach(function(el) {
       const computedStyle = getComputedStyle(el);
       if (computedStyle.overflow === "hidden" || 
@@ -96,7 +96,7 @@ mangax.effect(function(ctx) {
 
   function createStyles() {
     const styleId = "mynovel-bypass-login-styles";
-    if (ctx.site.querySelector(`#${styleId}`)) return;
+    if (document.getElementById(styleId)) return;
 
     const style = document.createElement("style");
     style.id = styleId;
@@ -107,7 +107,7 @@ mangax.effect(function(ctx) {
     document.head.appendChild(style);
 
     ctx.on("stop", function() {
-      const existing = document.querySelector(`#${styleId}`);
+      const existing = document.getElementById(styleId);
       if (existing) existing.remove();
     });
   }
