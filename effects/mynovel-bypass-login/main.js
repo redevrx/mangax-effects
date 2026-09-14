@@ -48,19 +48,22 @@ mangax.effect(function(ctx) {
       attributeFilter: ["class", "style", "data-modal"],
     };
 
-    const observer = ctx.observe(function(el) {
-      for (const selector of CONFIG.MODAL_SELECTORS) {
-        if (el.matches(selector)) {
-          const modal = el;
-          setTimeout(function() {
-            if (shouldBypass() && !isBypassed) {
-              hideModal(modal);
-              isBypassed = true;
-            }
-          }, 100);
-          break;
+    const observer = ctx.observe(function(elements) {
+      if (!Array.isArray(elements)) return;
+      elements.forEach(function(el) {
+        for (const selector of CONFIG.MODAL_SELECTORS) {
+          if (el.matches(selector)) {
+            const modal = el;
+            setTimeout(function() {
+              if (shouldBypass() && !isBypassed) {
+                hideModal(modal);
+                isBypassed = true;
+              }
+            }, 100);
+            break;
+          }
         }
-      }
+      });
     });
 
     ctx.on("stop", function() {
