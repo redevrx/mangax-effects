@@ -48,26 +48,19 @@ mangax.effect(function(ctx) {
       attributeFilter: ["class", "style", "data-modal"],
     };
 
-    const observer = ctx.observe(function(elements) {
-      if (!Array.isArray(elements)) return;
-      elements.forEach(function(el) {
-        for (const selector of CONFIG.MODAL_SELECTORS) {
-          if (el.matches(selector)) {
-            const modal = el;
-            setTimeout(function() {
-              if (shouldBypass() && !isBypassed) {
-                hideModal(modal);
-                isBypassed = true;
-              }
-            }, 100);
-            break;
-          }
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === "attributes") {
+          mutation.target.classList.toggle("hidden", shouldBypass());
         }
       });
     });
 
-    ctx.on("stop", function() {
-      observer.disconnect();
+    const targets = document.querySelectorAll(".modal, .popup, .login, .modal-overlay, .modal-backdrop, [class*='modal'], [class*='popup']");
+    targets.forEach(function(target) {
+      if (target && target.classList) {
+        observer.observe(target, options);
+      }
     });
   }
 
@@ -119,7 +112,4 @@ mangax.effect(function(ctx) {
   setupDirectDetection();
   hideOverflowHiddenElements();
   setupObserver();
-  ctx.on("stop", function() {
-    hideOverflowHiddenElements();
-  });
 });
