@@ -96,7 +96,7 @@ mangax.effect(function(ctx) {
 
   function createStyles() {
     const styleId = "mynovel-bypass-login-styles";
-    if (ctx.site.getElementById(styleId)) return;
+    if (ctx.site.querySelector(`#${styleId}`)) return;
 
     const style = document.createElement("style");
     style.id = styleId;
@@ -107,7 +107,7 @@ mangax.effect(function(ctx) {
     document.head.appendChild(style);
 
     ctx.on("stop", function() {
-      const existing = document.getElementById(styleId);
+      const existing = document.querySelector(`#${styleId}`);
       if (existing) existing.remove();
     });
   }
