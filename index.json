@@ -124,7 +124,6 @@
       },
       "type": "toggle",
       "category": "reading",
-      "icon": "open_in_new",
       "author": "redevrx",
       "engines": [
         "any"

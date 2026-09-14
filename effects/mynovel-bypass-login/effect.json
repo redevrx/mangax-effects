@@ -17,10 +17,8 @@
   },
   "type": "toggle",
   "category": "reading",
-  "icon": "open_in_new",
   "entry": "main.js",
-  "matches": ["*://mynovel.co/*"],
-  "runAt": "documentStart",
+  "matches": ["*://*.mynovel.co/*"],
   "engines": ["any"],
   "keywords": ["mynovel", "login", "coins", "bypass", "my novel co"]
 }

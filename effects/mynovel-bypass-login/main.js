@@ -1,24 +1,20 @@
 mangax.effect(function(ctx) {
   const CONFIG = {
     MIN_COINS: 10,
-    MODAL_SELECTORS: [".coin-count", "[data-coin]", "[data-credits]", ".credits", "[data-coins]", ".coins", "[class*='modal']", "[class*='popup']", "[class*='login']", "#coin-modal", "[data-modal]", ".modal-overlay", ".modal-backdrop"],
-    COIN_SELECTORS: ["[data-coin]", "[data-credits]", ".coin-count", ".credits", "[data-coins]", ".coins", "[class*='coin']", "[class*='credits']", "#coin-counter"],
+    MODAL_SELECTORS: [".modal", ".modal-dialog", ".modal-backdrop", "[role='dialog']", "#modal", "[class*='modal']", "[class*='popup']"],
+    COIN_SELECTORS: [".coins", ".coin-count"],
   };
 
   let isBypassed = false;
+  let observer;
 
   function getCoinCount() {
-    for (const selector of CONFIG.COIN_SELECTORS) {
-      const el = document.querySelector(selector);
-      if (el) {
-        const text = el.textContent || el.innerText || "";
-        const match = text.match(/(\d+)/);
-        if (match) {
-          return parseInt(match[1], 10);
-        }
-      }
-    }
-    return 0;
+    const elements = document.querySelectorAll(CONFIG.COIN_SELECTORS.join(", "));
+    if (elements.length === 0) return 0;
+    const el = elements[0];
+    const text = (el.textContent || el.innerText || "").trim();
+    const match = text.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
   }
 
   function shouldBypass() {
@@ -26,90 +22,45 @@ mangax.effect(function(ctx) {
   }
 
   function hideModal(modal) {
-    if (modal.classList.contains("hidden")) return;
+    if (modal.dataset.bypassed) return;
+    modal.dataset.bypassed = "true";
     modal.classList.add("hidden");
     modal.style.display = "none";
     modal.setAttribute("aria-hidden", "true");
   }
 
   function restoreModal(modal) {
-    if (!modal.classList.contains("hidden")) return;
+    if (!modal.dataset.bypassed) return;
     modal.classList.remove("hidden");
     modal.style.display = "";
     modal.removeAttribute("aria-hidden");
+    modal.removeAttribute("data-bypassed");
     isBypassed = false;
   }
 
-  function setupObserver() {
-    const options = {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["class", "style", "data-modal"],
-    };
-
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.type === "attributes") {
-          mutation.target.classList.toggle("hidden", shouldBypass());
-        }
-      });
-    });
-
-    const targets = document.querySelectorAll(".modal, .popup, .login, .modal-overlay, .modal-backdrop, [class*='modal'], [class*='popup']");
-    targets.forEach(function(target) {
-      if (target && target.classList) {
-        observer.observe(target, options);
-      }
+  function restoreOverflowElements() {
+    document.querySelectorAll("[data-mx-overflow-hidden]").forEach(function(el) {
+      el.removeAttribute("data-mx-overflow-hidden");
     });
   }
 
-  function setupDirectDetection() {
-    for (const selector of CONFIG.MODAL_SELECTORS) {
-      const modals = document.querySelectorAll(selector);
-      modals.forEach(function(modal) {
-        setTimeout(function() {
-          if (shouldBypass() && !modal.classList.contains("hidden") && !isBypassed) {
-            hideModal(modal);
-            isBypassed = true;
-          }
-        }, 500);
-      });
-    }
-  }
-
-  function hideOverflowHiddenElements() {
-    const overflowElements = document.querySelectorAll("*");
-    overflowElements.forEach(function(el) {
-      const computedStyle = getComputedStyle(el);
-      if (computedStyle.overflow === "hidden" || 
-          computedStyle.overflowY === "hidden" || 
-          computedStyle.overflowX === "hidden") {
-        el.classList.add("hidden");
-      }
+  function restoreAll() {
+    restoreOverflowElements();
+    document.querySelectorAll("[data-bypassed]").forEach(function(el) {
+      el.removeAttribute("data-bypassed");
     });
+    restoreModal(null);
+    isBypassed = false;
   }
 
-  function createStyles() {
-    const styleId = "mynovel-bypass-login-styles";
-    if (document.getElementById(styleId)) return;
+  ctx.on(window, "stop", function() {
+    if (observer) observer.disconnect();
+    restoreAll();
+  });
 
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.textContent = `
-      .hidden { display: none !important; }
-      [data-modal][hidden] { display: none !important; }
-    `;
-    document.head.appendChild(style);
-
-    ctx.on("stop", function() {
-      const existing = document.getElementById(styleId);
-      if (existing) existing.remove();
-    });
-  }
-
-  createStyles();
-  setupDirectDetection();
-  hideOverflowHiddenElements();
-  setupObserver();
+  return function() {
+    if (observer) observer.disconnect();
+    restoreAll();
+    return { restored: true };
+  };
 });
