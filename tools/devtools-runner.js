@@ -1,18 +1,3 @@
-// Runs an effect in desktop Chrome with the same `ctx` the MangaX app gives it, so a script can be
-// tried on the real site before it goes anywhere near a phone.
-//
-// 1. Open the site in Chrome, open DevTools → Console.
-// 2. Paste this whole file and press Enter.
-// 3. Optional — set up like the app would (defaults: toggle, no options, novel):
-//      mangaxTest.setup({ type: 'toggle', engine: 'manga', options: { speed: 60 }, permissions: ['toast'] })
-// 4. Paste the effect's main.js and press Enter. It starts at once.
-// 5. Try it, then:
-//      mangaxTest.options({ speed: 120 })   the reader changes a setting
-//      mangaxTest.stop()                    the reader switches it off — the page should be back to normal
-//
-// Errors are printed the way the app would report them. Toasts go to the console.
-// Differences from the app: the page's own globals are visible here (on iOS they are not), and
-// options are not clamped to the manifest's limits.
 (function () {
   var config = { type: 'toggle', engine: 'novel', options: {}, permissions: [] };
   var run = null;

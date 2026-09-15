@@ -1,65 +1,133 @@
 mangax.effect(function(ctx) {
   const CONFIG = {
-    MIN_COINS: 10,
-    MODAL_SELECTORS: [".modal", ".modal-dialog", ".modal-backdrop", "[role='dialog']", "#modal", "[class*='modal']", "[class*='popup']"],
-    COIN_SELECTORS: [".coins", ".coin-count"],
+    MODAL_SELECTORS: [
+      ".fixed.top-0.left-0.right-0.bottom-0.z-[9999]",
+      ".modal-backdrop",
+      ".login-modal",
+      ".auth-modal",
+      ".modal-overlay",
+      "[role='dialog']",
+      "[aria-modal='true']",
+      ".full-screen-modal",
+      ".fullscreen-modal",
+      ".blocker-modal",
+      ".blocker-overlay",
+    ],
+    LOGIN_SELECTORS: [
+      ".login-modal",
+      ".auth-modal",
+      ".modal-content",
+      ".modal-dialog",
+      ".login-overlay",
+      ".auth-overlay",
+      ".login-screen",
+      ".auth-screen",
+      "[role='dialog']",
+    ],
+    MODAL_BUTTON_SELECTORS: [
+      ".modal-close",
+      ".close-modal",
+      ".btn-close",
+      ".close-btn",
+      ".modal-dismiss",
+      ".dismiss-btn",
+      ".modal-accept",
+      ".accept-btn",
+      ".btn-accept",
+      ".accept-modal",
+      ".modal-yes",
+      ".yes-btn",
+    ],
   };
 
-  let isBypassed = false;
   let observer;
+  let modalElement = null;
+  let isBypassed = false;
 
-  function getCoinCount() {
-    const elements = document.querySelectorAll(CONFIG.COIN_SELECTORS.join(", "));
-    if (elements.length === 0) return 0;
-    const el = elements[0];
-    const text = (el.textContent || el.innerText || "").trim();
-    const match = text.match(/(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
+  function hideModal() {
+    if (!modalElement || modalElement.dataset.mx_bypassed) return;
+    modalElement.dataset.mx_bypassed = "true";
+    modalElement.style.display = "none";
   }
 
-  function shouldBypass() {
-    return getCoinCount() >= CONFIG.MIN_COINS;
-  }
-
-  function hideModal(modal) {
-    if (modal.dataset.bypassed) return;
-    modal.dataset.bypassed = "true";
-    modal.classList.add("hidden");
-    modal.style.display = "none";
-    modal.setAttribute("aria-hidden", "true");
-  }
-
-  function restoreModal(modal) {
-    if (!modal.dataset.bypassed) return;
-    modal.classList.remove("hidden");
-    modal.style.display = "";
-    modal.removeAttribute("aria-hidden");
-    modal.removeAttribute("data-bypassed");
+  function restoreModal() {
+    if (!modalElement || !modalElement.dataset.mx_bypassed) return;
+    modalElement.style.display = "";
+    modalElement.removeAttribute("data-mx_bypassed");
     isBypassed = false;
-  }
-
-  function restoreOverflowElements() {
-    document.querySelectorAll("[data-mx-overflow-hidden]").forEach(function(el) {
-      el.removeAttribute("data-mx-overflow-hidden");
-    });
   }
 
   function restoreAll() {
-    restoreOverflowElements();
-    document.querySelectorAll("[data-bypassed]").forEach(function(el) {
-      el.removeAttribute("data-bypassed");
-    });
-    restoreModal(null);
+    if (observer) observer.disconnect();
     isBypassed = false;
   }
 
-  ctx.on(window, "stop", function() {
-    if (observer) observer.disconnect();
-    restoreAll();
+  function setupObserver() {
+    if (observer) return;
+    observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1) {
+            CONFIG.MODAL_SELECTORS.some(function(selector) {
+              return node.matches(selector);
+            }) && (modalElement = node);
+          }
+        });
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  function checkAndApply() {
+    if (modalElement && !modalElement.dataset.mx_bypassed && !isBypassed) {
+      setupObserver();
+      isBypassed = true;
+      modalElement.dataset.mx_bypassed = "true";
+      modalElement.style.display = "none";
+    }
+  }
+
+  ctx.observe(".fixed.top-0.left-0.right-0.bottom-0.z-50,.fixed.top-0.left-0.right-0.bottom-0.z-9999,.fixed.top-0.left-0.right-0.bottom-0.z-[9999],.fixed.top-0.left-0.right-0.bottom-0", function(el) {
+    if (!el.dataset.mx_bypassed) {
+      el.dataset.mx_bypassed = "true";
+      el.style.display = "none";
+    }
   });
 
+  ctx.observe("[role='dialog']", function(el) {
+    if (!el.dataset.mx_bypassed) {
+      el.dataset.mx_bypassed = "true";
+      el.style.display = "none";
+    }
+  });
+
+  ctx.observe(".login-modal,.auth-modal,.modal-overlay,.full-screen-modal,.fullscreen-modal,.blocker-modal,.blocker-overlay,.auth-screen,.login-screen", function(el) {
+    if (!el.dataset.mx_bypassed) {
+      el.dataset.mx_bypassed = "true";
+      el.style.display = "none";
+    }
+  });
+
+  ctx.addStyle(`
+    .fixed.top-0.left-0.right-0.bottom-0.z-9999,
+    .modal-backdrop,
+    .login-modal,
+    .auth-modal,
+    .modal-overlay,
+    [role="dialog"][aria-modal="true"],
+    .full-screen-modal,
+    .fullscreen-modal,
+    .blocker-modal,
+    .blocker-overlay,
+    .auth-screen,
+    .login-screen {
+      display: none !important;
+    }
+  `);
+
+  ctx.toast("Bypass active: login modals hidden. Refresh to restore.");
+
   return function() {
-    if (observer) observer.disconnect();
     restoreAll();
     return { restored: true };
   };
