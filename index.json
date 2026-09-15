@@ -136,6 +136,33 @@
         "แตะ",
         "พลิกหน้า"
       ]
+    },
+    {
+      "id": "redevrx.webtoon-age-limit",
+      "path": "effects/webtoon-age-limit",
+      "version": "1.0.0",
+      "name": {
+        "en": "Age Limit Popup",
+        "th": "หน้าต่างอายุ"
+      },
+      "description": {
+        "en": "Hide Webtoon's 18+ content warning dialog",
+        "th": "ซ่อนคำเตือนอายุ 18+"
+      },
+      "type": "toggle",
+      "category": "cleanup",
+      "icon": "block",
+      "author": "redevrx",
+      "engines": [
+        "any"
+      ],
+      "keywords": [
+        "webtoon",
+        "age limit",
+        "18+",
+        "warning",
+        "popup"
+      ]
     }
   ]
 }

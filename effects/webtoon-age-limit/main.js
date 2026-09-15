@@ -1,5 +1,5 @@
 mangax.effect(function (ctx) {
-  // Hide Webtoon's 18+ age limit dialog
+  // ctx.addStyle handles injection and cleanup automatically
   ctx.addStyle(`
     .age_limit {
       display: none !important;
@@ -13,12 +13,8 @@ mangax.effect(function (ctx) {
 
   // Return undo function for toggle
   return function () {
-    // Remove all our styles and hide commands
-    const style = document.querySelector('style[data-mx-age-limit]');
-    if (style) {
-      style.remove();
-    }
-
+    // ctx.addStyle cleans up automatically on stop
+    // Restore dialogs
     document.querySelectorAll('.age_limit').forEach(function (el) {
       el.style.display = '';
     });
