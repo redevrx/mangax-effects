@@ -4,7 +4,7 @@
     {
       "id": "redevrx.auto-scroll",
       "path": "effects/auto-scroll",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "name": {
         "en": "Auto scroll",
         "th": "เลื่อนอัตโนมัติ"
@@ -108,32 +108,6 @@
         "cookie",
         "modal",
         "ป๊อปอัป"
-      ]
-    },
-    {
-      "id": "redevrx.mynovel-bypass-login",
-      "path": "effects/mynovel-bypass-login",
-      "version": "1.0.4",
-      "name": {
-        "en": "Bypass login (mynovel.co)",
-        "th": "ข้ามล็อกอิน (my novel.co)"
-      },
-      "description": {
-        "en": "Allows reading on mynovel.co without being forced to login when you have coins.",
-        "th": "อ่าน mynovel.co ได้โดยไม่ต้องล็อกอินเมื่อมีเหรียญเพียงพอ"
-      },
-      "type": "toggle",
-      "category": "reading",
-      "author": "redevrx",
-      "engines": [
-        "any"
-      ],
-      "keywords": [
-        "mynovel",
-        "login",
-        "coins",
-        "bypass",
-        "my novel co"
       ]
     },
     {
