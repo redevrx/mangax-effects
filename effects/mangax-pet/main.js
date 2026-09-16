@@ -38,6 +38,10 @@ mangax.effect(function (ctx) {
   var replaceMenu = options.replaceMenu === true; // ซ่อนปุ่มเมนูของแอพ ใช้กดค้างที่น้องแทน
   var isTop = defaultPosition === 'top';
 
+  // แถบเบราว์เซอร์ด้านล่างของแอพ (URL + เมนูล่าง) สูงราว 115px และวางทับหน้าเว็บ
+  // → ตำแหน่ง bottom และการลากลงล่าง ต้องอยู่เหนือแถบนี้ ไม่งั้นน้องโดนบัง
+  var BOTTOM_CLEAR = 130;
+
   function sayChance() {
     if (chattiness === 'quiet') return 0.15;
     if (chattiness === 'chatty') return 0.8;
@@ -67,7 +71,7 @@ mangax.effect(function (ctx) {
       'will-change:transform,left,top,bottom;' +
       'filter:drop-shadow(0 6px 12px rgba(99,102,241,.4));}\n' +
       '#mx-pet.at-top{top:24px;bottom:auto;}\n' +
-      '#mx-pet.at-bottom{bottom:24px;top:auto;}\n' +
+      '#mx-pet.at-bottom{bottom:' + BOTTOM_CLEAR + 'px;top:auto;}\n' +
       '#mx-pet:active{cursor:grabbing;}\n' +
       '#mx-pet.dragging{cursor:grabbing;transform:scale(1.12) rotate(6deg)!important;' +
       'filter:drop-shadow(0 14px 20px rgba(99,102,241,.55))!important;' +
@@ -471,12 +475,23 @@ mangax.effect(function (ctx) {
     appCall('menu.replace', { on: replaceMenu });
   }
 
+  function bubbleShown() {
+    return !!(bubble && bubble.classList.contains('show'));
+  }
+
   // เปิดเมนูของแอพข้างตัวน้อง ตำแหน่งส่งเป็นสัดส่วน 0–1 ของหน้าจอ
   function openAppMenu() {
     var r = mascot.getBoundingClientRect();
     var w = window.innerWidth || 1;
     var h = window.innerHeight || 1;
-    appCall('menu.open', { x: (r.left + r.width / 2) / w, y: (r.top + r.height / 2) / h });
+    appCall('menu.open', {
+      x: (r.left + r.width / 2) / w,
+      y: (r.top + r.height / 2) / h,
+      // เมนูจะเว้นจากขอบตัวน้อง (รวมกล่องคำพูดด้านบน) ไม่ทับตัว
+      // กล่องคำพูดอยู่ด้านบนตอนน้องอยู่ล่าง และอยู่ด้านล่างตอนน้องอยู่บน
+      top: Math.max(0, r.top - (!isTop && bubbleShown() ? 40 : 0)) / h,
+      bottom: Math.min(h, r.bottom + (isTop && bubbleShown() ? 40 : 0)) / h
+    });
   }
 
   applyReplaceMenu();
@@ -515,7 +530,7 @@ mangax.effect(function (ctx) {
     x: Math.max(margin, window.innerWidth - currentSize - 20),
     targetX: Math.max(margin, window.innerWidth - currentSize - 20),
     top: 24,
-    bottom: 24,
+    bottom: BOTTOM_CLEAR,
     speed: walkSpeed(),
     isWalking: false,
     isBusy: false,
@@ -727,13 +742,13 @@ mangax.effect(function (ctx) {
       mascot.style.left = newX + 'px';
 
       if (isTop) {
-        var maxTop = Math.max(margin, window.innerHeight - curH - margin);
+        var maxTop = Math.max(margin, window.innerHeight - curH - BOTTOM_CLEAR);
         var newTop = Math.max(margin, Math.min(maxTop, startMascotTop + dy));
         state.top = newTop;
         mascot.style.top = newTop + 'px';
       } else {
-        var maxBottom = Math.max(margin, window.innerHeight - curH - margin);
-        var newBottom = Math.max(margin, Math.min(maxBottom, startMascotBottom - dy));
+        var maxBottom = Math.max(BOTTOM_CLEAR, window.innerHeight - curH - margin);
+        var newBottom = Math.max(BOTTOM_CLEAR, Math.min(maxBottom, startMascotBottom - dy));
         state.bottom = newBottom;
         mascot.style.bottom = newBottom + 'px';
       }
@@ -1272,16 +1287,20 @@ mangax.effect(function (ctx) {
     var curW = currentSize;
     var curH = currentSize * 1.25;
     var maxX = Math.max(margin, window.innerWidth - curW - margin);
-    var maxY = Math.max(margin, window.innerHeight - curH - margin);
+    var maxTopY = Math.max(margin, window.innerHeight - curH - BOTTOM_CLEAR);
+    var maxBottomY = Math.max(BOTTOM_CLEAR, window.innerHeight - curH - margin);
     if (state.x > maxX) {
       state.x = maxX; state.targetX = maxX;
       mascot.style.left = maxX + 'px';
     }
-    if (isTop && state.top > maxY) {
-      state.top = maxY; mascot.style.top = maxY + 'px';
+    if (isTop && state.top > maxTopY) {
+      state.top = maxTopY; mascot.style.top = maxTopY + 'px';
     }
-    if (!isTop && state.bottom > maxY) {
-      state.bottom = maxY; mascot.style.bottom = maxY + 'px';
+    if (!isTop && state.bottom > maxBottomY) {
+      state.bottom = maxBottomY; mascot.style.bottom = maxBottomY + 'px';
+    }
+    if (!isTop && state.bottom < BOTTOM_CLEAR) {
+      state.bottom = BOTTOM_CLEAR; mascot.style.bottom = BOTTOM_CLEAR + 'px';
     }
   }
   ctx.on(window, 'resize', clampToScreen, { passive: true });
