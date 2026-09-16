@@ -1,22 +1,24 @@
 mangax.effect(function (ctx) {
-  // ctx.addStyle handles injection and cleanup automatically
-  ctx.addStyle(`
-    .age_limit {
-      display: none !important;
-    }
-  `);
+  ctx.addStyle(
+    '.ly_wrap:has(.ly_adult), .ly_wrap:has(.age_limit), .ly_adult, .age_limit, [data-mx-webtoon-age-hidden] {\n' +
+    '  display: none !important;\n' +
+    '}\n' +
+    'body[data-mx-webtoon-age-unlocked] {\n' +
+    '  overflow: visible !important;\n' +
+    '}'
+  );
 
-  // Observe for late-loaded dialogs
-  ctx.observe('.age_limit', function (el) {
-    el.style.display = 'none';
+  ctx.observe('.ly_adult, .age_limit', function (el) {
+    var wrap = el.closest ? el.closest('.ly_wrap') : null;
+    var target = wrap || el;
+    target.setAttribute('data-mx-webtoon-age-hidden', '');
+    document.body.setAttribute('data-mx-webtoon-age-unlocked', '');
   });
 
-  // Return undo function for toggle
   return function () {
-    // ctx.addStyle cleans up automatically on stop
-    // Restore dialogs
-    document.querySelectorAll('.age_limit').forEach(function (el) {
-      el.style.display = '';
+    document.querySelectorAll('[data-mx-webtoon-age-hidden]').forEach(function (el) {
+      el.removeAttribute('data-mx-webtoon-age-hidden');
     });
+    document.body.removeAttribute('data-mx-webtoon-age-unlocked');
   };
 });
