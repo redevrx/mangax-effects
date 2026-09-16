@@ -62,7 +62,7 @@ network API of the app's own.
 | `name`, `description` | a string, or `{ "en": ..., "th": ... }` |
 | `type` | `style` (CSS only, switch) · `action` (runs once, Run button) · `toggle` (runs until switched off) |
 | `category` | exactly one of `reading`, `cleanup`, `appearance`, `navigation`, `utility` |
-| `icon` | one of `swap_vert`, `block`, `visibility_off`, `dark_mode`, `light_mode`, `contrast`, `palette`, `speed`, `timer`, `text_fields`, `format_size`, `close`, `bolt`, `touch_app`, `skip_next`, `auto_fix_high`. Any other name shows a generic icon |
+| `icon` | one of `swap_vert`, `block`, `visibility_off`, `dark_mode`, `light_mode`, `contrast`, `palette`, `speed`, `timer`, `text_fields`, `format_size`, `close`, `bolt`, `touch_app`, `skip_next`, `auto_fix_high`, `menu_book`, `auto_stories`, `translate`, `record_voice_over`, `volume_up`, `bookmark`, `zoom_in`, `fit_screen`, `cleaning_services`, `hide_image`, `filter_alt`, `delete_sweep`, `do_not_disturb`, `brightness_6`, `invert_colors`, `format_color_fill`, `blur_on`, `crop`, `image`, `wallpaper`, `keyboard_double_arrow_down`, `vertical_align_top`, `arrow_downward`, `swipe`, `open_in_new`, `link`, `notifications`, `download`, `content_copy`, `refresh`, `settings`, `pets`, `emoji_emotions`, `star`, `favorite`. Any other name shows a generic icon |
 | `matches` | URL patterns `scheme://host/path`. `*://*/*` = every site. `*.example.com` covers `example.com` **and** `www.example.com`; `example.com` alone does not cover `www.` |
 | `excludes` | same format; sites to skip |
 | `engines` | `["any"]` unless the effect truly only makes sense in one mode (`manga` or `novel`) |

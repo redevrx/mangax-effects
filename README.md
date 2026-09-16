@@ -134,6 +134,19 @@ mangax.effect(function (ctx) {
 });
 ```
 
+### Icons
+
+`icon` takes one of these names. Any other name shows the default icon for the effect's `type`.
+
+| Category | Names |
+|---|---|
+| General | `swap_vert` `block` `visibility_off` `dark_mode` `light_mode` `contrast` `palette` `speed` `timer` `text_fields` `format_size` `close` `bolt` `touch_app` `skip_next` `auto_fix_high` |
+| Reading | `menu_book` `auto_stories` `translate` `record_voice_over` `volume_up` `bookmark` `zoom_in` `fit_screen` |
+| Cleanup | `cleaning_services` `hide_image` `filter_alt` `delete_sweep` `do_not_disturb` |
+| Appearance | `brightness_6` `invert_colors` `format_color_fill` `blur_on` `crop` `image` `wallpaper` |
+| Navigation | `keyboard_double_arrow_down` `vertical_align_top` `arrow_downward` `swipe` `open_in_new` `link` |
+| Utility | `notifications` `download` `content_copy` `refresh` `settings` `pets` `emoji_emotions` `star` `favorite` |
+
 ### `ctx`
 
 | | |
