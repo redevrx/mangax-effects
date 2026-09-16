@@ -1,0 +1,62 @@
+{
+  "$schema": "../../schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.mascot",
+  "version": "1.0.0",
+  "name": {
+    "en": "MangaX Mascot",
+    "th": "มาสคอต MangaX"
+  },
+  "description": {
+    "en": "Interactive anime mascot that walks, reacts, and cheers while you read. Drag anywhere!",
+    "th": "มาสคอตคู่ใจเดินเล่นบนจอ ทำท่าทางน่ารัก ลากย้ายตำแหน่งได้ และดีใจเมื่ออ่านจบ"
+  },
+  "author": {
+    "name": "redevrx",
+    "url": "https://github.com/redevrx"
+  },
+  "type": "toggle",
+  "category": "appearance",
+  "icon": "auto_fix_high",
+  "entry": "main.js",
+  "matches": [
+    "*://*/*"
+  ],
+  "engines": [
+    "any"
+  ],
+  "permissions": [],
+  "keywords": [
+    "mascot",
+    "pet",
+    "companion",
+    "animation",
+    "anime",
+    "มาสคอต",
+    "สัตว์เลี้ยง"
+  ],
+  "options": [
+    {
+      "key": "size",
+      "type": "slider",
+      "label": {
+        "en": "Size",
+        "th": "ขนาด"
+      },
+      "min": 50,
+      "max": 130,
+      "step": 5,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "key": "interactive",
+      "type": "boolean",
+      "label": {
+        "en": "React to reading",
+        "th": "ตอบสนองการอ่าน"
+      },
+      "default": true
+    }
+  ]
+}

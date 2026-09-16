@@ -111,6 +111,35 @@
       ]
     },
     {
+      "id": "redevrx.mascot",
+      "path": "effects/mascot",
+      "version": "1.0.0",
+      "name": {
+        "en": "MangaX Mascot",
+        "th": "มาสคอต MangaX"
+      },
+      "description": {
+        "en": "Interactive anime mascot that walks, reacts, and cheers while you read. Drag anywhere!",
+        "th": "มาสคอตคู่ใจเดินเล่นบนจอ ทำท่าทางน่ารัก ลากย้ายตำแหน่งได้ และดีใจเมื่ออ่านจบ"
+      },
+      "type": "toggle",
+      "category": "appearance",
+      "icon": "auto_fix_high",
+      "author": "redevrx",
+      "engines": [
+        "any"
+      ],
+      "keywords": [
+        "mascot",
+        "pet",
+        "companion",
+        "animation",
+        "anime",
+        "มาสคอต",
+        "สัตว์เลี้ยง"
+      ]
+    },
+    {
       "id": "redevrx.tap-scroll",
       "path": "effects/tap-scroll",
       "version": "1.1.0",
