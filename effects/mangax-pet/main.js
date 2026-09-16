@@ -9,7 +9,6 @@ mangax.effect(function (ctx) {
     var id = setTimeout(function () {
       var idx = activeTimers.indexOf(id);
       if (idx >= 0) activeTimers.splice(idx, 1);
-      // ⚠️ runtime ไม่ catch error ในนี้ → ต้อง try/catch เอง
       try { fn(); } catch (e) {}
     }, ms);
     activeTimers.push(id);
@@ -34,12 +33,10 @@ mangax.effect(function (ctx) {
   var reactToReading = options.interactive !== false;
   var chattiness = options.chattiness || 'normal';
   var defaultPosition = options.position || 'top';
-  var energy = options.energy || 'normal'; // ใหม่: normal | hyper | lazy
-  var replaceMenu = options.replaceMenu === true; // ซ่อนปุ่มเมนูของแอพ ใช้กดค้างที่น้องแทน
+  var energy = options.energy || 'normal';
+  var replaceMenu = options.replaceMenu === true;
   var isTop = defaultPosition === 'top';
 
-  // แถบเบราว์เซอร์ด้านล่างของแอพ (URL + เมนูล่าง) สูงราว 115px และวางทับหน้าเว็บ
-  // → ตำแหน่ง bottom และการลากลงล่าง ต้องอยู่เหนือแถบนี้ ไม่งั้นน้องโดนบัง
   var BOTTOM_CLEAR = 130;
 
   function sayChance() {
@@ -59,7 +56,7 @@ mangax.effect(function (ctx) {
   }
 
   // ================================================================
-  // ============ CSS (tất cả 52 ท่า) ============
+  // ============ CSS ============
   // ================================================================
   ctx.addStyle(
       // ----- container -----
@@ -113,7 +110,7 @@ mangax.effect(function (ctx) {
       '@keyframes mx-halo-spin{to{transform:rotate(360deg)}}\n' +
       '#mx-pet .mx-halo{animation:mx-halo-spin 18s linear infinite;}\n' +
 
-      // ============ 🚶 LOCOMOTION ============
+      // ============ LOCOMOTION ============
       '#mx-pet.jump svg{animation:mx-jump .55s cubic-bezier(.34,1.56,.64,1) 2!important;}\n' +
       '@keyframes mx-jump{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-38px) scale(1.08)}}\n' +
 
@@ -140,7 +137,7 @@ mangax.effect(function (ctx) {
       '#mx-pet.run .mx-leg-r{animation:mx-leg-r .16s ease-in-out infinite;}\n' +
       '#mx-pet.run svg{animation:mx-bounce .16s ease-in-out infinite;}\n' +
 
-      // ============ 😴 REST ============
+      // ============ REST ============
       '#mx-pet.yawn svg{animation:mx-yawn 1.8s ease-in-out!important;}\n' +
       '@keyframes mx-yawn{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(8px) rotate(-4deg)}}\n' +
       '#mx-pet.yawn .mx-mouth{d:path("M112 98 Q120 110 128 98 Q120 116 112 98");}\n' +
@@ -171,7 +168,7 @@ mangax.effect(function (ctx) {
       '@keyframes mx-snore{0%,100%{transform:rotate(-12deg) scale(.96) translateY(0)}50%{transform:rotate(-12deg) scale(1.02) translateY(-2px)}}\n' +
       '#mx-pet.snore .mx-eye-l,#mx-pet.snore .mx-eye-r{animation:none!important;transform:scaleY(.08)!important;}\n' +
 
-      // ============ 😂 EMOTION ============
+      // ============ EMOTION ============
       '#mx-pet.tap svg{animation:mx-tap .4s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
       '@keyframes mx-tap{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(12deg)}100%{transform:scale(1)}}\n' +
 
@@ -217,7 +214,7 @@ mangax.effect(function (ctx) {
       '@keyframes mx-bored{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-6deg) translateY(2px)}}\n' +
       '#mx-pet.bored .mx-eye-l,#mx-pet.bored .mx-eye-r{transform:scaleY(.5)!important;animation:none!important;}\n' +
 
-      // ============ 🎉 CELEBRATE ============
+      // ============ CELEBRATE ============
       '#mx-pet.cheer svg{animation:mx-cheer .5s ease-in-out 4!important;}\n' +
       '@keyframes mx-cheer{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-22px) rotate(-8deg)}75%{transform:translateY(-22px) rotate(8deg)}}\n' +
 
@@ -255,7 +252,7 @@ mangax.effect(function (ctx) {
       '#mx-pet.backflip svg{animation:mx-backflip 1.2s cubic-bezier(.5,0,.5,1)!important;}\n' +
       '@keyframes mx-backflip{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(-360deg) translateY(-40px)}100%{transform:rotate(-720deg) translateY(0)}}\n' +
 
-      // ============ 📖 READING / TRANSLATE ============
+      // ============ READING / TRANSLATE ============
       '#mx-pet.scan svg{animation:mx-scan 1s ease-in-out infinite!important;}\n' +
       '@keyframes mx-scan{0%,100%{transform:scale(1)}50%{transform:scale(1.06) rotate(2deg)}}\n' +
       '#mx-pet.scan .mx-halo{animation:mx-halo-spin 1.2s linear infinite!important;}\n' +
@@ -283,7 +280,7 @@ mangax.effect(function (ctx) {
       '#mx-pet.page-flip .mx-arm-r{animation:mx-page .6s ease-in-out 3!important;transform-origin:180px 180px;}\n' +
       '@keyframes mx-page{0%,100%{transform:rotate(0)}50%{transform:rotate(-45deg)}}\n' +
 
-      // ============ 🎭 MISC ============
+      // ============ MISC ============
       '#mx-pet.wave .mx-arm-r{animation:mx-wave .5s ease-in-out 4!important;transform-origin:180px 180px;}\n' +
       '@keyframes mx-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}\n' +
 
@@ -320,6 +317,16 @@ mangax.effect(function (ctx) {
       '@keyframes mx-meditate{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.02)}}\n' +
       '#mx-pet.meditate .mx-halo{animation:mx-halo-spin 6s linear infinite!important;}\n' +
 
+      // ============ ENGINE SWITCH ============
+      '#mx-pet.engine-switch svg{animation:mx-engine-switch 1.1s cubic-bezier(.5,0,.5,1)!important;}\n' +
+      '@keyframes mx-engine-switch{' +
+      '  0%   {transform:rotate(0) scale(1);opacity:1;}\n' +
+      '  40%  {transform:rotate(180deg) scale(.7);opacity:.5;}\n' +
+      '  70%  {transform:rotate(300deg) scale(1.15);opacity:.9;}\n' +
+      '  100% {transform:rotate(360deg) scale(1);opacity:1;}\n' +
+      '}\n' +
+      '#mx-pet.engine-switch .mx-halo{animation:mx-halo-spin .6s linear infinite!important;}\n' +
+
       // ============ FX ============
       '.mx-heart{position:fixed;font-size:22px;pointer-events:none;z-index:1000000;' +
       'animation:mx-heart-up 1.1s ease-out forwards;}\n' +
@@ -351,6 +358,11 @@ mangax.effect(function (ctx) {
       '@keyframes mx-dream-float{0%{opacity:0;transform:scale(.5)}20%{opacity:1;transform:scale(1.1)}' +
       '100%{opacity:0;transform:translate(30px,-40px) scale(1.3)}}\n' +
 
+      '.mx-ring{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;' +
+      'border:3px solid #818cf8;border-radius:50%;pointer-events:none;z-index:1000000;' +
+      'animation:mx-ring-out 1.1s ease-out forwards;}\n' +
+      '@keyframes mx-ring-out{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(5)}}\n' +
+
       '@keyframes mx-spark-in{0%{opacity:0;transform:translateY(0) scale(.6)}30%{opacity:1}' +
       '100%{opacity:0;transform:translateY(-30px) scale(1.1)}}\n' +
       '#mx-pet .mx-spark-1{animation:mx-spark-in 3s ease-out infinite;}\n' +
@@ -359,7 +371,6 @@ mangax.effect(function (ctx) {
       '#mx-pet .mx-spark-4{animation:mx-spark-in 3s ease-out infinite 2.1s;}\n' +
       '#mx-pet.face-left svg{transform:scaleX(-1);}\n' +
 
-      // ----- ลดการเคลื่อนไหวถ้า OS ตั้งไว้ -----
       '@media (prefers-reduced-motion: reduce){' +
       '#mx-pet svg{animation-duration:.01s!important;animation-iteration-count:1!important;}}'
   );
@@ -457,11 +468,10 @@ mangax.effect(function (ctx) {
   var bubbleHideTimer = null;
 
   // ================================================================
-  // ============ APP MENU (permission "menu") ============
+  // ============ APP MENU ============
   // ================================================================
   var LONG_PRESS_MS = 500;
 
-  // แอพรุ่นเก่าไม่รู้จักคำสั่ง → reject; น้องทำงานต่อได้ปกติ
   function appCall(cmd, args) {
     try {
       return ctx.call(cmd, args).catch(function () { return null; });
@@ -470,38 +480,179 @@ mangax.effect(function (ctx) {
     }
   }
 
-  // แอพซ่อนปุ่มเมนูเฉพาะตอนที่น้องยังทำงานอยู่ ปิด effect / ออกจากหน้า / error → ปุ่มกลับมาเอง
   function applyReplaceMenu() {
     appCall('menu.replace', { on: replaceMenu });
   }
 
-  // ---- เมนูของน้องเอง: วาดใน JS จาก menu.items แล้วกดผ่าน menu.press (โค้ดเดียวกับปุ่มของแอพ) ----
-  var ENGINE_KEY = '__engine';
-  var MENU_ICONS = {
-    document_scanner: '🔍', menu_book: '📖', close: '⏹️', auto_fix_high: '✨',
-    record_voice_over: '🗣️', stop: '⏹️', auto_awesome: '🌟', palette: '🎨',
-    save_alt: '💾', settings: '⚙️', swap_horiz: '🔄'
+  // ================================================================
+  // ============ MENU ICONS — ใหม่ ใช้ SVG สวย ๆ ============
+  // ================================================================
+  // ใช้ inline SVG แทน emoji → ดูสะอาด ต่างเครื่องเหมือนกัน
+  // icon: ชื่อจาก manifest ของแอพ, สีจาก theme หลัก
+  var MENU_ICON_SVG = {
+    // ---- แปล / สแกน ----
+    document_scanner:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>' +
+        '<path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>' +
+        '<circle cx="12" cy="12" r="3"/></svg>',
+    auto_awesome:
+        '<svg viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/>' +
+        '<path d="M19 14l.9 2.6L22.5 17.5l-2.6.9L19 21l-.9-2.6L15.5 17.5l2.6-.9L19 14z"/>' +
+        '<path d="M5 14l.7 2 2 .7-2 .7L5 19.4l-.7-2-2-.7 2-.7L5 14z"/></svg>',
+    auto_fix_high:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/>' +
+        '<path d="M17.8 11.8L19 13"/><path d="M15 9h0"/><path d="M17.8 6.2L19 5"/>' +
+        '<path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>',
+    menu_book:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>' +
+        '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+    record_voice_over:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>' +
+        '<path d="M16 11a3 3 0 0 1 0 6"/><path d="M19 8a7 7 0 0 1 0 12"/></svg>',
+    volume_up:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>',
+    stop:
+        '<svg viewBox="0 0 24 24" fill="currentColor">' +
+        '<rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+    close:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>',
+    // ---- เอฟเฟกต์ / แต่ง ----
+    palette:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/>' +
+        '<circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/>' +
+        '<path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.5A4.5 4.5 0 0 0 22 11c0-5-4.5-9-10-9z"/></svg>',
+    save_alt:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>' +
+        '<path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>',
+    // ---- ตั้งค่า ----
+    settings:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="12" cy="12" r="3"/>' +
+        '<path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 8.9 19a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 5 8.9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    // ---- สลับโหมด ----
+    swap_horiz:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M16 3l4 4-4 4"/><path d="M20 7H4"/>' +
+        '<path d="M8 21l-4-4 4-4"/><path d="M4 17h16"/></svg>'
   };
+  // fallback: emoji ถ้า icon ใน manifest ไม่รู้จัก
+  var MENU_ICON_EMOJI = {
+    auto_awesome: '🌟', palette: '🎨', save_alt: '💾', settings: '⚙️',
+    swap_horiz: '🔄', stop: '⏹️', close: '⏹️'
+  };
+
+  var ENGINE_KEY = '__engine';
+
+  // ================================================================
+  // ============ MENU GROUPS — จัดกลุ่มใหม่ ============
+  // ================================================================
+  // กลุ่มตาม "ลำดับความสำคัญในการใช้งาน":
+  //   grp 0 → แปล (scan)                     ใกล้น้องที่สุด
+  //   grp 1 → เอฟเฟกต์ / แต่งกล่อง
+  //   grp 2 → อ่านออกเสียง / export
+  //   grp 3 → ตั้งค่า
+  //   grp 4 → สลับโหมด (แยกออกไปไกลสุด มีเส้นคั่น)
+  var MENU_GROUPS = {
+    // กลุ่ม 0
+    scan: 0, full_context_scan: 0,
+    // กลุ่ม 1
+    effects: 1, bubble_edit: 1, palette: 1,
+    // กลุ่ม 2
+    read_aloud: 2, export_chapter: 2, volume_up: 2,
+    // กลุ่ม 3
+    settings: 3,
+    // กลุ่ม 4
+    __engine: 4
+  };
+  var MENU_ICON_GROUPS = {
+    document_scanner: 0, auto_awesome: 0, auto_fix_high: 0,
+    palette: 1, save_alt: 1,
+    record_voice_over: 2, volume_up: 2,
+    settings: 3,
+    swap_horiz: 4
+  };
+  // ชื่อกลุ่ม (สำหรับแสดง label เล็กๆ ระหว่างคั่น)
+  var GROUP_LABELS = {
+    0: 'แปล',
+    1: 'เอฟเฟกต์',
+    2: 'อื่นๆ',
+    3: 'ตั้งค่า',
+    4: 'โหมด'
+  };
+
+  function itemGroup(item) {
+    if (typeof MENU_GROUPS[item.key] === 'number') return MENU_GROUPS[item.key];
+    if (typeof MENU_ICON_GROUPS[item.icon] === 'number') return MENU_ICON_GROUPS[item.icon];
+    return 2; // ค่ากลางสำหรับปุ่มใหม่จากแอพ
+  }
+
+  // ================================================================
+  // ============ MENU STATE ============
+  // ================================================================
   var menuState = { items: [], engine: ctx.engine === 'novel' ? 'novel' : 'manga', open: false };
   var menuLayer = null;
 
   ctx.addStyle(
       '#mx-pet-menu-layer{all:initial;position:fixed;inset:0;z-index:1000002;' +
-      'background:rgba(10,10,24,.28);-webkit-tap-highlight-color:transparent;}\n' +
-      '#mx-pet-menu-layer .mx-menu{position:fixed;display:flex;flex-direction:column;gap:10px;}\n' +
+      'background:rgba(10,10,24,.32);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);' +
+      '-webkit-tap-highlight-color:transparent;}\n' +
+      '#mx-pet-menu-layer .mx-menu{position:fixed;display:flex;flex-direction:column;gap:8px;}\n' +
       '#mx-pet-menu-layer .mx-menu.right{align-items:flex-end;}\n' +
       '#mx-pet-menu-layer .mx-menu.left{align-items:flex-start;}\n' +
+
+      // ---- menu item ----
       '#mx-pet-menu-layer .mx-menu-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;' +
-      'padding:6px 14px 6px 6px;border-radius:16px;border:2px solid #818cf8;background:rgba(26,26,46,.96);' +
+      'padding:6px 16px 6px 6px;border-radius:18px;' +
+      'border:1.5px solid rgba(129,140,248,.55);' +
+      'background:linear-gradient(135deg,rgba(26,26,46,.98),rgba(40,30,70,.98));' +
       'color:#fff;font:600 13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
-      'box-shadow:0 6px 18px rgba(0,0,0,.4);opacity:0;transform:translateY(10px) scale(.85);' +
-      'animation:mx-menu-in .26s cubic-bezier(.34,1.56,.64,1) forwards;cursor:pointer;white-space:nowrap;}\n' +
-      '#mx-pet-menu-layer .mx-menu.right .mx-menu-item{flex-direction:row-reverse;padding:6px 6px 6px 14px;}\n' +
-      '#mx-pet-menu-layer .mx-menu-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;' +
-      'justify-content:center;font-size:19px;background:rgba(129,140,248,.22);}\n' +
-      '#mx-pet-menu-layer .mx-menu-item.active{border-color:#22d3ee;box-shadow:0 0 14px rgba(34,211,238,.55);}\n' +
-      '#mx-pet-menu-layer .mx-menu-item.active .mx-menu-icon{background:rgba(34,211,238,.35);}\n' +
-      '#mx-pet-menu-layer .mx-menu-item:active{transform:scale(.94);}\n' +
+      'box-shadow:0 6px 20px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);' +
+      'opacity:0;transform:translateY(10px) scale(.85);' +
+      'animation:mx-menu-in .3s cubic-bezier(.34,1.56,.64,1) forwards;cursor:pointer;white-space:nowrap;' +
+      'transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease;}\n' +
+      '#mx-pet-menu-layer .mx-menu.right .mx-menu-item{flex-direction:row-reverse;padding:6px 6px 6px 16px;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item:hover{transform:translateY(-1px);' +
+      'border-color:rgba(168,85,247,.9);' +
+      'box-shadow:0 8px 24px rgba(99,102,241,.5),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item:active{transform:scale(.95);}\n' +
+
+      // ---- icon ----
+      '#mx-pet-menu-layer .mx-menu-icon{width:36px;height:36px;flex-shrink:0;border-radius:12px;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'background:linear-gradient(135deg,rgba(62,224,255,.22),rgba(168,85,247,.28));' +
+      'color:#c7d2fe;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);}\n' +
+      '#mx-pet-menu-layer .mx-menu-icon svg{width:20px;height:20px;display:block;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item.active{border-color:#22d3ee;' +
+      'box-shadow:0 0 16px rgba(34,211,238,.6),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item.active .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(34,211,238,.4),rgba(34,211,238,.25));color:#fff;}\n' +
+
+      // ---- item สลับโหมด (ไฮไลต์พิเศษ) ----
+      '#mx-pet-menu-layer .mx-menu-item.engine{' +
+      'border-color:rgba(255,213,61,.6);' +
+      'background:linear-gradient(135deg,rgba(40,25,60,.98),rgba(60,35,80,.98));}\n' +
+      '#mx-pet-menu-layer .mx-menu-item.engine .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(255,213,61,.35),rgba(168,85,247,.35));color:#fff8c2;}\n' +
+
+      // ---- group label ----
+      '#mx-pet-menu-layer .mx-menu-group{display:flex;align-items:center;gap:6px;' +
+      'margin:6px 4px 2px;font:700 10px/1 -apple-system,sans-serif;' +
+      'letter-spacing:.5px;text-transform:uppercase;color:rgba(199,210,254,.55);' +
+      'opacity:0;animation:mx-menu-in .3s ease .1s forwards;}\n' +
+      '#mx-pet-menu-layer .mx-menu.right .mx-menu-group{flex-direction:row-reverse;}\n' +
+      '#mx-pet-menu-layer .mx-menu-group::before,' +
+      '#mx-pet-menu-layer .mx-menu-group::after{content:"";height:1px;flex:1;' +
+      'background:linear-gradient(90deg,transparent,rgba(129,140,248,.45),transparent);}\n' +
+
       '@keyframes mx-menu-in{to{opacity:1;transform:none;}}\n'
   );
 
@@ -516,7 +667,6 @@ mangax.effect(function (ctx) {
     return appCall('menu.items').then(setMenuItems);
   }
 
-  // ปุ่มสลับมังงะ ↔ นิยาย ต่อท้ายเมนู (permission "engine")
   function withEngineItem(items) {
     var toNovel = menuState.engine !== 'novel';
     return items.concat([{
@@ -525,6 +675,14 @@ mangax.effect(function (ctx) {
       icon: 'swap_horiz',
       active: false
     }]);
+  }
+
+  // เรียงใหม่ตาม group → ในกลุ่มเดียวกันคงลำดับเดิม
+  function sortMenuItems(items) {
+    return items
+        .map(function (it, i) { return { it: it, i: i, g: itemGroup(it) }; })
+        .sort(function (a, b) { return a.g - b.g || a.i - b.i; })
+        .map(function (x) { return x.it; });
   }
 
   function openPetMenu() {
@@ -548,39 +706,71 @@ mangax.effect(function (ctx) {
 
   function renderMenu() {
     if (menuLayer && menuLayer.parentNode) menuLayer.parentNode.removeChild(menuLayer);
+
     var r = mascot.getBoundingClientRect();
     var w = window.innerWidth;
     var h = window.innerHeight;
-    // น้องอยู่ครึ่งล่าง → เมนูขึ้นด้านบน, อยู่ฝั่งขวา → ชิดขวา ปุ่มแรก (scan) อยู่ใกล้น้องที่สุดเสมอ
+
     var above = r.top + r.height / 2 > h / 2;
     var onRight = r.left + r.width / 2 > w / 2;
-    var items = withEngineItem(menuState.items);
+
+    var items = sortMenuItems(withEngineItem(menuState.items));
+    var groupOf = items.map(itemGroup);
+
+    // ถ้าอยู่ด้านบน → reverse ทั้ง list และ group
     var ordered = above ? items.slice().reverse() : items;
+    var orderedGroups = above ? groupOf.slice().reverse() : groupOf;
 
     var layer = document.createElement('div');
     layer.id = 'mx-pet-menu-layer';
     var list = document.createElement('div');
     list.className = 'mx-menu ' + (onRight ? 'right' : 'left');
 
+    var nearIdx = 0;
+    var lastGroup = orderedGroups[0];
+
     ordered.forEach(function (item, i) {
+      var grp = orderedGroups[i];
+
+      // ขึ้น label กลุ่มใหม่ (ยกเว้นอันแรก)
+      if (i > 0 && grp !== lastGroup) {
+        var label = document.createElement('div');
+        label.className = 'mx-menu-group';
+        label.textContent = GROUP_LABELS[grp] || '';
+        list.appendChild(label);
+      }
+      lastGroup = grp;
+
       var button = document.createElement('button');
       button.type = 'button';
-      button.className = 'mx-menu-item' + (item.active ? ' active' : '');
-      var fromPet = above ? ordered.length - 1 - i : i;
-      button.style.animationDelay = (fromPet * 45) + 'ms';
+      var isEngine = item.key === ENGINE_KEY;
+      button.className = 'mx-menu-item' +
+          (item.active ? ' active' : '') +
+          (isEngine ? ' engine' : '');
+      button.style.animationDelay = (nearIdx * 40) + 'ms';
+      nearIdx++;
+
       var icon = document.createElement('span');
       icon.className = 'mx-menu-icon';
-      icon.textContent = MENU_ICONS[item.icon] || '•';
-      var label = document.createElement('span');
-      label.textContent = item.label;
+      // ใช้ SVG ถ้ามี, ไม่งั้น fallback เป็น emoji
+      if (MENU_ICON_SVG[item.icon]) {
+        icon.innerHTML = MENU_ICON_SVG[item.icon];
+      } else {
+        icon.textContent = MENU_ICON_EMOJI[item.icon] || '•';
+      }
+
+      var labelEl = document.createElement('span');
+      labelEl.textContent = item.label;
+
       button.appendChild(icon);
-      button.appendChild(label);
+      button.appendChild(labelEl);
       button.addEventListener('click', function (ev) {
         ev.stopPropagation();
         try { pressMenu(item); } catch (e) {}
       });
       list.appendChild(button);
     });
+
     layer.appendChild(list);
     layer.addEventListener('click', function () {
       closePetMenu();
@@ -592,7 +782,7 @@ mangax.effect(function (ctx) {
     document.body.appendChild(layer);
     menuLayer = layer;
 
-    var gap = 10;
+    var gap = 12;
     var lw = list.offsetWidth;
     var lh = list.offsetHeight;
     var left = onRight ? r.right - lw : r.left;
@@ -603,17 +793,55 @@ mangax.effect(function (ctx) {
     list.style.top = top + 'px';
   }
 
+  // ================================================================
+  // ============ PRESS MENU ============
+  // ================================================================
+  function spawnRing(cx, cy) {
+    var ring = document.createElement('div');
+    ring.className = 'mx-ring';
+    ring.style.left = cx + 'px';
+    ring.style.top = cy + 'px';
+    document.body.appendChild(ring);
+    safeTimeout(function () { if (ring.parentNode) ring.parentNode.removeChild(ring); }, 1100);
+  }
+
   function pressMenu(item) {
     closePetMenu();
     state.lastInteract = Date.now();
     resetIdleTimer();
+
+    // ---- สลับโหมด: เล่น animation 1.1 วิ ก่อนยิงคำสั่ง ----
     if (item.key === ENGINE_KEY) {
       var to = menuState.engine === 'novel' ? 'manga' : 'novel';
-      appCall('engine.set', { type: to }).then(function (engine) {
-        if (!engine) say('สลับไม่ได้น้า 🥺');
-      });
+      var c = center();
+
+      // 1. ใส่ class engine-switch (หมุน 360° + halo หมุนเร็ว)
+      mascot.classList.add('engine-switch');
+      // 2. วงแหวนขยาย
+      spawnRing(c.x, c.y);
+      // 3. ประกาย + หัวใจ
+      spawnSparks(c.x, c.y, 12);
+      spawnHearts(c.x, c.top, 5);
+      // 4. พูดบอก
+      say(to === 'novel' ? 'ไปโหมดนิยายกัน~ 📖' : 'ไปโหมดมังงะกัน~ 🎨', false);
+
+      // 5. รอ animation จบ → ยิงคำสั่ง
+      safeTimeout(function () {
+        appCall('engine.set', { type: to }).then(function (engine) {
+          if (!engine) {
+            // ล้มเหลว → เอา class ออก + สั่นหัว
+            mascot.classList.remove('engine-switch');
+            react('shake', 900);
+            say('สลับไม่ได้น้า 🥺');
+          }
+          // ถ้าสำเร็จ หน้าใหม่จะโหลด → effect ถูก stop → class หายไปเอง
+        });
+      }, 1100);
+
       return;
     }
+
+    // ---- ปุ่มปกติ ----
     var reaction = menuReactions[item.key];
     if (reaction) {
       react(reaction[0], 1400);
@@ -628,10 +856,8 @@ mangax.effect(function (ctx) {
 
   ctx.onEvent('menu:change', setMenuItems);
   loadMenu();
-
   applyReplaceMenu();
 
-  // หน้าเว็บบางที่เขียน body ใหม่ทั้งก้อน ถ้าน้องหลุดไปด้วย ตอนแทนปุ่มเมนูอยู่จะไม่มีทางเปิดเมนูเลย
   safeInterval(function () {
     if (!mascot.isConnected && document.body) document.body.appendChild(mascot);
   }, 1500);
@@ -639,10 +865,9 @@ mangax.effect(function (ctx) {
   // ================================================================
   // ============ SAY ============
   // ================================================================
-  // น้องอยู่ชิดขอบจอ → เลื่อนกล่องคำพูดเข้ามาให้อยู่ในจอทั้งกล่อง
   function keepBubbleOnScreen() {
     var r = mascot.getBoundingClientRect();
-    var half = bubble.offsetWidth / 2; // offsetWidth ไม่โดน scale ของ animation
+    var half = bubble.offsetWidth / 2;
     var center = r.left + r.width / 2;
     var edge = 8;
     var dx = 0;
@@ -787,7 +1012,6 @@ mangax.effect(function (ctx) {
   // ================================================================
   // ============ ACTION ============
   // ================================================================
-  // force = ตอบ event ของแอพ: ตัดท่าที่เล่นอยู่ทันที ไม่รอให้จบ
   var actionToken = 0;
   function doAction(name, duration, force) {
     if (isDragging || (state.isBusy && !force)) return;
@@ -795,7 +1019,6 @@ mangax.effect(function (ctx) {
     state.isBusy = true;
     state.isWalking = false;
     state.isAsleep = false;
-    // ล้างท่าก่อนหน้า
     var prev = mascot.getAttribute('data-action');
     if (prev) mascot.classList.remove(prev);
     mascot.setAttribute('data-action', name);
@@ -804,7 +1027,7 @@ mangax.effect(function (ctx) {
     stopZzz();
 
     safeTimeout(function () {
-      if (token !== actionToken) return; // มีท่าใหม่มาแทนแล้ว
+      if (token !== actionToken) return;
       mascot.classList.remove(name);
       mascot.removeAttribute('data-action');
       if (!isDragging) mascot.classList.add('idle');
@@ -843,13 +1066,12 @@ mangax.effect(function (ctx) {
     if (mascot.setPointerCapture) {
       try { mascot.setPointerCapture(e.pointerId); } catch (err) {}
     }
-    // กดค้าง (ไม่ลาก) → เปิดเมนูของแอพ
     var pointerId = e.pointerId;
     clearTimeout(state.pressTimer);
     state.pressTimer = safeTimeout(function () {
       if (!isPointerDown || isDragging) return;
       longPressed = true;
-      isPointerDown = false; // นิ้วที่ยังค้างอยู่ไม่นับเป็นลาก/แตะ
+      isPointerDown = false;
       if (mascot.releasePointerCapture) {
         try { mascot.releasePointerCapture(pointerId); } catch (err) {}
       }
@@ -902,7 +1124,6 @@ mangax.effect(function (ctx) {
         mascot.style.bottom = newBottom + 'px';
       }
 
-      // feedback ตามความเร็ว
       if (dragSpeed < 0.4 && !mascot.classList.contains('love')) {
         mascot.classList.remove('angry');
         mascot.classList.add('love');
@@ -915,7 +1136,7 @@ mangax.effect(function (ctx) {
 
   function onPointerEnd(e) {
     clearTimeout(state.pressTimer);
-    if (!isPointerDown) return; // รวมถึงหลังกดค้างเปิดเมนูไปแล้ว
+    if (!isPointerDown) return;
     isPointerDown = false;
     if (mascot.releasePointerCapture) {
       try { mascot.releasePointerCapture(e.pointerId); } catch (err) {}
@@ -961,7 +1182,6 @@ mangax.effect(function (ctx) {
             'อยู่เป็นเพื่อนนะ! ✨', 'ลุยตอนต่อไปกัน! 🚀', 'ฮิฮิ จั๊กจี้จัง~ 😆',
             'จั๊กจี้นะ! 🤣', 'หืม? มีอะไรเหรอ 👀'
           ];
-          // สุ่มท่า tap แบบต่างๆ
           var tapActions = ['tap', 'wink', 'hiccup', 'blush'];
           var pick = tapActions[Math.floor(Math.random() * tapActions.length)];
           doAction(pick, 600);
@@ -1003,7 +1223,7 @@ mangax.effect(function (ctx) {
   state.rafId = requestAnimationFrame(tick);
 
   // ================================================================
-  // ============ AI: 52 ท่า แบ่งหมวด ------
+  // ============ AI ============
   // ================================================================
   function pickNewTarget() {
     if (state.isBusy || isDragging || state.isAsleep) return;
@@ -1035,7 +1255,6 @@ mangax.effect(function (ctx) {
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  // ---- ชีวิตประจำวันของน้อง: พูดถึงเรื่องที่อ่าน + ท่าต่อเนื่องหลายจังหวะ ----
   var readingType = ctx.engine === 'novel' ? 'novel' : 'manga';
 
   var talk = {
@@ -1060,7 +1279,6 @@ mangax.effect(function (ctx) {
     morning: ['อรุณสวัสดิ์! อ่านตอนเช้าสดชื่นดีน้า ☀️']
   };
 
-  // [ท่า, ระยะเวลา, ท่า, ระยะเวลา, ...] เล่นต่อกันเหมือนน้องกำลังอ่านไปด้วย
   var routines = {
     manga: [
       ['read', 1800, 'page-flip', 1400, 'laugh', 1500],
@@ -1125,7 +1343,6 @@ mangax.effect(function (ctx) {
   function randomAction() {
     if (state.isBusy || isDragging || state.isAsleep || menuState.open) return;
     if (reactToReading && Math.random() < talkChance()) return chatter();
-    // สุ่มกลุ่ม
     var groups = ['walkActions', 'shortActions', 'moodActions', 'restActions'];
     if (energy === 'lazy') groups = ['walkActions', 'restActions', 'restActions'];
     if (energy === 'hyper') groups = ['walkActions', 'shortActions', 'shortActions', 'moodActions'];
@@ -1133,7 +1350,6 @@ mangax.effect(function (ctx) {
     var pick = pickFromGroup(group);
 
     if (actionGroups.walkActions.indexOf(pick) >= 0) {
-      // ท่าเดิน → ตั้ง target
       if (pick === 'walk' || pick === 'run' || pick === 'moonwalk') pickNewTarget();
       else if (pick === 'hop') { doAction('hop', 1400); pickNewTarget(); }
       else if (pick === 'skip') { doAction('skip', 1400); pickNewTarget(); }
@@ -1151,7 +1367,6 @@ mangax.effect(function (ctx) {
       };
       doAction(pick, durations[pick] || 1500);
 
-      // เสียงตอบรับตามท่า
       if (pick === 'yawn') say('ง่วงจังง~ 🥱');
       else if (pick === 'laugh') say('ฮิฮิ 😂');
       else if (pick === 'love') say('รักเลยน้าา 💜');
@@ -1167,7 +1382,7 @@ mangax.effect(function (ctx) {
   }, actionInterval());
 
   // ================================================================
-  // ============ IDLE TIMER: ง่วง → นอน ============
+  // ============ IDLE TIMER ============
   // ================================================================
   function resetIdleTimer() {
     if (state.idleTimer) clearTimeout(state.idleTimer);
@@ -1180,19 +1395,16 @@ mangax.effect(function (ctx) {
       sayIfChance('หืมม~ หลับไปเลย 😴', true);
       stopZzz();
     }
-    // 25 วิ → หาว
     state.idleTimer = safeTimeout(function () {
       if (state.isBusy || isDragging || state.isAsleep) return;
       doAction('yawn', 1800);
       sayIfChance('ง่วงจังง~ 🥱');
     }, 25000);
-    // 50 วิ → นอน
     state.dozeTimer = safeTimeout(function () {
       if (state.isBusy || isDragging || state.isAsleep) return;
       state.isAsleep = true;
       state.isBusy = true;
       state.isWalking = false;
-      // สุ่มท่านอน: sleep / doze / dream / snore
       var sleeps = ['sleep', 'doze', 'dream', 'snore'];
       var pick = sleeps[Math.floor(Math.random() * sleeps.length)];
       mascot.classList.remove('walking', 'idle', 'yawn');
@@ -1219,14 +1431,13 @@ mangax.effect(function (ctx) {
       state.lastInteract = Date.now();
       resetIdleTimer();
       if (menuState.open) closePetMenu();
-      // หยุดเลื่อนค้างไว้สักพัก = กำลังดูฉากนั้นอยู่
       if (state.lookTimer) clearTimeout(state.lookTimer);
       state.lookTimer = safeTimeout(function () {
         if (state.isBusy || isDragging || state.isAsleep || Math.random() > talkChance() + 0.15) return;
         react(readingType === 'manga' ? 'peek' : 'read', 1600);
         say(readingType === 'manga'
-          ? pickPhrase(['ดูฉากนี้นานเลยนะ ชอบเหรอ? 👀', 'ช่องนี้สวยใช่ม้า 😍', 'อ่านละเอียดจังง 🔎'])
-          : pickPhrase(['ย่อหน้านี้ลึกซึ้งเนอะ 🤔', 'อ่านช้าๆ ซึมซับไปนะ 📖']));
+            ? pickPhrase(['ดูฉากนี้นานเลยนะ ชอบเหรอ? 👀', 'ช่องนี้สวยใช่ม้า 😍', 'อ่านละเอียดจังง 🔎'])
+            : pickPhrase(['ย่อหน้านี้ลึกซึ้งเนอะ 🤔', 'อ่านช้าๆ ซึมซับไปนะ 📖']));
       }, 7000);
       var now = Date.now();
       var curY = window.scrollY || window.pageYOffset || 0;
@@ -1236,7 +1447,6 @@ mangax.effect(function (ctx) {
 
       if (scrollSpeed > 1.2) {
         state.speed = Math.min(3.2, walkSpeed() + scrollSpeed * 0.6);
-        // เร็วมาก → วิ่ง
         if (scrollSpeed > 2.5 && !state.isBusy) {
           mascot.classList.remove('walking');
           mascot.classList.add('run');
@@ -1270,16 +1480,9 @@ mangax.effect(function (ctx) {
           }
         }
       }, { threshold: 0.1 });
-      // ใช้ ctx.observe
       ctx.observe('.viewer_footer, #comment, .comment_area, #comments, .viewer_end, .ep_bottom', function (el) {
         io.observe(el);
       });
-      // รอ observer disconnect ตอน cleanup — ผ่าน ctx
-      // (ctx.observe จัดการเองอยู่แล้ว, แค่ต้อง disconnect io)
-      // แต่เราไม่สามารถ addCleanup ตรงได้ → ใช้ ctx.on บน window unload แทนไม่ได้
-      // วิธีที่ปลอดภัย: เก็บ reference แล้วให้ effect cleanup ผ่าน ctx.observe ที่ return
-      // → ใช้ window 'beforeunload' แทนไม่ได้ เพราะ ctx ไม่มี
-      // → ปล่อยให้ GC (ไม่สมบูรณ์แต่ปลอดภัย)
     }
   }
 
@@ -1287,8 +1490,6 @@ mangax.effect(function (ctx) {
   // ============ APP EVENTS ============
   // ================================================================
   var translationState = { active: null, type: null, lastEventAt: 0, failedCount: 0, lastCelebrate: 0 };
-
-  // realtime ส่ง translate:done ทุก batch → ฉลองใหญ่ได้ไม่เกินทุก 20 วิ ที่เหลือแค่ท่าเล็ก
   var CELEBRATE_EVERY_MS = 20000;
 
   var phrases = {
@@ -1335,13 +1536,11 @@ mangax.effect(function (ctx) {
     stopZzz();
     resetIdleTimer();
   }
-  // ระหว่างสแกนอยู่ มีวงแหวนหมุนรอบตัวน้องตลอด
   function setHalo(on) {
     if (on) mascot.classList.add('scan-halo');
     else mascot.classList.remove('scan-halo');
   }
 
-  // ----- กดแปล: ท่าตาม type (manga / novel) และ mode -----
   ctx.onEvent('translate:start', function (data) {
     var mode = (data && data.mode) || 'realtime';
     var type = typeOf(data);
@@ -1351,12 +1550,10 @@ mangax.effect(function (ctx) {
     var c = center();
 
     if (mode === 'full') {
-      // ทั้งตอน: มังงะ = พลิกหน้า, นิยาย = นั่งอ่าน
       react(type === 'manga' ? 'page-flip' : 'read', 3000);
       sayIfChance(pickPhrase(phrases.fullStart[type]));
       spawnNotes(c.x, c.top, 3);
     } else {
-      // realtime: มังงะ = สแกน, นิยาย = อ่าน
       react(type === 'manga' ? 'scan' : 'read', 2200);
       sayIfChance(pickPhrase(phrases.scanStart[type]));
       setHalo(true);
@@ -1369,7 +1566,6 @@ mangax.effect(function (ctx) {
     }
   });
 
-  // ----- แปลสำเร็จ -----
   ctx.onEvent('translate:done', function (data) {
     var mode = (data && data.mode) || 'realtime';
     var type = typeOf(data);
@@ -1390,12 +1586,11 @@ mangax.effect(function (ctx) {
       return;
     }
 
-    // realtime ยังสแกนต่อ (วงแหวนอยู่ต่อ) ฉลองใหญ่เป็นระยะ
     if (now - translationState.lastCelebrate > CELEBRATE_EVERY_MS) {
       translationState.lastCelebrate = now;
       var celebrates = type === 'manga'
-        ? ['cheer', 'clap', 'spin', 'translate-happy']
-        : ['clap', 'translate-happy', 'star', 'hop'];
+          ? ['cheer', 'clap', 'spin', 'translate-happy']
+          : ['clap', 'translate-happy', 'star', 'hop'];
       react(pickPhrase(celebrates), 2400);
       spawnSparks(c.x, c.y, 12);
       spawnHearts(c.x, c.top, 6);
@@ -1407,7 +1602,6 @@ mangax.effect(function (ctx) {
     }
   });
 
-  // ----- แปล failed: ยิ่งพลาดติดกัน ยิ่งเศร้า -----
   ctx.onEvent('translate:failed', function (data) {
     var mode = (data && data.mode) || 'realtime';
     translationState.failedCount++;
@@ -1438,7 +1632,6 @@ mangax.effect(function (ctx) {
     safeTimeout(function () { translationState.failedCount = 0; }, 30000);
   });
 
-  // ----- stop แปล: ผู้ใช้กดหยุด vs แอพหยุดเอง -----
   ctx.onEvent('translate:stop', function (data) {
     var reason = (data && data.reason) || 'auto';
     translationState.active = null;
@@ -1469,7 +1662,6 @@ mangax.effect(function (ctx) {
     var key = data && data.key;
     state.lastInteract = Date.now();
     resetIdleTimer();
-    // scan / full_context_scan มี translate:start ตามมาอยู่แล้ว
     if (key === 'scan' || key === 'full_context_scan') return;
     var reaction = key ? menuReactions[key] : ['pout', 'ไม่เอาแล้วเหรอ~ 🥺'];
     if (!reaction) return;
@@ -1483,11 +1675,34 @@ mangax.effect(function (ctx) {
     readingType = type === 'novel' ? 'novel' : 'manga';
     state.lastInteract = Date.now();
     resetIdleTimer();
-    react('spin', 1200);
-    sayIfChance(type === 'novel' ? 'โหมดนิยาย! 📖' : 'โหมดมังงะ! 🎨');
+
+    // ล้าง animation สลับโหมด (ถ้ามีค้างอยู่)
+    mascot.classList.remove('engine-switch');
+
+    // ---- ต้อนรับด้วยท่าที่ต่างกันตามโหมด ----
+    if (type === 'novel') {
+      // นิยาย: เปิดหนังสือ → ค้อม → หัวใจ
+      react('read', 1400);
+      safeTimeout(function () { react('bow', 1200); }, 1450);
+      safeTimeout(function () {
+        var c = center();
+        spawnHearts(c.x, c.top, 4);
+        spawnNotes(c.x, c.top, 5);
+      }, 2700);
+      sayIfChance('โหมดนิยายมาแล้ว! 📖✨');
+    } else {
+      // มังงะ: กระโดด → หมุน → ขยิบตา
+      react('jump', 1100);
+      safeTimeout(function () { react('spin', 1000); }, 1150);
+      safeTimeout(function () { react('wink', 800); }, 2200);
+      safeTimeout(function () {
+        var c = center();
+        spawnSparks(c.x, c.y, 10);
+      }, 2300);
+      sayIfChance('โหมดมังงะกลับมาแล้ว! 🎨✨');
+    }
   });
 
-  // URL เปลี่ยน → คารวะ
   ctx.onUrlChange(function () {
     closePetMenu();
     state.lastInteract = Date.now();
@@ -1505,12 +1720,10 @@ mangax.effect(function (ctx) {
       var grew = opts.size > currentSize;
       currentSize = opts.size;
       mascot.style.setProperty('--mx-pet-size', opts.size + 'px');
-      // ขยาย → กระโดดดีใจ, ย่อ → ตัวสั่น
       react(grew ? 'jump' : 'shake', 1000);
       var c = mascot.getBoundingClientRect();
       if (grew) spawnSparks(c.left + c.width / 2, c.top + c.height / 2, 6);
       say(grew ? 'ตัวโตขึ้นแล้วว! 💪' : 'ตัวเล็กลงง~ 🐣');
-      // ตัวใหญ่ขึ้นอาจล้นขอบจอ
       clampToScreen();
     }
     if (typeof opts.interactive === 'boolean') reactToReading = opts.interactive;
@@ -1531,7 +1744,7 @@ mangax.effect(function (ctx) {
   });
 
   // ================================================================
-  // ============ RESIZE ============
+  // ============ RESIZE / CLAMP ============
   // ================================================================
   function clampToScreen() {
     var curW = currentSize;
@@ -1558,7 +1771,6 @@ mangax.effect(function (ctx) {
   // ================================================================
   // ============ GREETING ============
   // ================================================================
-  // ctx.auto = แอพเปิดให้เองตอนโหลดหน้า (runAt pageLoad), false = ผู้ใช้กดเปิดเอง
   safeTimeout(function () {
     var c = mascot.getBoundingClientRect();
     if (ctx.auto) {
@@ -1590,7 +1802,7 @@ mangax.effect(function (ctx) {
     closePetMenu();
     if (mascot.parentNode) mascot.parentNode.removeChild(mascot);
     var fx = document.querySelectorAll(
-        '.mx-heart, .mx-tear, .mx-zzz, .mx-spark, .mx-note, .mx-dream'
+        '.mx-heart, .mx-tear, .mx-zzz, .mx-spark, .mx-note, .mx-dream, .mx-ring'
     );
     for (var k = 0; k < fx.length; k++) {
       if (fx[k].parentNode) fx[k].parentNode.removeChild(fx[k]);
