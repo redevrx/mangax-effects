@@ -190,11 +190,6 @@
           "required": [
             "style"
           ]
-        },
-        "properties": {
-          "runAt": {
-            "const": "manual"
-          }
         }
       }
     },

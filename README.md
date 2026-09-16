@@ -144,10 +144,43 @@ mangax.effect(function (ctx) {
 | `ctx.observe(selector, fn)` | `fn(element)` once for every match, now and as the page adds more |
 | `ctx.addStyle(css)` | Adds a `<style>`, removed when the effect stops |
 | `ctx.onUrlChange(fn)` | The page changed its URL without reloading |
+| `ctx.onEvent(name, fn)` | `fn(data, name)` on app events (below); `"*"` hears all of them |
 | `ctx.toast(text)` | Shows a message in the app. Needs `"permissions": ["toast"]` |
 | `ctx.call(cmd, args)` | Sends a command to the app; returns a Promise |
 | `ctx.stop()` | Switches the effect off from inside |
 | `ctx.id` · `ctx.engine` · `ctx.site` | This effect, `manga` / `novel`, the page's host |
+
+### App events
+
+Listen with `ctx.onEvent`. Every event's `data` has `type` (`manga` / `novel`) and `mode`
+(`realtime` for the scan button, `full` for a whole-chapter scan).
+
+| Event | When | Extra `data` |
+|---|---|---|
+| `translate:start` | The reader starts a translation | |
+| `translate:done` | A batch (or the whole chapter) is translated | |
+| `translate:failed` | A batch or the chapter could not be translated | `message` |
+| `translate:stop` | The translation stopped | `reason`: `user` (pressed stop) or `auto` (page or chapter changed) |
+
+- Treat them as signals, not a count: two changes in quick succession can arrive as one.
+- A toggle's listeners are removed when it stops; an action's stay until the page changes.
+- No permission is needed.
+
+```js
+mangax.effect(function (ctx) {
+  ctx.onEvent('translate:done', function (data) {
+    if (data.type === 'manga') ctx.toast('Chapter ready').catch(function () {});
+  });
+  return function () {};
+});
+```
+
+### Starting on page load
+
+`"runAt": "pageLoad"` starts the effect whenever a page it matches finishes loading — any type,
+actions included. The reader can switch that off per effect (or on for a `manual` one) in the
+Effects sheet, and can always still switch it on or run it by hand. `documentStart` currently
+behaves like `pageLoad`.
 
 ### Options
 
@@ -168,7 +201,7 @@ Declared in `effect.json`; the app draws the settings and passes the values in `
   translation scan.
 - Pick the one `category` people would look in: `reading`, `cleanup`, `appearance`, `navigation`,
   `utility`. Add `keywords` (any language) for words the name does not contain.
-- One script file per effect, no imports, 256 KB at most.
+- One script file per effect, no imports, 1 MB at most; `effect.json` 128 KB at most.
 - An error thrown inside `ctx` callbacks stops the effect and tells the reader. Errors in callbacks
   you schedule yourself (`requestAnimationFrame`, `setTimeout`) are not caught — guard them.
 - Match only the sites an effect is for when it is site-specific: `https://*.example.com/read/*`.

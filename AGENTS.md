@@ -67,7 +67,7 @@ network API of the app's own.
 | `excludes` | same format; sites to skip |
 | `engines` | `["any"]` unless the effect truly only makes sense in one mode (`manga` or `novel`) |
 | `permissions` | `["toast"]` if the script calls `ctx.toast`; otherwise `[]` |
-| `runAt` | leave it out. The app currently runs every effect when the reader turns it on |
+| `runAt` | leave it out (`manual`) unless the effect should start by itself: `pageLoad` starts it whenever a matching page finishes loading, for any type including `action`. The reader can still run it by hand and can turn auto-start off. `documentStart` behaves like `pageLoad` for now |
 | `options` | settings the app draws; see below |
 
 ### Options
@@ -117,6 +117,7 @@ mangax.effect(function (ctx) {
 | `ctx.observe` | `(selector, fn(element))` | `selector` is **one CSS selector string** (use commas for several). `fn` runs once per matching element, now and for elements added later. Disconnected on stop |
 | `ctx.addStyle` | `(css) → <style>` | Removed on stop. Change `.textContent` of the returned element to update it |
 | `ctx.onUrlChange` | `(fn(href))` | Single-page sites changing URL without a reload |
+| `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`); `"*"` for all. `data.type` is `manga` \| `novel`, `data.mode` is `realtime` \| `full`. Removed on stop. No permission needed |
 | `ctx.toast` | `(text) → Promise` | Needs `"permissions": ["toast"]`. Add `.catch(function () {})` |
 | `ctx.call` | `(cmd, args) → Promise` | Only `toast` exists today |
 | `ctx.stop` | `()` | Turns the effect off from inside (runs all cleanups) |
@@ -152,7 +153,7 @@ by themselves.
   `ctx.stop()` on failure.
 - The script may run before the page finishes loading: prefer `ctx.observe` over one
   `querySelector` at start.
-- ES2017 is fine (`const`, arrow functions, `async`). One file, no imports, 256 KB at most.
+- ES2017 is fine (`const`, arrow functions, `async`). One file, no imports, 1 MB at most.
 - Do not send data anywhere (`fetch`, `XMLHttpRequest`, beacons) and do not read or store login
   details, cookies or tokens.
 - Do not write effects that get around a site's payment, subscription or login requirements.

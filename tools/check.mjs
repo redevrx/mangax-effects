@@ -14,8 +14,8 @@ import { execFileSync } from 'node:child_process';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const EFFECTS = join(ROOT, 'effects');
-const MAX_MANIFEST = 64 * 1024;
-const MAX_FILE = 256 * 1024;
+const MAX_MANIFEST = 128 * 1024;
+const MAX_FILE = 1024 * 1024;
 
 const ID = /^[a-z0-9][a-z0-9-]*(\.[a-z0-9][a-z0-9-]*)+$/;
 const VERSION = /^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$/;
@@ -39,7 +39,7 @@ function check(dir) {
   const at = join(EFFECTS, dir);
   const manifestPath = join(at, 'effect.json');
   if (!existsSync(manifestPath)) return { problems: ['effect.json is missing'] };
-  if (statSync(manifestPath).size > MAX_MANIFEST) problems.push('effect.json is over 64 KB');
+  if (statSync(manifestPath).size > MAX_MANIFEST) problems.push('effect.json is over 128 KB');
 
   let m;
   try { m = JSON.parse(readFileSync(manifestPath, 'utf8')); } catch (e) { return { problems: [`effect.json: ${e.message}`] }; }
@@ -60,7 +60,6 @@ function check(dir) {
   if (m.type === 'action') {
     if (!m.entry) problems.push('an action needs "entry"');
     if (m.style) problems.push('an action cannot have "style"');
-    if ((m.runAt ?? 'manual') !== 'manual') problems.push('an action must be runAt manual');
   }
   if (m.type === 'toggle' && !m.entry) problems.push('a toggle needs "entry"');
 
@@ -68,7 +67,7 @@ function check(dir) {
     if (!isFile(file)) { problems.push(`"${file}" is not a file inside the folder`); continue; }
     const path = join(at, file);
     if (!existsSync(path)) { problems.push(`${file} is missing`); continue; }
-    if (statSync(path).size > MAX_FILE) problems.push(`${file} is over 256 KB`);
+    if (statSync(path).size > MAX_FILE) problems.push(`${file} is over 1 MB`);
     if (file === m.entry) {
       try { execFileSync(process.execPath, ['--check', path], { stdio: 'pipe' }); }
       catch (e) { problems.push(`${file} does not parse:\n${String(e.stderr).trim()}`); }

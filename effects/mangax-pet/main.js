@@ -15,6 +15,7 @@ mangax.effect(function (ctx) {
   var options = ctx.options || {};
   var currentSize = typeof options.size === 'number' ? options.size : 80;
   var reactToReading = options.interactive !== false;
+  var chattiness = options.chattiness || 'normal';
 
   ctx.addStyle(
     '#mx-pet {\n' +
@@ -41,6 +42,43 @@ mangax.effect(function (ctx) {
     '  transition: transform .12s ease-out !important;\n' +
     '}\n' +
     '#mx-pet svg { width: 100%; height: 100%; display: block; overflow: visible; }\n' +
+    '\n' +
+    '/* บอลลูนคำพูด */\n' +
+    '#mx-pet-bubble {\n' +
+    '  position: absolute;\n' +
+    '  bottom: 104%;\n' +
+    '  left: 50%;\n' +
+    '  transform: translateX(-50%) scale(0);\n' +
+    '  transform-origin: bottom center;\n' +
+    '  background: rgba(26, 26, 46, 0.95);\n' +
+    '  color: #ffffff;\n' +
+    '  border: 2px solid #818cf8;\n' +
+    '  border-radius: 12px;\n' +
+    '  padding: 5px 10px;\n' +
+    '  font-size: 12px;\n' +
+    '  font-weight: 600;\n' +
+    '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;\n' +
+    '  white-space: nowrap;\n' +
+    '  pointer-events: none;\n' +
+    '  opacity: 0;\n' +
+    '  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;\n' +
+    '  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);\n' +
+    '  z-index: 10;\n' +
+    '}\n' +
+    '#mx-pet-bubble.show {\n' +
+    '  transform: translateX(-50%) scale(1);\n' +
+    '  opacity: 1;\n' +
+    '}\n' +
+    '#mx-pet-bubble::after {\n' +
+    '  content: "";\n' +
+    '  position: absolute;\n' +
+    '  top: 100%;\n' +
+    '  left: 50%;\n' +
+    '  margin-left: -5px;\n' +
+    '  border-width: 5px;\n' +
+    '  border-style: solid;\n' +
+    '  border-color: #818cf8 transparent transparent transparent;\n' +
+    '}\n' +
     '\n' +
     '/* เดิน: ขาสลับ */\n' +
     '@keyframes mx-leg-l { 0%,100%{transform:rotate(-22deg)} 50%{transform:rotate(22deg)} }\n' +
@@ -120,6 +158,7 @@ mangax.effect(function (ctx) {
   mascot.id = 'mx-pet';
   mascot.classList.add('idle');
   mascot.innerHTML =
+    '<div id="mx-pet-bubble"></div>\n' +
     '<svg viewBox="0 0 240 300" xmlns="http://www.w3.org/2000/svg">\n' +
     '  <defs>\n' +
     '    <linearGradient id="mx-gx" x1="0%" y1="0%" x2="100%" y2="100%">\n' +
@@ -200,6 +239,24 @@ mangax.effect(function (ctx) {
     '</svg>';
 
   document.body.appendChild(mascot);
+  var bubble = mascot.querySelector('#mx-pet-bubble');
+  var bubbleHideTimer = null;
+
+  function say(text, showToast) {
+    if (chattiness === 'quiet' || !text) return;
+    if (bubble) {
+      bubble.textContent = text;
+      bubble.classList.add('show');
+      if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
+      bubbleHideTimer = safeTimeout(function () {
+        bubble.classList.remove('show');
+        bubbleHideTimer = null;
+      }, 2600);
+    }
+    if (showToast && typeof ctx.toast === 'function') {
+      ctx.toast(text).catch(function () {});
+    }
+  }
 
   var margin = 16;
   var state = {
@@ -251,6 +308,7 @@ mangax.effect(function (ctx) {
       state.isWalking = false;
       mascot.classList.add('dragging');
       mascot.classList.remove('walking', 'idle');
+      say('ว้ากก ลอยแล้วว! 🛸');
     }
 
     if (isDragging) {
@@ -303,6 +361,15 @@ mangax.effect(function (ctx) {
     }, duration || 1500);
   }
 
+  var tapPhrases = [
+    'งื้ออ~ 💜',
+    'อย่าจิ้มเก๊าา 🐱',
+    'อ่านสนุกไหม? 📖',
+    'อยู่เป็นเพื่อนนะ! ✨',
+    'ลุยตอนต่อไปกัน! 🚀',
+    'ฮิฮิ จั๊กจี้จัง~ 😆'
+  ];
+
   function onPointerEnd(e) {
     if (!isPointerDown) return;
     isPointerDown = false;
@@ -321,13 +388,15 @@ mangax.effect(function (ctx) {
       state.lastInteract = Date.now();
       doAction('tap', 450);
       spawnHearts(e.clientX, e.clientY);
+      var phrase = tapPhrases[Math.floor(Math.random() * tapPhrases.length)];
+      say(phrase);
     }
   }
 
   ctx.on(mascot, 'pointerup', onPointerEnd);
   ctx.on(mascot, 'pointercancel', onPointerEnd);
 
-  // ===== Animation Loop (Walking / Idle) =====
+  // ===== Animation Loop =====
   function tick() {
     if (!isDragging && !state.isBusy) {
       var dx = state.targetX - state.x;
@@ -370,14 +439,27 @@ mangax.effect(function (ctx) {
     state.speed = 0.9 + Math.random() * 1.3;
   }
 
+  var idlePhrases = [
+    'ง่วงจังง~ 🥱',
+    'พักสายตาบ้างน้า ☕️',
+    'อ่านถึงไหนแล้วนะ? 🤔',
+    'คอยเชียร์อยู่นะ! ✌️'
+  ];
+
   function randomAction() {
     if (state.isBusy || isDragging) return;
     var actions = ['jump', 'yawn', 'shake', 'walk', 'walk'];
     var pick = actions[Math.floor(Math.random() * actions.length)];
     if (pick === 'walk') {
       pickNewTarget();
+      if (chattiness === 'chatty' && Math.random() < 0.3) {
+        say(idlePhrases[Math.floor(Math.random() * idlePhrases.length)]);
+      }
     } else {
       doAction(pick, pick === 'yawn' ? 1800 : (pick === 'shake' ? 1500 : 1100));
+      if (pick === 'yawn') {
+        say('ง่วงจังง~ 🥱');
+      }
     }
   }
 
@@ -414,7 +496,8 @@ mangax.effect(function (ctx) {
       if (docH > winH * 1.4 && (curY + winH >= docH - 80)) {
         if (!state.cheeredEnd) {
           state.cheeredEnd = true;
-          doAction('cheer', 2200);
+          doAction('cheer', 2400);
+          say('อ่านจบแล้ว! เก่งมากก 🎉', true);
           safeTimeout(function () { state.cheeredEnd = false; }, 8000);
         }
       }
@@ -425,7 +508,8 @@ mangax.effect(function (ctx) {
         for (var i = 0; i < entries.length; i++) {
           if (entries[i].isIntersecting) {
             state.lastInteract = Date.now();
-            doAction('cheer', 2200);
+            doAction('cheer', 2400);
+            say('อ่านจบแล้ว! เก่งมากก 🎉', true);
             break;
           }
         }
@@ -446,6 +530,9 @@ mangax.effect(function (ctx) {
     }
     if (typeof opts.interactive === 'boolean') {
       reactToReading = opts.interactive;
+    }
+    if (opts.chattiness) {
+      chattiness = opts.chattiness;
     }
   });
 
@@ -470,6 +557,7 @@ mangax.effect(function (ctx) {
   return function () {
     if (state.rafId) cancelAnimationFrame(state.rafId);
     clearInterval(aiInterval);
+    if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
     for (var i = 0; i < activeTimers.length; i++) {
       clearTimeout(activeTimers[i]);
     }

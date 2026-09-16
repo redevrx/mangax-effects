@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.mangax-pet",
+  "version": "1.0.0",
+  "name": { "en": "MangaX Pet", "th": "สัตว์เลี้ยง MangaX" },
+  "description": {
+    "en": "A cute mascot that walks on the screen and reacts to reading.",
+    "th": "มาสคอตน่ารักเดินไปมาบนจอ ตอบสนองการอ่าน"
+  },
+  "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
+  "type": "toggle",
+  "category": "appearance",
+  "icon": "pets",
+  "entry": "main.js",
+  "matches": ["*://*/*"],
+  "engines": ["any"],
+  "permissions": ["toast"],
+  "keywords": ["mascot", "pet", "มาสคอต", "สัตว์เลี้ยง", "น่ารัก"],
+  "options": [
+    {
+      "key": "size",
+      "type": "slider",
+      "label": { "en": "Size", "th": "ขนาด" },
+      "min": 50, "max": 140, "step": 5, "default": 80, "unit": "px"
+    },
+    {
+      "key": "interactive",
+      "type": "boolean",
+      "label": { "en": "React to reading", "th": "ตอบสนองการอ่าน" },
+      "default": true
+    },
+    {
+      "key": "chattiness",
+      "type": "select",
+      "label": { "en": "Chattiness", "th": "ความช่างพูด" },
+      "choices": [
+        { "value": "quiet", "label": { "en": "Quiet", "th": "เงียบ" } },
+        { "value": "normal", "label": { "en": "Normal", "th": "ปกติ" } },
+        { "value": "chatty", "label": { "en": "Chatty", "th": "ช่างพูด" } }
+      ],
+      "default": "normal"
+    }
+  ]
+}
