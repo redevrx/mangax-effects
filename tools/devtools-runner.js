@@ -8,9 +8,14 @@
     novel: ['scan', 'effects', 'read_aloud', 'settings']
   };
 
+  var MENU_ICONS = {
+    scan: 'document_scanner', effects: 'auto_fix_high', full_context_scan: 'auto_awesome',
+    read_aloud: 'record_voice_over', settings: 'settings'
+  };
+
   var COMMAND_PERMISSIONS = {
     toast: 'toast',
-    'menu.items': 'menu', 'menu.press': 'menu', 'menu.open': 'menu', 'menu.replace': 'menu',
+    'menu.items': 'menu', 'menu.press': 'menu', 'menu.replace': 'menu',
     'engine.get': null,
     'engine.set': 'engine'
   };
@@ -130,17 +135,13 @@
           case 'menu.items':
             return Promise.resolve({
               engine: config.engine,
-              items: MENU_KEYS[config.engine].map(function (key) { return { key: key, label: key, active: false }; })
+              items: MENU_KEYS[config.engine].map(function (key) { return { key: key, label: key, icon: MENU_ICONS[key], active: false }; })
             });
           case 'menu.press':
             if (MENU_KEYS[config.engine].indexOf(args.key) < 0) {
               return Promise.reject(new Error('the menu has no "' + args.key + '" button right now'));
             }
             log('menu.press', args.key);
-            return Promise.resolve(null);
-          case 'menu.open':
-            log('menu.open', 'at ' + JSON.stringify({ x: args.x, y: args.y }) + ' — mangaxTest.closeMenu(key) to close it');
-            emit('menu:open', { byEffect: true });
             return Promise.resolve(null);
           case 'menu.replace':
             log('menu.replace', args.on === false ? 'menu button back' : 'menu button hidden while this runs');
@@ -154,6 +155,9 @@
             if (args.type !== config.engine) {
               config.engine = args.type;
               emit('engine:change', { type: args.type });
+              emit('menu:change', { engine: config.engine, items: MENU_KEYS[config.engine].map(function (key) {
+                return { key: key, label: key, icon: MENU_ICONS[key], active: false };
+              }) });
             }
             return Promise.resolve(args.type);
         }

@@ -176,8 +176,9 @@ Listen with `ctx.onEvent`. The `translate:*` events' `data` has `type` (`manga` 
 | `translate:failed` | A batch or the chapter could not be translated | `type`, `mode`, `message` |
 | `translate:stop` | The translation stopped | `type`, `mode`, `reason`: `user` (pressed stop) or `auto` (page or chapter changed) |
 | `engine:change` | The reader switched between manga and novel | `type` |
-| `menu:open` | The browser menu opened | `byEffect`: `true` when a script opened it with `menu.open` |
-| `menu:close` | The browser menu closed | `key`: the button pressed, or `null` when dismissed |
+| `menu:open` | The app's own menu opened | |
+| `menu:close` | The app's own menu closed | `key`: the button pressed, or `null` when dismissed |
+| `menu:change` | The menu's buttons changed (one came or went, a label or lit state changed, the engine switched) | same as `menu.items`: `engine`, `items` |
 
 - Treat them as signals, not a count: two changes in quick succession can arrive as one.
 - A toggle's listeners are removed when it stops; an action's stay until the page changes.
@@ -201,9 +202,8 @@ mangax.effect(function (ctx) {
 | Command | Permission | `args` | Resolves to |
 |---|---|---|---|
 | `toast` | `toast` | `{ text }` | `null` (same as `ctx.toast`) |
-| `menu.items` | `menu` | | `{ engine, items: [{ key, label, active }] }`, in the menu's order |
+| `menu.items` | `menu` | | `{ engine, items: [{ key, label, icon, active }] }`, in the menu's order. `icon` is the Material icon name the app uses |
 | `menu.press` | `menu` | `{ key }` | `null`; rejects when that button is not in the menu right now |
-| `menu.open` | `menu` | `{ x, y }`, 0–1 of the screen | `null`; the menu opens next to that point |
 | `menu.replace` | `menu` | `{ on }` | `true` when the menu button is now hidden |
 | `engine.get` | none | | `"manga"` or `"novel"` |
 | `engine.set` | `engine` | `{ type: "manga" \| "novel" }` | the engine now in use |
@@ -214,31 +214,39 @@ Buttons come and go with the engine and the page, so ask `menu.items` rather tha
 
 `menu.replace` hides the app's floating menu button **only while the effect runs**. Stopping
 the effect, an error, or leaving the page brings the button back, so the reader is never left
-without a way into the menu. An effect that hides it must give the reader another way to open
-it (`menu.open`).
+without a way into the menu. While it is hidden the effect draws the menu itself: build it from
+`menu.items`, redraw on `menu:change`, and press buttons with `menu.press` — the app runs the
+same code its own button runs.
 
 ```js
 mangax.effect(function (ctx) {
-  var button = document.createElement('button');
-  button.textContent = '☰';
-  button.style.cssText = 'position:fixed;right:16px;bottom:96px;z-index:999999';
-  document.body.appendChild(button);
+  var items = [];
+  var bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;right:16px;bottom:140px;z-index:999999;display:flex;flex-direction:column;gap:8px';
+  document.body.appendChild(bar);
+
+  function draw(data) {
+    items = (data && data.items) || [];
+    bar.textContent = '';
+    items.forEach(function (item) {
+      var b = document.createElement('button');
+      b.textContent = item.label + (item.active ? ' •' : '');
+      b.onclick = function () { ctx.call('menu.press', { key: item.key }).catch(function () {}); };
+      bar.appendChild(b);
+    });
+  }
 
   ctx.call('menu.replace', { on: true }).catch(function () {});
-  ctx.on(button, 'click', function () {
-    var r = button.getBoundingClientRect();
-    ctx.call('menu.open', {
-      x: (r.left + r.width / 2) / innerWidth,
-      y: (r.top + r.height / 2) / innerHeight,
-    }).catch(function () {});
-  });
+  ctx.call('menu.items').then(draw, function () {});
+  ctx.onEvent('menu:change', draw);
 
-  return function () { button.remove(); };
+  return function () { bar.remove(); };
 });
 ```
 
-`effect.json`: `"permissions": ["menu"]`. MangaX Pet (`effects/mangax-pet`) does the same with
-its `replaceMenu` option and a long-press.
+`effect.json`: `"permissions": ["menu"]`. MangaX Pet (`effects/mangax-pet`) does this with its
+`replaceMenu` option: long-press the pet for its menu, which also switches manga / novel
+(`engine.set`, permission `engine`).
 
 ### Starting on page load
 

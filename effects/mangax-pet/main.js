@@ -79,7 +79,7 @@ mangax.effect(function (ctx) {
       '#mx-pet svg{width:100%;height:100%;display:block;overflow:visible;}\n' +
 
       // ----- บอลลูน -----
-      '#mx-pet-bubble{position:absolute;left:50%;transform:translateX(-50%) scale(0);' +
+      '#mx-pet-bubble{position:absolute;left:50%;transform:translateX(calc(-50% + var(--mx-bubble-dx,0px))) scale(0);' +
       'transform-origin:bottom center;background:rgba(26,26,46,.95);color:#fff;' +
       'border:2px solid #818cf8;border-radius:12px;padding:5px 10px;font-size:12px;' +
       'font-weight:600;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
@@ -88,7 +88,7 @@ mangax.effect(function (ctx) {
       'box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:10;}\n' +
       '#mx-pet.at-bottom #mx-pet-bubble{bottom:104%;top:auto;transform-origin:bottom center;}\n' +
       '#mx-pet.at-top #mx-pet-bubble{top:104%;bottom:auto;transform-origin:top center;}\n' +
-      '#mx-pet-bubble.show{transform:translateX(-50%) scale(1);opacity:1;}\n' +
+      '#mx-pet-bubble.show{transform:translateX(calc(-50% + var(--mx-bubble-dx,0px))) scale(1);opacity:1;}\n' +
 
       // ----- เดิน / ขยับพื้นฐาน -----
       '@keyframes mx-leg-l{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}}\n' +
@@ -475,24 +475,159 @@ mangax.effect(function (ctx) {
     appCall('menu.replace', { on: replaceMenu });
   }
 
-  function bubbleShown() {
-    return !!(bubble && bubble.classList.contains('show'));
+  // ---- เมนูของน้องเอง: วาดใน JS จาก menu.items แล้วกดผ่าน menu.press (โค้ดเดียวกับปุ่มของแอพ) ----
+  var ENGINE_KEY = '__engine';
+  var MENU_ICONS = {
+    document_scanner: '🔍', menu_book: '📖', close: '⏹️', auto_fix_high: '✨',
+    record_voice_over: '🗣️', stop: '⏹️', auto_awesome: '🌟', palette: '🎨',
+    save_alt: '💾', settings: '⚙️', swap_horiz: '🔄'
+  };
+  var menuState = { items: [], engine: ctx.engine === 'novel' ? 'novel' : 'manga', open: false };
+  var menuLayer = null;
+
+  ctx.addStyle(
+      '#mx-pet-menu-layer{all:initial;position:fixed;inset:0;z-index:1000002;' +
+      'background:rgba(10,10,24,.28);-webkit-tap-highlight-color:transparent;}\n' +
+      '#mx-pet-menu-layer .mx-menu{position:fixed;display:flex;flex-direction:column;gap:10px;}\n' +
+      '#mx-pet-menu-layer .mx-menu.right{align-items:flex-end;}\n' +
+      '#mx-pet-menu-layer .mx-menu.left{align-items:flex-start;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;' +
+      'padding:6px 14px 6px 6px;border-radius:16px;border:2px solid #818cf8;background:rgba(26,26,46,.96);' +
+      'color:#fff;font:600 13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
+      'box-shadow:0 6px 18px rgba(0,0,0,.4);opacity:0;transform:translateY(10px) scale(.85);' +
+      'animation:mx-menu-in .26s cubic-bezier(.34,1.56,.64,1) forwards;cursor:pointer;white-space:nowrap;}\n' +
+      '#mx-pet-menu-layer .mx-menu.right .mx-menu-item{flex-direction:row-reverse;padding:6px 6px 6px 14px;}\n' +
+      '#mx-pet-menu-layer .mx-menu-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;' +
+      'justify-content:center;font-size:19px;background:rgba(129,140,248,.22);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item.active{border-color:#22d3ee;box-shadow:0 0 14px rgba(34,211,238,.55);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item.active .mx-menu-icon{background:rgba(34,211,238,.35);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item:active{transform:scale(.94);}\n' +
+      '@keyframes mx-menu-in{to{opacity:1;transform:none;}}\n'
+  );
+
+  function setMenuItems(data) {
+    if (!data || !data.items) return;
+    menuState.items = data.items;
+    if (data.engine) menuState.engine = data.engine;
+    if (menuState.open) renderMenu();
   }
 
-  // เปิดเมนูของแอพข้างตัวน้อง ตำแหน่งส่งเป็นสัดส่วน 0–1 ของหน้าจอ
-  function openAppMenu() {
-    var r = mascot.getBoundingClientRect();
-    var w = window.innerWidth || 1;
-    var h = window.innerHeight || 1;
-    appCall('menu.open', {
-      x: (r.left + r.width / 2) / w,
-      y: (r.top + r.height / 2) / h,
-      // เมนูจะเว้นจากขอบตัวน้อง (รวมกล่องคำพูดด้านบน) ไม่ทับตัว
-      // กล่องคำพูดอยู่ด้านบนตอนน้องอยู่ล่าง และอยู่ด้านล่างตอนน้องอยู่บน
-      top: Math.max(0, r.top - (!isTop && bubbleShown() ? 40 : 0)) / h,
-      bottom: Math.min(h, r.bottom + (isTop && bubbleShown() ? 40 : 0)) / h
+  function loadMenu() {
+    return appCall('menu.items').then(setMenuItems);
+  }
+
+  // ปุ่มสลับมังงะ ↔ นิยาย ต่อท้ายเมนู (permission "engine")
+  function withEngineItem(items) {
+    var toNovel = menuState.engine !== 'novel';
+    return items.concat([{
+      key: ENGINE_KEY,
+      label: toNovel ? 'สลับเป็นนิยาย' : 'สลับเป็นมังงะ',
+      icon: 'swap_horiz',
+      active: false
+    }]);
+  }
+
+  function openPetMenu() {
+    if (menuState.items.length) {
+      menuState.open = true;
+      renderMenu();
+      return;
+    }
+    loadMenu().then(function () {
+      if (!menuState.items.length) return say('ตอนนี้เปิดเมนูไม่ได้น้า 🥺');
+      menuState.open = true;
+      renderMenu();
     });
   }
+
+  function closePetMenu() {
+    menuState.open = false;
+    if (menuLayer && menuLayer.parentNode) menuLayer.parentNode.removeChild(menuLayer);
+    menuLayer = null;
+  }
+
+  function renderMenu() {
+    if (menuLayer && menuLayer.parentNode) menuLayer.parentNode.removeChild(menuLayer);
+    var r = mascot.getBoundingClientRect();
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    // น้องอยู่ครึ่งล่าง → เมนูขึ้นด้านบน, อยู่ฝั่งขวา → ชิดขวา ปุ่มแรก (scan) อยู่ใกล้น้องที่สุดเสมอ
+    var above = r.top + r.height / 2 > h / 2;
+    var onRight = r.left + r.width / 2 > w / 2;
+    var items = withEngineItem(menuState.items);
+    var ordered = above ? items.slice().reverse() : items;
+
+    var layer = document.createElement('div');
+    layer.id = 'mx-pet-menu-layer';
+    var list = document.createElement('div');
+    list.className = 'mx-menu ' + (onRight ? 'right' : 'left');
+
+    ordered.forEach(function (item, i) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mx-menu-item' + (item.active ? ' active' : '');
+      var fromPet = above ? ordered.length - 1 - i : i;
+      button.style.animationDelay = (fromPet * 45) + 'ms';
+      var icon = document.createElement('span');
+      icon.className = 'mx-menu-icon';
+      icon.textContent = MENU_ICONS[item.icon] || '•';
+      var label = document.createElement('span');
+      label.textContent = item.label;
+      button.appendChild(icon);
+      button.appendChild(label);
+      button.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        try { pressMenu(item); } catch (e) {}
+      });
+      list.appendChild(button);
+    });
+    layer.appendChild(list);
+    layer.addEventListener('click', function () {
+      closePetMenu();
+      try {
+        react('pout', 1000);
+        sayIfChance('ไม่เอาแล้วเหรอ~ 🥺');
+      } catch (e) {}
+    });
+    document.body.appendChild(layer);
+    menuLayer = layer;
+
+    var gap = 10;
+    var lw = list.offsetWidth;
+    var lh = list.offsetHeight;
+    var left = onRight ? r.right - lw : r.left;
+    var top = above ? r.top - gap - lh : r.bottom + gap;
+    left = Math.max(8, Math.min(left, w - lw - 8));
+    top = Math.max(8, Math.min(top, h - lh - BOTTOM_CLEAR));
+    list.style.left = left + 'px';
+    list.style.top = top + 'px';
+  }
+
+  function pressMenu(item) {
+    closePetMenu();
+    state.lastInteract = Date.now();
+    resetIdleTimer();
+    if (item.key === ENGINE_KEY) {
+      var to = menuState.engine === 'novel' ? 'manga' : 'novel';
+      appCall('engine.set', { type: to }).then(function (engine) {
+        if (!engine) say('สลับไม่ได้น้า 🥺');
+      });
+      return;
+    }
+    var reaction = menuReactions[item.key];
+    if (reaction) {
+      react(reaction[0], 1400);
+      sayIfChance(reaction[1]);
+    }
+    ctx.call('menu.press', { key: item.key }).catch(function () {
+      react('shake', 900);
+      say('ปุ่มนี้ใช้ไม่ได้ตอนนี้น้า 😣');
+      loadMenu();
+    });
+  }
+
+  ctx.onEvent('menu:change', setMenuItems);
+  loadMenu();
 
   applyReplaceMenu();
 
@@ -504,10 +639,23 @@ mangax.effect(function (ctx) {
   // ================================================================
   // ============ SAY ============
   // ================================================================
+  // น้องอยู่ชิดขอบจอ → เลื่อนกล่องคำพูดเข้ามาให้อยู่ในจอทั้งกล่อง
+  function keepBubbleOnScreen() {
+    var r = mascot.getBoundingClientRect();
+    var half = bubble.offsetWidth / 2; // offsetWidth ไม่โดน scale ของ animation
+    var center = r.left + r.width / 2;
+    var edge = 8;
+    var dx = 0;
+    if (center - half < edge) dx = edge - (center - half);
+    else if (center + half > window.innerWidth - edge) dx = (window.innerWidth - edge) - (center + half);
+    bubble.style.setProperty('--mx-bubble-dx', dx + 'px');
+  }
+
   function say(text, showToast) {
     if (!text) return;
     if (bubble) {
       bubble.textContent = text;
+      keepBubbleOnScreen();
       bubble.classList.add('show');
       if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
       bubbleHideTimer = safeTimeout(function () {
@@ -708,7 +856,8 @@ mangax.effect(function (ctx) {
       react('surprised', 900);
       var r = mascot.getBoundingClientRect();
       spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 5);
-      openAppMenu();
+      if (menuState.open) closePetMenu();
+      else openPetMenu();
     }, LONG_PRESS_MS);
   });
 
@@ -886,8 +1035,96 @@ mangax.effect(function (ctx) {
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  // ---- ชีวิตประจำวันของน้อง: พูดถึงเรื่องที่อ่าน + ท่าต่อเนื่องหลายจังหวะ ----
+  var readingType = ctx.engine === 'novel' ? 'novel' : 'manga';
+
+  var talk = {
+    manga: [
+      'ฉากนี้พีคมากก! 🔥', 'พระเอกเท่ชะมัด 😳', 'ตัวร้ายน่ากลัวจังง 😱', 'ช่องนี้วาดสวยมากเลย 🎨',
+      'ไม่นะ! ตัดจบตรงนี้เหรอ 😭', 'รอตอนต่อไปไม่ไหวแล้วว ⏳', 'คู่นี้ต้องได้กันนะ 💕',
+      'ใครชอบเรื่องนี้ยกมือ! 🙋', 'หน้านี้ต้องแคปเก็บไว้ 📸', 'มุกนี้ฮามากก 🤣',
+      'ฉากต่อสู้มันส์สุดๆ ⚔️', 'เดาว่าตอนหน้าต้องหักมุมแน่ 🤔', 'ตัวประกอบคนนี้น่ารักจัง 🥰'
+    ],
+    novel: [
+      'สำนวนเรื่องนี้ดีจัง ✍️', 'บรรยายเห็นภาพเลย 🌄', 'ตัวละครนี้น่าสงสัยนะ 🤔',
+      'อ่านอีกบทเดียวน้า~ 📖', 'ประโยคนี้โดนใจมาก 💘', 'ปมเริ่มคลายแล้วว 🧩',
+      'ให้เค้าอ่านให้ฟังไหม? มีในเมนูนะ 🎧'
+    ],
+    translating: ['กำลังแปลอยู่น้า รอแป๊บ ⏳', 'ช่องคำพูดเยอะจัง สู้ๆ 💪', 'ใกล้เสร็จแล้วว ✨'],
+    tips: [
+      'กดค้างที่เค้าเพื่อเปิดเมนูนะ 👆', 'ลองแปลทั้งตอนด้วย Full Context Scan ดูสิ 🌟',
+      'แตะเค้า 2 ครั้ง เค้าจะเต้นให้ดู 🕺', 'ลากเค้าไปวางตรงไหนก็ได้นะ 🛸',
+      'ปรับขนาดเค้าได้ในเมนู Effects 🎛️'
+    ],
+    lateNight: ['ดึกแล้วน้า อ่านอีกตอนเดียวพอนะ 🌙', 'ตาจะปิดแล้วว... อ่านต่อพรุ่งนี้ไหม 😪'],
+    morning: ['อรุณสวัสดิ์! อ่านตอนเช้าสดชื่นดีน้า ☀️']
+  };
+
+  // [ท่า, ระยะเวลา, ท่า, ระยะเวลา, ...] เล่นต่อกันเหมือนน้องกำลังอ่านไปด้วย
+  var routines = {
+    manga: [
+      ['read', 1800, 'page-flip', 1400, 'laugh', 1500],
+      ['read', 1600, 'surprised', 900, 'nosebleed', 1600],
+      ['page-flip', 1500, 'excited', 1400, 'clap', 1200],
+      ['read', 1800, 'cry', 1800, 'sigh', 1400],
+      ['peek', 1400, 'think', 1500, 'star', 1300],
+      ['read', 1500, 'blush', 1500, 'love', 1400]
+    ],
+    novel: [
+      ['read', 2200, 'think', 1600],
+      ['read', 1800, 'blush', 1400],
+      ['meditate', 2000, 'read', 1800, 'wink', 800],
+      ['read', 2000, 'surprised', 900, 'excited', 1300]
+    ]
+  };
+
+  function playRoutine(steps) {
+    var t = 0;
+    for (var i = 0; i < steps.length; i += 2) {
+      (function (name, dur, at) {
+        safeTimeout(function () {
+          if (isDragging || state.isAsleep || menuState.open) return;
+          react(name, dur);
+        }, at);
+      })(steps[i], steps[i + 1], t);
+      t += steps[i + 1] + 80;
+    }
+  }
+
+  function talkChance() {
+    if (chattiness === 'quiet') return 0.08;
+    if (chattiness === 'chatty') return 0.35;
+    return 0.2;
+  }
+
+  function chatter() {
+    var hour = new Date().getHours();
+    var roll = Math.random();
+    if (translationState.active) {
+      react('scan', 1600);
+      return say(pickPhrase(talk.translating));
+    }
+    if ((hour >= 23 || hour < 5) && roll < 0.25) {
+      react('yawn', 1800);
+      return say(pickPhrase(talk.lateNight));
+    }
+    if (hour >= 6 && hour < 9 && roll < 0.15) {
+      react('stretch', 1800);
+      return say(pickPhrase(talk.morning));
+    }
+    if (roll < 0.2) {
+      react('wave', 1400);
+      var tips = talk.tips.slice();
+      if (readingType === 'novel') tips.push('สลับเป็นมังงะได้ในเมนูของเค้านะ 🔄');
+      return say(pickPhrase(tips));
+    }
+    playRoutine(pickPhrase(routines[readingType]));
+    say(pickPhrase(talk[readingType]));
+  }
+
   function randomAction() {
-    if (state.isBusy || isDragging || state.isAsleep) return;
+    if (state.isBusy || isDragging || state.isAsleep || menuState.open) return;
+    if (reactToReading && Math.random() < talkChance()) return chatter();
     // สุ่มกลุ่ม
     var groups = ['walkActions', 'shortActions', 'moodActions', 'restActions'];
     if (energy === 'lazy') groups = ['walkActions', 'restActions', 'restActions'];
@@ -981,6 +1218,16 @@ mangax.effect(function (ctx) {
     ctx.on(window, 'scroll', function () {
       state.lastInteract = Date.now();
       resetIdleTimer();
+      if (menuState.open) closePetMenu();
+      // หยุดเลื่อนค้างไว้สักพัก = กำลังดูฉากนั้นอยู่
+      if (state.lookTimer) clearTimeout(state.lookTimer);
+      state.lookTimer = safeTimeout(function () {
+        if (state.isBusy || isDragging || state.isAsleep || Math.random() > talkChance() + 0.15) return;
+        react(readingType === 'manga' ? 'peek' : 'read', 1600);
+        say(readingType === 'manga'
+          ? pickPhrase(['ดูฉากนี้นานเลยนะ ชอบเหรอ? 👀', 'ช่องนี้สวยใช่ม้า 😍', 'อ่านละเอียดจังง 🔎'])
+          : pickPhrase(['ย่อหน้านี้ลึกซึ้งเนอะ 🤔', 'อ่านช้าๆ ซึมซับไปนะ 📖']));
+      }, 7000);
       var now = Date.now();
       var curY = window.scrollY || window.pageYOffset || 0;
       var dt = (now - lastT) || 1;
@@ -1232,6 +1479,8 @@ mangax.effect(function (ctx) {
 
   ctx.onEvent('engine:change', function (data) {
     var type = (data && data.type) || 'manga';
+    menuState.engine = type;
+    readingType = type === 'novel' ? 'novel' : 'manga';
     state.lastInteract = Date.now();
     resetIdleTimer();
     react('spin', 1200);
@@ -1240,6 +1489,7 @@ mangax.effect(function (ctx) {
 
   // URL เปลี่ยน → คารวะ
   ctx.onUrlChange(function () {
+    closePetMenu();
     state.lastInteract = Date.now();
     doAction('bow', 1600);
     sayIfChance(pickPhrase(phrases.chapterNew));
@@ -1330,12 +1580,14 @@ mangax.effect(function (ctx) {
     if (state.pressTimer) clearTimeout(state.pressTimer);
     if (state.idleTimer) clearTimeout(state.idleTimer);
     if (state.dozeTimer) clearTimeout(state.dozeTimer);
+    if (state.lookTimer) clearTimeout(state.lookTimer);
     if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
     stopZzz();
     for (var i = 0; i < activeTimers.length; i++) clearTimeout(activeTimers[i]);
     activeTimers = [];
     for (var j = 0; j < activeIntervals.length; j++) clearInterval(activeIntervals[j]);
     activeIntervals = [];
+    closePetMenu();
     if (mascot.parentNode) mascot.parentNode.removeChild(mascot);
     var fx = document.querySelectorAll(
         '.mx-heart, .mx-tear, .mx-zzz, .mx-spark, .mx-note, .mx-dream'
