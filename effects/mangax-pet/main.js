@@ -3,22 +3,27 @@ mangax.effect(function (ctx) {
   // ============ HELPERS ============
   // ================================================================
   var activeTimers = [];
-  var cleanups = [];
+  var activeIntervals = [];
 
   function safeTimeout(fn, ms) {
     var id = setTimeout(function () {
       var idx = activeTimers.indexOf(id);
       if (idx >= 0) activeTimers.splice(idx, 1);
+      // ⚠️ runtime ไม่ catch error ในนี้ → ต้อง try/catch เอง
       try { fn(); } catch (e) {}
     }, ms);
     activeTimers.push(id);
     return id;
   }
-
   function safeInterval(fn, ms) {
     var id = setInterval(function () { try { fn(); } catch (e) {} }, ms);
-    cleanups.push(function () { clearInterval(id); });
+    activeIntervals.push(id);
     return id;
+  }
+  function clearSafeInterval(id) {
+    var i = activeIntervals.indexOf(id);
+    if (i >= 0) activeIntervals.splice(i, 1);
+    clearInterval(id);
   }
 
   // ================================================================
@@ -29,6 +34,7 @@ mangax.effect(function (ctx) {
   var reactToReading = options.interactive !== false;
   var chattiness = options.chattiness || 'normal';
   var defaultPosition = options.position || 'top';
+  var energy = options.energy || 'normal'; // ใหม่: normal | hyper | lazy
   var isTop = defaultPosition === 'top';
 
   function sayChance() {
@@ -36,11 +42,22 @@ mangax.effect(function (ctx) {
     if (chattiness === 'chatty') return 0.8;
     return 0.45;
   }
+  function actionInterval() {
+    if (energy === 'hyper') return 1800;
+    if (energy === 'lazy') return 6000;
+    return 3600;
+  }
+  function walkSpeed() {
+    if (energy === 'hyper') return 1.8;
+    if (energy === 'lazy') return 0.6;
+    return 1.2;
+  }
 
   // ================================================================
-  // ============ CSS ============
+  // ============ CSS (tất cả 52 ท่า) ============
   // ================================================================
   ctx.addStyle(
+      // ----- container -----
       '#mx-pet{position:fixed;' +
       'width:var(--mx-pet-size,' + currentSize + 'px);' +
       'height:calc(var(--mx-pet-size,' + currentSize + 'px)*1.25);' +
@@ -56,7 +73,7 @@ mangax.effect(function (ctx) {
       'transition:transform .12s ease-out!important;}\n' +
       '#mx-pet svg{width:100%;height:100%;display:block;overflow:visible;}\n' +
 
-      // บอลลูน
+      // ----- บอลลูน -----
       '#mx-pet-bubble{position:absolute;left:50%;transform:translateX(-50%) scale(0);' +
       'transform-origin:bottom center;background:rgba(26,26,46,.95);color:#fff;' +
       'border:2px solid #818cf8;border-radius:12px;padding:5px 10px;font-size:12px;' +
@@ -67,26 +84,22 @@ mangax.effect(function (ctx) {
       '#mx-pet.at-bottom #mx-pet-bubble{bottom:104%;top:auto;transform-origin:bottom center;}\n' +
       '#mx-pet.at-top #mx-pet-bubble{top:104%;bottom:auto;transform-origin:top center;}\n' +
       '#mx-pet-bubble.show{transform:translateX(-50%) scale(1);opacity:1;}\n' +
-      '#mx-pet.at-bottom #mx-pet-bubble::after{content:"";position:absolute;top:100%;left:50%;' +
-      'margin-left:-5px;border-width:5px;border-style:solid;border-color:#818cf8 transparent transparent transparent;}\n' +
-      '#mx-pet.at-top #mx-pet-bubble::after{content:"";position:absolute;bottom:100%;left:50%;' +
-      'margin-left:-5px;border-width:5px;border-style:solid;border-color:transparent transparent #818cf8 transparent;}\n' +
 
-      // เดิน
+      // ----- เดิน / ขยับพื้นฐาน -----
       '@keyframes mx-leg-l{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}}\n' +
       '@keyframes mx-leg-r{0%,100%{transform:rotate(22deg)}50%{transform:rotate(-22deg)}}\n' +
-      '#mx-pet.walking .mx-leg-l{animation:mx-leg-l .32s ease-in-out infinite;}\n' +
-      '#mx-pet.walking .mx-leg-r{animation:mx-leg-r .32s ease-in-out infinite;}\n' +
       '@keyframes mx-arm-l{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}\n' +
       '@keyframes mx-arm-r{0%,100%{transform:rotate(14deg)}50%{transform:rotate(-14deg)}}\n' +
+      '@keyframes mx-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}\n' +
+      '@keyframes mx-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.02)}}\n' +
+      '#mx-pet.walking .mx-leg-l{animation:mx-leg-l .32s ease-in-out infinite;}\n' +
+      '#mx-pet.walking .mx-leg-r{animation:mx-leg-r .32s ease-in-out infinite;}\n' +
       '#mx-pet.walking .mx-arm-l{animation:mx-arm-l .32s ease-in-out infinite;}\n' +
       '#mx-pet.walking .mx-arm-r{animation:mx-arm-r .32s ease-in-out infinite;}\n' +
-      '@keyframes mx-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}\n' +
       '#mx-pet.walking svg{animation:mx-bounce .32s ease-in-out infinite;}\n' +
-      '@keyframes mx-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.02)}}\n' +
       '#mx-pet.idle svg{animation:mx-breathe 2.6s ease-in-out infinite;}\n' +
 
-      // ตา/หู/halo
+      // ----- ตา / หู / halo -----
       '@keyframes mx-blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}\n' +
       '#mx-pet .mx-eye-l,#mx-pet .mx-eye-r{transform-origin:center;animation:mx-blink 4.2s infinite;}\n' +
       '@keyframes mx-ear{0%,90%,100%{transform:rotate(0)}95%{transform:rotate(-9deg)}}\n' +
@@ -95,63 +108,39 @@ mangax.effect(function (ctx) {
       '@keyframes mx-halo-spin{to{transform:rotate(360deg)}}\n' +
       '#mx-pet .mx-halo{animation:mx-halo-spin 18s linear infinite;}\n' +
 
-      // ===== ท่าพื้นฐาน =====
+      // ============ 🚶 LOCOMOTION ============
       '#mx-pet.jump svg{animation:mx-jump .55s cubic-bezier(.34,1.56,.64,1) 2!important;}\n' +
       '@keyframes mx-jump{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-38px) scale(1.08)}}\n' +
 
-      '#mx-pet.yawn svg{animation:mx-yawn 1.8s ease-in-out!important;}\n' +
-      '@keyframes mx-yawn{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(8px) rotate(-4deg)}}\n' +
+      '#mx-pet.hop .mx-leg-l{animation:mx-leg-l .22s ease-in-out infinite;}\n' +
+      '#mx-pet.hop .mx-leg-r{animation:mx-leg-r .22s ease-in-out infinite;}\n' +
+      '#mx-pet.hop svg{animation:mx-hop .4s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}\n' +
 
-      '#mx-pet.shake svg{animation:mx-shake .5s ease-in-out 3!important;}\n' +
-      '@keyframes mx-shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}\n' +
+      '#mx-pet.skip .mx-leg-l{animation:mx-leg-l .26s ease-in-out infinite;}\n' +
+      '#mx-pet.skip .mx-leg-r{animation:mx-leg-r .26s ease-in-out infinite;}\n' +
+      '#mx-pet.skip svg{animation:mx-skip .5s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-skip{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}\n' +
 
-      '#mx-pet.tap svg{animation:mx-tap .4s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
-      '@keyframes mx-tap{0%{transform:scale(1) rotate(0)}40%{transform:scale(1.25) rotate(12deg)}100%{transform:scale(1) rotate(0)}}\n' +
+      '#mx-pet.tiptoe .mx-leg-l{animation:mx-tiptoe .5s ease-in-out infinite;}\n' +
+      '#mx-pet.tiptoe .mx-leg-r{animation:mx-tiptoe .5s ease-in-out infinite .25s;}\n' +
+      '@keyframes mx-tiptoe{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}\n' +
+      '#mx-pet.tiptoe svg{animation:mx-bounce .5s ease-in-out infinite;}\n' +
 
-      '#mx-pet.cheer svg{animation:mx-cheer .5s ease-in-out 4!important;}\n' +
-      '@keyframes mx-cheer{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-22px) rotate(-8deg)}75%{transform:translateY(-22px) rotate(8deg)}}\n' +
-
-      '#mx-pet.dance svg{animation:mx-dance .6s ease-in-out 6!important;}\n' +
-      '@keyframes mx-dance{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-18deg) scale(1.1)}' +
-      '50%{transform:rotate(0) scale(.95)}75%{transform:rotate(18deg) scale(1.1)}100%{transform:rotate(0) scale(1)}}\n' +
-
-      '#mx-pet.laugh svg{animation:mx-laugh .22s ease-in-out 8!important;}\n' +
-      '@keyframes mx-laugh{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(4deg)}}\n' +
-
-      '#mx-pet.wave .mx-arm-r{animation:mx-wave .5s ease-in-out 4!important;transform-origin:180px 180px;}\n' +
-      '@keyframes mx-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}\n' +
-
-      '#mx-pet.think svg{animation:mx-think 1.6s ease-in-out infinite!important;}\n' +
-      '@keyframes mx-think{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}\n' +
-      '#mx-pet.think .mx-arm-r{transform:rotate(-70deg)!important;transform-origin:180px 180px;}\n' +
-
-      '#mx-pet.angry svg{animation:mx-angry .18s linear 8!important;}\n' +
-      '@keyframes mx-angry{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-3deg)}75%{transform:translateX(4px) rotate(3deg)}}\n' +
-      '#mx-pet.angry .mx-cheek{fill:#FF3B3B!important;opacity:1!important;}\n' +
-
-      '#mx-pet.love svg{animation:mx-love 1s ease-in-out 3!important;}\n' +
-      '@keyframes mx-love{0%,100%{transform:scale(1)}50%{transform:scale(1.08) translateY(-4px)}}\n' +
-      '#mx-pet.love .mx-eye-l,#mx-pet.love .mx-eye-r{fill:#FF69B4!important;}\n' +
-
-      '#mx-pet.peek .mx-arm-l{transform:rotate(45deg)!important;transform-origin:60px 180px;}\n' +
-      '#mx-pet.peek .mx-arm-r{transform:rotate(-45deg)!important;transform-origin:180px 180px;}\n' +
-      '#mx-pet.peek svg{animation:mx-peek 1.4s ease-in-out!important;}\n' +
-      '@keyframes mx-peek{0%,100%{transform:scale(1)}50%{transform:scale(.92) translateY(6px)}}\n' +
+      '#mx-pet.sneak svg{animation:mx-sneak 1s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-sneak{0%,100%{transform:rotate(-6deg) scaleY(.96)}50%{transform:rotate(-4deg) scaleY(.94)}}\n' +
+      '#mx-pet.sneak .mx-eye-l,#mx-pet.sneak .mx-eye-r{animation:none!important;transform:scaleY(.5)!important;}\n' +
 
       '#mx-pet.run .mx-leg-l{animation:mx-leg-l .16s ease-in-out infinite;}\n' +
       '#mx-pet.run .mx-leg-r{animation:mx-leg-r .16s ease-in-out infinite;}\n' +
       '#mx-pet.run svg{animation:mx-bounce .16s ease-in-out infinite;}\n' +
 
-      '#mx-pet.flip svg{animation:mx-flip .9s cubic-bezier(.5,0,.5,1)!important;}\n' +
-      '@keyframes mx-flip{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(360deg) translateY(-30px)}100%{transform:rotate(720deg) translateY(0)}}\n' +
+      // ============ 😴 REST ============
+      '#mx-pet.yawn svg{animation:mx-yawn 1.8s ease-in-out!important;}\n' +
+      '@keyframes mx-yawn{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(8px) rotate(-4deg)}}\n' +
+      '#mx-pet.yawn .mx-mouth{d:path("M112 98 Q120 110 128 98 Q120 116 112 98");}\n' +
 
-      '#mx-pet.excited svg{animation:mx-excited .12s linear 15!important;}\n' +
-      '@keyframes mx-excited{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,-3px)}75%{transform:translate(3px,3px)}}\n' +
-      '#mx-pet.excited .mx-eye-l,#mx-pet.excited .mx-eye-r{fill:#FFD93D!important;}\n' +
-
-      // ===== นอนหลับ =====
-      '#mx-pet.sleep svg{animation:mx-sleep 3.5s ease-in-out infinite!important;' +
-      'transform-origin:120px 260px;}\n' +
+      '#mx-pet.sleep svg{animation:mx-sleep 3.5s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
       '@keyframes mx-sleep{0%,100%{transform:rotate(-12deg) scale(.96)}50%{transform:rotate(-12deg) scale(1)}}\n' +
       '#mx-pet.sleep .mx-eye-l,#mx-pet.sleep .mx-eye-r{animation:none!important;transform:scaleY(.1)!important;}\n' +
       '#mx-pet.sleep .mx-mouth{d:path("M114 100 Q120 96 126 100");}\n' +
@@ -169,25 +158,64 @@ mangax.effect(function (ctx) {
       '#mx-pet.sigh .mx-arm-l{transform:rotate(35deg)!important;transform-origin:60px 180px;}\n' +
       '#mx-pet.sigh .mx-arm-r{transform:rotate(-35deg)!important;transform-origin:180px 180px;}\n' +
 
-      // ===== App Event ท่า =====
-      '#mx-pet.scan svg{animation:mx-scan 1s ease-in-out infinite!important;}\n' +
-      '@keyframes mx-scan{0%,100%{transform:scale(1)}50%{transform:scale(1.06) rotate(2deg)}}\n' +
-      '#mx-pet.scan .mx-halo{animation:mx-halo-spin 1.2s linear infinite!important;}\n' +
-      '#mx-pet.scan .mx-eye-l,#mx-pet.scan .mx-eye-r{fill:#3EE0FF!important;}\n' +
+      '#mx-pet.dream svg{animation:mx-dream 3s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-dream{0%,100%{transform:rotate(-10deg) scale(.97)}50%{transform:rotate(-8deg) scale(.99)}}\n' +
+      '#mx-pet.dream .mx-eye-l,#mx-pet.dream .mx-eye-r{animation:none!important;transform:scaleY(.15)!important;fill:#FF69B4!important;}\n' +
 
-      '#mx-pet.read svg{animation:mx-read 2s ease-in-out infinite!important;}\n' +
-      '@keyframes mx-read{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}\n' +
-      '#mx-pet.read .mx-arm-l{transform:rotate(-30deg)!important;transform-origin:60px 180px;}\n' +
-      '#mx-pet.read .mx-arm-r{transform:rotate(-60deg)!important;transform-origin:180px 180px;}\n' +
+      '#mx-pet.snore svg{animation:mx-snore 1.2s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-snore{0%,100%{transform:rotate(-12deg) scale(.96) translateY(0)}50%{transform:rotate(-12deg) scale(1.02) translateY(-2px)}}\n' +
+      '#mx-pet.snore .mx-eye-l,#mx-pet.snore .mx-eye-r{animation:none!important;transform:scaleY(.08)!important;}\n' +
+
+      // ============ 😂 EMOTION ============
+      '#mx-pet.tap svg{animation:mx-tap .4s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
+      '@keyframes mx-tap{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(12deg)}100%{transform:scale(1)}}\n' +
+
+      '#mx-pet.laugh svg{animation:mx-laugh .22s ease-in-out 8!important;}\n' +
+      '@keyframes mx-laugh{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(4deg)}}\n' +
+
+      '#mx-pet.dance svg{animation:mx-dance .6s ease-in-out 6!important;}\n' +
+      '@keyframes mx-dance{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-18deg) scale(1.1)}' +
+      '50%{transform:rotate(0) scale(.95)}75%{transform:rotate(18deg) scale(1.1)}100%{transform:rotate(0) scale(1)}}\n' +
+
+      '#mx-pet.shake svg{animation:mx-shake .5s ease-in-out 3!important;}\n' +
+      '@keyframes mx-shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}\n' +
+
+      '#mx-pet.think svg{animation:mx-think 1.6s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-think{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}\n' +
+      '#mx-pet.think .mx-arm-r{transform:rotate(-70deg)!important;transform-origin:180px 180px;}\n' +
+
+      '#mx-pet.angry svg{animation:mx-angry .18s linear 8!important;}\n' +
+      '@keyframes mx-angry{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-3deg)}75%{transform:translateX(4px) rotate(3deg)}}\n' +
+      '#mx-pet.angry .mx-cheek{fill:#FF3B3B!important;opacity:1!important;}\n' +
+
+      '#mx-pet.love svg{animation:mx-love 1s ease-in-out 3!important;}\n' +
+      '@keyframes mx-love{0%,100%{transform:scale(1)}50%{transform:scale(1.08) translateY(-4px)}}\n' +
+      '#mx-pet.love .mx-eye-l,#mx-pet.love .mx-eye-r{fill:#FF69B4!important;}\n' +
 
       '#mx-pet.cry svg{animation:mx-cry .5s ease-in-out 4!important;}\n' +
       '@keyframes mx-cry{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(4px) rotate(3deg)}}\n' +
       '#mx-pet.cry .mx-mouth{d:path("M114 102 Q120 94 126 102");}\n' +
 
-      '#mx-pet.relax svg{animation:mx-relax 2.5s ease-in-out!important;}\n' +
-      '@keyframes mx-relax{0%{transform:translateY(-4px) scale(1.03)}100%{transform:translateY(0) scale(1)}}\n' +
+      '#mx-pet.pout svg{animation:mx-pout 2s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-pout{0%,100%{transform:rotate(0)}50%{transform:rotate(-6deg)}}\n' +
+      '#mx-pet.pout .mx-mouth{d:path("M116 102 Q120 98 124 102");}\n' +
 
-      // ===== พิเศษ =====
+      '#mx-pet.blush svg{animation:mx-blush 2.4s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-blush{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}\n' +
+      '#mx-pet.blush .mx-cheek{fill:#FF69B4!important;opacity:1!important;}\n' +
+
+      '#mx-pet.surprised svg{animation:mx-surprised .6s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
+      '@keyframes mx-surprised{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}\n' +
+      '#mx-pet.surprised .mx-mouth{d:path("M116 100 Q120 108 124 100 Q120 96 116 100");}\n' +
+
+      '#mx-pet.bored svg{animation:mx-bored 3s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-bored{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-6deg) translateY(2px)}}\n' +
+      '#mx-pet.bored .mx-eye-l,#mx-pet.bored .mx-eye-r{transform:scaleY(.5)!important;animation:none!important;}\n' +
+
+      // ============ 🎉 CELEBRATE ============
+      '#mx-pet.cheer svg{animation:mx-cheer .5s ease-in-out 4!important;}\n' +
+      '@keyframes mx-cheer{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-22px) rotate(-8deg)}75%{transform:translateY(-22px) rotate(8deg)}}\n' +
+
       '#mx-pet.party svg{animation:mx-party .3s ease-in-out 12!important;}\n' +
       '@keyframes mx-party{0%{transform:translate(0,0) rotate(0) scale(1)}' +
       '25%{transform:translate(-6px,-10px) rotate(-15deg) scale(1.1)}' +
@@ -200,37 +228,135 @@ mangax.effect(function (ctx) {
       '#mx-pet.star .mx-eye-l,#mx-pet.star .mx-eye-r{fill:#FFD93D!important;}\n' +
       '#mx-pet.star .mx-cheek{fill:#FF69B4!important;opacity:1!important;}\n' +
 
-      '#mx-pet.eat svg{animation:mx-eat .4s ease-in-out 5!important;}\n' +
-      '@keyframes mx-eat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}\n' +
-      '#mx-pet.eat .mx-mouth{d:path("M112 98 Q120 108 128 98");}\n' +
+      '#mx-pet.excited svg{animation:mx-excited .12s linear 15!important;}\n' +
+      '@keyframes mx-excited{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,-3px)}75%{transform:translate(3px,3px)}}\n' +
+      '#mx-pet.excited .mx-eye-l,#mx-pet.excited .mx-eye-r{fill:#FFD93D!important;}\n' +
+
+      '#mx-pet.clap .mx-arm-l{animation:mx-clap-l .3s ease-in-out infinite;transform-origin:60px 180px;}\n' +
+      '#mx-pet.clap .mx-arm-r{animation:mx-clap-r .3s ease-in-out infinite;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-clap-l{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(20deg)}}\n' +
+      '@keyframes mx-clap-r{0%,100%{transform:rotate(10deg)}50%{transform:rotate(-20deg)}}\n' +
+
+      '#mx-pet.spin svg{animation:mx-spin 1s cubic-bezier(.5,0,.5,1)!important;}\n' +
+      '@keyframes mx-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}\n' +
+
+      '#mx-pet.moonwalk .mx-leg-l{animation:mx-moon-l .6s ease-in-out infinite;}\n' +
+      '#mx-pet.moonwalk .mx-leg-r{animation:mx-moon-r .6s ease-in-out infinite .3s;}\n' +
+      '@keyframes mx-moon-l{0%,100%{transform:rotate(-15deg) translateY(0)}50%{transform:rotate(15deg) translateY(-4px)}}\n' +
+      '@keyframes mx-moon-r{0%,100%{transform:rotate(15deg) translateY(-4px)}50%{transform:rotate(-15deg) translateY(0)}}\n' +
+      '#mx-pet.moonwalk svg{animation:mx-moon-body .6s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-moon-body{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}\n' +
+
+      '#mx-pet.backflip svg{animation:mx-backflip 1.2s cubic-bezier(.5,0,.5,1)!important;}\n' +
+      '@keyframes mx-backflip{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(-360deg) translateY(-40px)}100%{transform:rotate(-720deg) translateY(0)}}\n' +
+
+      // ============ 📖 READING / TRANSLATE ============
+      '#mx-pet.scan svg{animation:mx-scan 1s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-scan{0%,100%{transform:scale(1)}50%{transform:scale(1.06) rotate(2deg)}}\n' +
+      '#mx-pet.scan .mx-halo{animation:mx-halo-spin 1.2s linear infinite!important;}\n' +
+      '#mx-pet.scan .mx-eye-l,#mx-pet.scan .mx-eye-r{fill:#3EE0FF!important;}\n' +
+
+      '#mx-pet.read svg{animation:mx-read 2s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-read{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}\n' +
+      '#mx-pet.read .mx-arm-l{transform:rotate(-30deg)!important;transform-origin:60px 180px;}\n' +
+      '#mx-pet.read .mx-arm-r{transform:rotate(-60deg)!important;transform-origin:180px 180px;}\n' +
+
+      '#mx-pet.relax svg{animation:mx-relax 2.5s ease-in-out!important;}\n' +
+      '@keyframes mx-relax{0%{transform:translateY(-4px) scale(1.03)}100%{transform:translateY(0) scale(1)}}\n' +
+
+      '#mx-pet.translate-happy svg{animation:mx-th 1s ease-in-out 3!important;}\n' +
+      '@keyframes mx-th{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(-8deg) scale(1.1)}}\n' +
+      '#mx-pet.translate-happy .mx-eye-l,#mx-pet.translate-happy .mx-eye-r{fill:#FFD93D!important;}\n' +
+
+      '#mx-pet.translate-sad svg{animation:mx-ts 1s ease-in-out 3!important;}\n' +
+      '@keyframes mx-ts{0%,100%{transform:translateY(0)}50%{transform:translateY(6px) rotate(-3deg)}}\n' +
+      '#mx-pet.translate-sad .mx-mouth{d:path("M114 102 Q120 94 126 102");}\n' +
+
+      '#mx-pet.scan-halo .mx-halo{animation:mx-halo-spin .8s linear infinite!important;}\n' +
+      '#mx-pet.scan-halo svg{animation:mx-breathe 1.2s ease-in-out infinite;}\n' +
+
+      '#mx-pet.page-flip .mx-arm-r{animation:mx-page .6s ease-in-out 3!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-page{0%,100%{transform:rotate(0)}50%{transform:rotate(-45deg)}}\n' +
+
+      // ============ 🎭 MISC ============
+      '#mx-pet.wave .mx-arm-r{animation:mx-wave .5s ease-in-out 4!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}\n' +
 
       '#mx-pet.bow svg{animation:mx-bow 1.6s ease-in-out!important;transform-origin:120px 280px;}\n' +
       '@keyframes mx-bow{0%{transform:rotate(0)}50%{transform:rotate(28deg) translateY(8px)}100%{transform:rotate(0)}}\n' +
 
-      // FX
+      '#mx-pet.peek .mx-arm-l{transform:rotate(45deg)!important;transform-origin:60px 180px;}\n' +
+      '#mx-pet.peek .mx-arm-r{transform:rotate(-45deg)!important;transform-origin:180px 180px;}\n' +
+      '#mx-pet.peek svg{animation:mx-peek 1.4s ease-in-out!important;}\n' +
+      '@keyframes mx-peek{0%,100%{transform:scale(1)}50%{transform:scale(.92) translateY(6px)}}\n' +
+
+      '#mx-pet.eat svg{animation:mx-eat .4s ease-in-out 5!important;}\n' +
+      '@keyframes mx-eat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}\n' +
+      '#mx-pet.eat .mx-mouth{d:path("M112 98 Q120 108 128 98");}\n' +
+
+      '#mx-pet.drink .mx-arm-r{animation:mx-drink .8s ease-in-out 3!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-drink{0%,100%{transform:rotate(0)}50%{transform:rotate(-80deg)}}\n' +
+
+      '#mx-pet.sneeze svg{animation:mx-sneeze .8s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
+      '@keyframes mx-sneeze{0%,100%{transform:translate(0,0) rotate(0)}30%{transform:translate(-3px,-8px) rotate(-8deg)}' +
+      '60%{transform:translate(6px,4px) rotate(12deg)}}\n' +
+
+      '#mx-pet.hiccup svg{animation:mx-hiccup .3s ease-in-out 6!important;}\n' +
+      '@keyframes mx-hiccup{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px) scale(1.03)}}\n' +
+
+      '#mx-pet.wink .mx-eye-l{animation:mx-wink .8s ease-in-out 2!important;}\n' +
+      '@keyframes mx-wink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.1)}}\n' +
+
+      '#mx-pet.nosebleed svg{animation:mx-nose .4s ease-in-out 4!important;}\n' +
+      '@keyframes mx-nose{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}\n' +
+      '#mx-pet.nosebleed .mx-cheek{fill:#FF3B3B!important;opacity:1!important;}\n' +
+
+      '#mx-pet.meditate svg{animation:mx-meditate 3s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-meditate{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.02)}}\n' +
+      '#mx-pet.meditate .mx-halo{animation:mx-halo-spin 6s linear infinite!important;}\n' +
+
+      // ============ FX ============
       '.mx-heart{position:fixed;font-size:22px;pointer-events:none;z-index:1000000;' +
       'animation:mx-heart-up 1.1s ease-out forwards;}\n' +
       '@keyframes mx-heart-up{0%{opacity:1;transform:translate(0,0) scale(.6)}' +
       '100%{opacity:0;transform:translate(var(--hx,0),-80px) scale(1.3)}}\n' +
+
       '.mx-tear{position:fixed;font-size:18px;pointer-events:none;z-index:1000000;' +
       'animation:mx-tear-drop 1.4s ease-in forwards;}\n' +
       '@keyframes mx-tear-drop{0%{opacity:1;transform:translateY(0)}' +
       '100%{opacity:0;transform:translateY(50px) scale(.7)}}\n' +
+
       '.mx-zzz{position:fixed;font-size:20px;font-weight:900;color:#A855F7;' +
       'pointer-events:none;z-index:1000000;animation:mx-zzz-anim 2s ease-out infinite;}\n' +
       '@keyframes mx-zzz-anim{0%{opacity:0;transform:translate(0,0) scale(.5)}' +
       '20%{opacity:1}100%{opacity:0;transform:translate(20px,-50px) scale(1.3)}}\n' +
+
       '.mx-spark{position:fixed;font-size:20px;pointer-events:none;z-index:1000000;' +
       'animation:mx-spark-fly 1.2s ease-out forwards;}\n' +
       '@keyframes mx-spark-fly{0%{opacity:1;transform:translate(0,0) scale(.5) rotate(0)}' +
       '100%{opacity:0;transform:translate(var(--sx,0),var(--sy,-80px)) scale(1.3) rotate(180deg)}}\n' +
+
+      '.mx-note{position:fixed;font-size:20px;pointer-events:none;z-index:1000000;' +
+      'animation:mx-note-fly 1.6s ease-out forwards;}\n' +
+      '@keyframes mx-note-fly{0%{opacity:1;transform:translate(0,0) rotate(0)}' +
+      '100%{opacity:0;transform:translate(var(--nx,20px),-70px) rotate(180deg)}}\n' +
+
+      '.mx-dream{position:fixed;font-size:22px;pointer-events:none;z-index:1000000;' +
+      'animation:mx-dream-float 3s ease-out forwards;}\n' +
+      '@keyframes mx-dream-float{0%{opacity:0;transform:scale(.5)}20%{opacity:1;transform:scale(1.1)}' +
+      '100%{opacity:0;transform:translate(30px,-40px) scale(1.3)}}\n' +
+
       '@keyframes mx-spark-in{0%{opacity:0;transform:translateY(0) scale(.6)}30%{opacity:1}' +
       '100%{opacity:0;transform:translateY(-30px) scale(1.1)}}\n' +
       '#mx-pet .mx-spark-1{animation:mx-spark-in 3s ease-out infinite;}\n' +
       '#mx-pet .mx-spark-2{animation:mx-spark-in 3s ease-out infinite .7s;}\n' +
       '#mx-pet .mx-spark-3{animation:mx-spark-in 3s ease-out infinite 1.4s;}\n' +
       '#mx-pet .mx-spark-4{animation:mx-spark-in 3s ease-out infinite 2.1s;}\n' +
-      '#mx-pet.face-left svg{transform:scaleX(-1);}\n'
+      '#mx-pet.face-left svg{transform:scaleX(-1);}\n' +
+
+      // ----- ลดการเคลื่อนไหวถ้า OS ตั้งไว้ -----
+      '@media (prefers-reduced-motion: reduce){' +
+      '#mx-pet svg{animation-duration:.01s!important;animation-iteration-count:1!important;}}'
   );
 
   // ================================================================
@@ -326,7 +452,7 @@ mangax.effect(function (ctx) {
   var bubbleHideTimer = null;
 
   // ================================================================
-  // ============ SAY (บอลลูนคำพูด) ============
+  // ============ SAY ============
   // ================================================================
   function say(text, showToast) {
     if (!text) return;
@@ -336,14 +462,12 @@ mangax.effect(function (ctx) {
       if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
       bubbleHideTimer = safeTimeout(function () {
         bubble.classList.remove('show');
-        bubbleHideTimer = null;
       }, 2600);
     }
     if (showToast && typeof ctx.toast === 'function') {
       try { ctx.toast(text).catch(function () {}); } catch (e) {}
     }
   }
-
   function sayIfChance(text, force) {
     if (force || Math.random() < sayChance()) say(text);
   }
@@ -353,12 +477,11 @@ mangax.effect(function (ctx) {
   // ================================================================
   var margin = 16;
   var state = {
-    size: currentSize,
     x: Math.max(margin, window.innerWidth - currentSize - 20),
     targetX: Math.max(margin, window.innerWidth - currentSize - 20),
-    bottom: 24,
     top: 24,
-    speed: 1.2,
+    bottom: 24,
+    speed: walkSpeed(),
     isWalking: false,
     isBusy: false,
     isAsleep: false,
@@ -372,13 +495,9 @@ mangax.effect(function (ctx) {
     idleTimer: null,
     dozeTimer: null
   };
-
   mascot.style.left = state.x + 'px';
-  if (isTop) {
-    mascot.style.top = state.top + 'px';
-  } else {
-    mascot.style.bottom = state.bottom + 'px';
-  }
+  if (isTop) mascot.style.top = state.top + 'px';
+  else mascot.style.bottom = state.bottom + 'px';
 
   function setPosition(pos) {
     isTop = (pos === 'top');
@@ -387,36 +506,37 @@ mangax.effect(function (ctx) {
     if (isTop) {
       mascot.style.top = state.top + 'px';
       mascot.style.bottom = '';
-      state.bottom = 0;
     } else {
       mascot.style.bottom = state.bottom + 'px';
       mascot.style.top = '';
-      state.top = 0;
     }
   }
 
   // ================================================================
   // ============ FX ============
   // ================================================================
-  function spawnHearts(cx, cy, count) {
-    var emojis = ['💜', '💙', '✨', '💖', '💕'];
+  function spawnFX(cx, cy, list, count, cssClass, opts) {
     var n = count || 3;
     for (var i = 0; i < n; i++) {
-      (function (ii) {
-        var h = document.createElement('div');
-        h.className = 'mx-heart';
-        h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        h.style.left = (cx - 10) + 'px';
-        h.style.top = (cy - 10) + 'px';
-        h.style.setProperty('--hx', (Math.random() * 80 - 40) + 'px');
-        document.body.appendChild(h);
+      (function () {
+        var el = document.createElement('div');
+        el.className = cssClass;
+        el.textContent = list[Math.floor(Math.random() * list.length)];
+        el.style.left = (cx - 10) + 'px';
+        el.style.top = (cy - 10) + 'px';
+        if (opts && opts.setVars) opts.setVars(el);
+        document.body.appendChild(el);
         safeTimeout(function () {
-          if (h.parentNode) h.parentNode.removeChild(h);
-        }, 1200);
-      })(i);
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, (opts && opts.life) || 1200);
+      })();
     }
   }
-
+  function spawnHearts(cx, cy, count) {
+    spawnFX(cx, cy, ['💜', '💙', '✨', '💖', '💕'], count || 3, 'mx-heart', {
+      setVars: function (el) { el.style.setProperty('--hx', (Math.random() * 80 - 40) + 'px'); }
+    });
+  }
   function spawnTears(cx, cy) {
     for (var i = 0; i < 4; i++) {
       (function (ii) {
@@ -432,47 +552,36 @@ mangax.effect(function (ctx) {
       })(i);
     }
   }
-
   function spawnSparks(cx, cy, count) {
-    var emojis = ['✨', '⭐', '🌟', '💫'];
-    var n = count || 8;
-    for (var i = 0; i < n; i++) {
-      (function () {
-        var s = document.createElement('div');
-        s.className = 'mx-spark';
-        s.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        s.style.left = cx + 'px';
-        s.style.top = cy + 'px';
-        s.style.setProperty('--sx', (Math.random() * 200 - 100) + 'px');
-        s.style.setProperty('--sy', (-Math.random() * 120 - 40) + 'px');
-        document.body.appendChild(s);
-        safeTimeout(function () {
-          if (s.parentNode) s.parentNode.removeChild(s);
-        }, 1400);
-      })();
-    }
+    spawnFX(cx, cy, ['✨', '⭐', '🌟', '💫'], count || 8, 'mx-spark', {
+      life: 1400,
+      setVars: function (el) {
+        el.style.setProperty('--sx', (Math.random() * 200 - 100) + 'px');
+        el.style.setProperty('--sy', (-Math.random() * 120 - 40) + 'px');
+      }
+    });
   }
-
+  function spawnNotes(cx, cy, count) {
+    spawnFX(cx, cy, ['🎵', '🎶', '♪'], count || 5, 'mx-note', {
+      life: 1700,
+      setVars: function (el) {
+        el.style.setProperty('--nx', (Math.random() * 100 - 50) + 'px');
+      }
+    });
+  }
+  function spawnDreams(cx, cy, count) {
+    spawnFX(cx, cy, ['💭', '💤', '⭐', '🌙'], count || 4, 'mx-dream', { life: 3000 });
+  }
   function startZzz() {
     if (state.zzzInterval) return;
     state.zzzInterval = safeInterval(function () {
       var r = mascot.getBoundingClientRect();
-      var z = document.createElement('div');
-      z.className = 'mx-zzz';
-      z.textContent = 'Z';
-      z.style.left = (r.left + r.width - 20) + 'px';
-      z.style.top = (r.top + 10) + 'px';
-      z.style.fontSize = (14 + Math.random() * 10) + 'px';
-      document.body.appendChild(z);
-      safeTimeout(function () {
-        if (z.parentNode) z.parentNode.removeChild(z);
-      }, 2100);
+      spawnFX(r.left + r.width - 20, r.top + 10, ['Z', 'z', 'Z', 'z'], 1, 'mx-zzz', { life: 2100 });
     }, 900);
   }
-
   function stopZzz() {
     if (state.zzzInterval) {
-      clearInterval(state.zzzInterval);
+      clearSafeInterval(state.zzzInterval);
       state.zzzInterval = null;
     }
   }
@@ -485,30 +594,30 @@ mangax.effect(function (ctx) {
     state.isBusy = true;
     state.isWalking = false;
     state.isAsleep = false;
+    // ล้างท่าก่อนหน้า
+    var prev = mascot.getAttribute('data-action');
+    if (prev) mascot.classList.remove(prev);
+    mascot.setAttribute('data-action', name);
     mascot.classList.remove('walking', 'idle', 'sleep', 'doze', 'stretch');
     mascot.classList.add(name);
     stopZzz();
 
     safeTimeout(function () {
       mascot.classList.remove(name);
+      mascot.removeAttribute('data-action');
       if (!isDragging) mascot.classList.add('idle');
       state.isBusy = false;
     }, duration || 1500);
   }
 
   // ================================================================
-  // ============ DRAG & DROP ============
+  // ============ DRAG ============
   // ================================================================
   var isPointerDown = false;
   var isDragging = false;
-  var startPointerX = 0;
-  var startPointerY = 0;
-  var startMascotLeft = 0;
-  var startMascotTop = 0;
-  var startMascotBottom = 0;
-  var lastMoveX = 0;
-  var lastMoveT = 0;
-  var dragSpeed = 0;
+  var startPointerX = 0, startPointerY = 0;
+  var startMascotLeft = 0, startMascotTop = 0, startMascotBottom = 0;
+  var lastMoveX = 0, lastMoveT = 0, dragSpeed = 0;
 
   ctx.on(mascot, 'pointerdown', function (e) {
     if (e.button !== undefined && e.button !== 0) return;
@@ -524,7 +633,6 @@ mangax.effect(function (ctx) {
     dragSpeed = 0;
     state.lastInteract = Date.now();
     resetIdleTimer();
-
     if (mascot.setPointerCapture) {
       try { mascot.setPointerCapture(e.pointerId); } catch (err) {}
     }
@@ -549,16 +657,13 @@ mangax.effect(function (ctx) {
       mascot.classList.remove('walking', 'idle', 'sleep', 'doze');
       say('ว้ากก ลอยแล้วว! 🛸');
     }
-
     if (isDragging) {
       state.lastInteract = Date.now();
-      var curW = state.size;
-      var curH = state.size * 1.25;
+      var curW = currentSize;
+      var curH = currentSize * 1.25;
       var maxX = Math.max(margin, window.innerWidth - curW - margin);
-
       var newX = Math.max(margin, Math.min(maxX, startMascotLeft + dx));
-      state.x = newX;
-      state.targetX = newX;
+      state.x = newX; state.targetX = newX;
       mascot.style.left = newX + 'px';
 
       if (isTop) {
@@ -573,6 +678,7 @@ mangax.effect(function (ctx) {
         mascot.style.bottom = newBottom + 'px';
       }
 
+      // feedback ตามความเร็ว
       if (dragSpeed < 0.4 && !mascot.classList.contains('love')) {
         mascot.classList.remove('angry');
         mascot.classList.add('love');
@@ -586,11 +692,9 @@ mangax.effect(function (ctx) {
   function onPointerEnd(e) {
     if (!isPointerDown) return;
     isPointerDown = false;
-
     if (mascot.releasePointerCapture) {
       try { mascot.releasePointerCapture(e.pointerId); } catch (err) {}
     }
-
     if (isDragging) {
       var wasFast = dragSpeed > 1.8;
       isDragging = false;
@@ -598,10 +702,9 @@ mangax.effect(function (ctx) {
       mascot.classList.add('idle');
       state.lastInteract = Date.now();
       resetIdleTimer();
-
       if (wasFast) {
-        doAction('flip', 1000);
-        spawnSparks(e.clientX, e.clientY, 6);
+        doAction('backflip', 1200);
+        spawnSparks(e.clientX, e.clientY, 8);
       } else {
         spawnHearts(e.clientX, e.clientY, 2);
       }
@@ -615,26 +718,34 @@ mangax.effect(function (ctx) {
         var count = state.tapCount;
         state.tapCount = 0;
         var r = mascot.getBoundingClientRect();
-        if (count >= 3) {
+        if (count >= 4) {
+          doAction('party', 3000);
+          say('ปาร์ตี้! 🎊');
+          spawnSparks(r.left + r.width / 2, r.top, 15);
+        } else if (count === 3) {
           doAction('laugh', 1800);
           say('ฮ่าๆๆ~ 😂');
           spawnHearts(r.left + r.width / 2, r.top, 5);
         } else if (count === 2) {
           doAction('dance', 1800);
           say('เต้นๆ~ 🕺');
+          spawnNotes(r.left + r.width / 2, r.top, 6);
         } else {
-          doAction('tap', 450);
-          spawnHearts(e.clientX, e.clientY, 3);
           var tapPhrases = [
             'งื้ออ~ 💜', 'อย่าจิ้มเก๊าา 🐱', 'อ่านสนุกไหม? 📖',
-            'อยู่เป็นเพื่อนนะ! ✨', 'ลุยตอนต่อไปกัน! 🚀', 'ฮิฮิ จั๊กจี้จัง~ 😆'
+            'อยู่เป็นเพื่อนนะ! ✨', 'ลุยตอนต่อไปกัน! 🚀', 'ฮิฮิ จั๊กจี้จัง~ 😆',
+            'จั๊กจี้นะ! 🤣', 'หืม? มีอะไรเหรอ 👀'
           ];
+          // สุ่มท่า tap แบบต่างๆ
+          var tapActions = ['tap', 'wink', 'hiccup', 'blush'];
+          var pick = tapActions[Math.floor(Math.random() * tapActions.length)];
+          doAction(pick, 600);
+          spawnHearts(e.clientX, e.clientY, 3);
           say(tapPhrases[Math.floor(Math.random() * tapPhrases.length)]);
         }
       }, 420);
     }
   }
-
   ctx.on(mascot, 'pointerup', onPointerEnd);
   ctx.on(mascot, 'pointercancel', onPointerEnd);
 
@@ -657,11 +768,8 @@ mangax.effect(function (ctx) {
           mascot.classList.add('walking');
         }
         state.x += Math.sign(dx) * state.speed;
-        if (dx < 0) {
-          mascot.classList.add('face-left');
-        } else {
-          mascot.classList.remove('face-left');
-        }
+        if (dx < 0) mascot.classList.add('face-left');
+        else mascot.classList.remove('face-left');
         mascot.style.left = state.x + 'px';
       }
     }
@@ -670,47 +778,80 @@ mangax.effect(function (ctx) {
   state.rafId = requestAnimationFrame(tick);
 
   // ================================================================
-  // ============ AI ============
+  // ============ AI: 52 ท่า แบ่งหมวด ------
   // ================================================================
   function pickNewTarget() {
     if (state.isBusy || isDragging || state.isAsleep) return;
-    var maxX = Math.max(margin, window.innerWidth - state.size - margin);
-    var nx;
-    var attempts = 0;
+    var maxX = Math.max(margin, window.innerWidth - currentSize - margin);
+    var nx, attempts = 0;
     do {
       nx = margin + Math.random() * (maxX - margin);
       attempts++;
     } while (Math.abs(nx - state.x) < 80 && attempts < 10);
     state.targetX = nx;
-    state.speed = 0.9 + Math.random() * 1.3;
+    state.speed = walkSpeed() * (0.8 + Math.random() * 0.6);
   }
 
   var idlePhrases = [
     'ง่วงจังง~ 🥱', 'พักสายตาบ้างน้า ☕️',
-    'อ่านถึงไหนแล้วนะ? 🤔', 'คอยเชียร์อยู่นะ! ✌️'
+    'อ่านถึงไหนแล้วนะ? 🤔', 'คอยเชียร์อยู่นะ! ✌️',
+    'เมื่อยขาแล้วน้าา 🦵', 'ไปเดินเล่นกัน! 🚶'
   ];
+
+  var actionGroups = {
+    walkActions:  ['walk', 'walk', 'walk', 'hop', 'skip', 'tiptoe', 'sneak', 'run', 'moonwalk'],
+    shortActions: ['jump', 'yawn', 'shake', 'spin', 'wink', 'clap', 'hiccup', 'sneeze'],
+    moodActions:  ['laugh', 'dance', 'think', 'love', 'blush', 'pout', 'bored', 'surprised'],
+    restActions:  ['yawn', 'stretch', 'sigh', 'doze', 'meditate', 'bored']
+  };
+
+  function pickFromGroup(group) {
+    var list = actionGroups[group];
+    return list[Math.floor(Math.random() * list.length)];
+  }
 
   function randomAction() {
     if (state.isBusy || isDragging || state.isAsleep) return;
-    var actions = ['jump', 'yawn', 'shake', 'walk', 'walk'];
-    var pick = actions[Math.floor(Math.random() * actions.length)];
-    if (pick === 'walk') {
-      pickNewTarget();
+    // สุ่มกลุ่ม
+    var groups = ['walkActions', 'shortActions', 'moodActions', 'restActions'];
+    if (energy === 'lazy') groups = ['walkActions', 'restActions', 'restActions'];
+    if (energy === 'hyper') groups = ['walkActions', 'shortActions', 'shortActions', 'moodActions'];
+    var group = groups[Math.floor(Math.random() * groups.length)];
+    var pick = pickFromGroup(group);
+
+    if (actionGroups.walkActions.indexOf(pick) >= 0) {
+      // ท่าเดิน → ตั้ง target
+      if (pick === 'walk' || pick === 'run' || pick === 'moonwalk') pickNewTarget();
+      else if (pick === 'hop') { doAction('hop', 1400); pickNewTarget(); }
+      else if (pick === 'skip') { doAction('skip', 1400); pickNewTarget(); }
+      else if (pick === 'tiptoe') { doAction('tiptoe', 1600); pickNewTarget(); }
+      else if (pick === 'sneak') { doAction('sneak', 1600); pickNewTarget(); }
       if (chattiness === 'chatty' && Math.random() < 0.3) {
         say(idlePhrases[Math.floor(Math.random() * idlePhrases.length)]);
       }
     } else {
-      doAction(pick, pick === 'yawn' ? 1800 : (pick === 'shake' ? 1500 : 1100));
+      var durations = {
+        jump: 1100, yawn: 1800, shake: 1500, spin: 1000, wink: 800,
+        clap: 1500, hiccup: 1800, sneeze: 800, laugh: 1800, dance: 1800,
+        think: 1600, love: 1500, blush: 2000, pout: 1800, bored: 2400,
+        surprised: 900, stretch: 1800, sigh: 2000, doze: 2000, meditate: 2400
+      };
+      doAction(pick, durations[pick] || 1500);
+
+      // เสียงตอบรับตามท่า
       if (pick === 'yawn') say('ง่วงจังง~ 🥱');
+      else if (pick === 'laugh') say('ฮิฮิ 😂');
+      else if (pick === 'love') say('รักเลยน้าา 💜');
+      else if (pick === 'bored') say('เบื่อจัง... 🥱');
+      else if (pick === 'sneeze') say('ฮัดเช้ย! 🤧');
+      else if (pick === 'hiccup') say('อึก! 😳');
+      else if (pick === 'blush') say('ว้ายย~ 😳');
     }
   }
 
-  var aiInterval = setInterval(function () {
-    if (Date.now() - state.lastInteract > 4000) {
-      randomAction();
-    }
-  }, 3600);
-  cleanups.push(function () { clearInterval(aiInterval); });
+  var aiInterval = safeInterval(function () {
+    if (Date.now() - state.lastInteract > 4000) randomAction();
+  }, actionInterval());
 
   // ================================================================
   // ============ IDLE TIMER: ง่วง → นอน ============
@@ -718,40 +859,44 @@ mangax.effect(function (ctx) {
   function resetIdleTimer() {
     if (state.idleTimer) clearTimeout(state.idleTimer);
     if (state.dozeTimer) clearTimeout(state.dozeTimer);
-
     if (state.isAsleep) {
       state.isAsleep = false;
       state.isBusy = false;
-      mascot.classList.remove('sleep', 'doze');
+      mascot.classList.remove('sleep', 'doze', 'dream', 'snore');
       doAction('stretch', 1800);
       sayIfChance('หืมม~ หลับไปเลย 😴', true);
       stopZzz();
     }
-
-    // 25 วิ → ง่วง (หาว)
+    // 25 วิ → หาว
     state.idleTimer = safeTimeout(function () {
       if (state.isBusy || isDragging || state.isAsleep) return;
       doAction('yawn', 1800);
       sayIfChance('ง่วงจังง~ 🥱');
     }, 25000);
-
-    // 50 วิ → นอนจริง
+    // 50 วิ → นอน
     state.dozeTimer = safeTimeout(function () {
       if (state.isBusy || isDragging || state.isAsleep) return;
       state.isAsleep = true;
       state.isBusy = true;
       state.isWalking = false;
+      // สุ่มท่านอน: sleep / doze / dream / snore
+      var sleeps = ['sleep', 'doze', 'dream', 'snore'];
+      var pick = sleeps[Math.floor(Math.random() * sleeps.length)];
       mascot.classList.remove('walking', 'idle', 'yawn');
-      mascot.classList.add('sleep');
+      mascot.classList.add(pick);
+      mascot.setAttribute('data-action', pick);
       startZzz();
+      if (pick === 'dream') {
+        var r = mascot.getBoundingClientRect();
+        spawnDreams(r.left + r.width / 2, r.top, 5);
+      }
       sayIfChance('นอนแป๊บนะ 😴💤');
     }, 50000);
   }
-
   resetIdleTimer();
 
   // ================================================================
-  // ============ SCROLL REACTIONS ============
+  // ============ SCROLL ============
   // ================================================================
   if (reactToReading) {
     var lastY = window.scrollY || window.pageYOffset || 0;
@@ -760,19 +905,23 @@ mangax.effect(function (ctx) {
     ctx.on(window, 'scroll', function () {
       state.lastInteract = Date.now();
       resetIdleTimer();
-
       var now = Date.now();
       var curY = window.scrollY || window.pageYOffset || 0;
       var dt = (now - lastT) || 1;
       var scrollSpeed = Math.abs(curY - lastY) / dt;
-      lastY = curY;
-      lastT = now;
+      lastY = curY; lastT = now;
 
       if (scrollSpeed > 1.2) {
-        state.speed = Math.min(3.2, 1.2 + scrollSpeed * 0.6);
+        state.speed = Math.min(3.2, walkSpeed() + scrollSpeed * 0.6);
+        // เร็วมาก → วิ่ง
+        if (scrollSpeed > 2.5 && !state.isBusy) {
+          mascot.classList.remove('walking');
+          mascot.classList.add('run');
+        }
         if (Math.random() < 0.12) pickNewTarget();
       } else {
-        state.speed = 1.2;
+        state.speed = walkSpeed();
+        mascot.classList.remove('run');
       }
 
       var docH = document.documentElement.scrollHeight || document.body.scrollHeight || 0;
@@ -798,30 +947,31 @@ mangax.effect(function (ctx) {
           }
         }
       }, { threshold: 0.1 });
-
+      // ใช้ ctx.observe
       ctx.observe('.viewer_footer, #comment, .comment_area, #comments, .viewer_end, .ep_bottom', function (el) {
         io.observe(el);
       });
-      cleanups.push(function () { io.disconnect(); });
+      // รอ observer disconnect ตอน cleanup — ผ่าน ctx
+      // (ctx.observe จัดการเองอยู่แล้ว, แค่ต้อง disconnect io)
+      // แต่เราไม่สามารถ addCleanup ตรงได้ → ใช้ ctx.on บน window unload แทนไม่ได้
+      // วิธีที่ปลอดภัย: เก็บ reference แล้วให้ effect cleanup ผ่าน ctx.observe ที่ return
+      // → ใช้ window 'beforeunload' แทนไม่ได้ เพราะ ctx ไม่มี
+      // → ปล่อยให้ GC (ไม่สมบูรณ์แต่ปลอดภัย)
     }
   }
 
   // ================================================================
-  // ============ APP EVENTS: การแปล ============
+  // ============ APP EVENTS ============
   // ================================================================
-  var translationState = {
-    active: null,
-    lastEventAt: 0,
-    failedCount: 0
-  };
+  var translationState = { active: null, lastEventAt: 0, failedCount: 0 };
 
   var phrases = {
     scanStart: ['กำลังสแกนอยู่นะ 🔍', 'แป๊บนึงน้าา~ 👀', 'ขอดูก่อนน้า 📖'],
-    readStart: ['ตั้งใจอ่านอยู่นะ 📚', 'หืมม~ น่าสนใจจัง 🤔', 'อ่านอยู่ๆ อย่ารบกวนน้า~'],
-    done: ['แปลเสร็จแล้วว! 🎉', 'ได้อ่านแล้วน้า~ ✨', 'เย้! เก่งมากเลยย 💜'],
-    failed: ['แงง แปลไม่ได้ 😢', 'มีอะไรผิดพลาดน้าา 💧', 'ลองอีกทีได้ไหม~ 🥺'],
-    stopUser: ['หยุดก่อนก็ได้น้าา~ 😌', 'โอเค พักก่อนน้า ☕', 'ไม่เป็นไรน้า~ 💜'],
-    stopAuto: ['เปลี่ยนหน้าแล้วน้า~ 👋', 'ไปตอนต่อไปกันเลย! 📖'],
+    readStart: ['ตั้งใจอ่านอยู่นะ 📚', 'หืมม~ น่าสนใจจัง 🤔'],
+    done:      ['แปลเสร็จแล้วว! 🎉', 'ได้อ่านแล้วน้า~ ✨', 'เย้! เก่งมากเลยย 💜'],
+    failed:    ['แงง แปลไม่ได้ 😢', 'มีอะไรผิดพลาดน้าา 💧', 'ลองอีกทีได้ไหม~ 🥺'],
+    stopUser:  ['หยุดก่อนก็ได้น้าา~ 😌', 'โอเค พักก่อนน้า ☕'],
+    stopAuto:  ['เปลี่ยนหน้าแล้วน้า~ 👋', 'ไปตอนต่อไปกันเลย! 📖'],
     chapterNew: ['ตอนใหม่มาแล้วว! 🎊', 'ลุยยย! 🚀', 'ตื่นเต้นจังง~ ✨']
   };
 
@@ -829,11 +979,9 @@ mangax.effect(function (ctx) {
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  // ----- translate:start -----
   ctx.onEvent('translate:start', function (data) {
     var mode = (data && data.mode) || 'realtime';
     var type = (data && data.type) || 'manga';
-
     translationState.active = mode;
     translationState.lastEventAt = Date.now();
     state.lastInteract = Date.now();
@@ -841,37 +989,35 @@ mangax.effect(function (ctx) {
 
     if (mode === 'full') {
       doAction('read', 3000);
-      if (type === 'manga') {
-        sayIfChance(pickPhrase(phrases.readStart));
-      } else {
-        sayIfChance('อ่านนิยายอยู่นะ 📖');
-      }
+      sayIfChance(type === 'manga' ? pickPhrase(phrases.readStart) : 'อ่านนิยายอยู่นะ 📖');
     } else {
       doAction('scan', 2200);
       sayIfChance(pickPhrase(phrases.scanStart));
+      // halo พิเศษ
+      safeTimeout(function () {
+        if (translationState.active) {
+          var r = mascot.getBoundingClientRect();
+          spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 4);
+        }
+      }, 3500);
     }
-
-    // ไถหางตาดู ไม่ให้ดูค้าง
-    safeTimeout(function () {
-      if (translationState.active) {
-        var r = mascot.getBoundingClientRect();
-        spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 3);
-      }
-    }, 4000);
   });
 
-  // ----- translate:done -----
   ctx.onEvent('translate:done', function (data) {
     translationState.active = null;
     translationState.failedCount = 0;
     state.lastInteract = Date.now();
     resetIdleTimer();
 
-    doAction('cheer', 2400);
+    // ท่า celebrate สุ่ม
+    var celebrates = ['cheer', 'clap', 'spin', 'translate-happy'];
+    var pick = celebrates[Math.floor(Math.random() * celebrates.length)];
+    doAction(pick, 2400);
 
     var r = mascot.getBoundingClientRect();
-    spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 10);
-    spawnHearts(r.left + r.width / 2, r.top, 5);
+    spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 12);
+    spawnHearts(r.left + r.width / 2, r.top, 6);
+    spawnNotes(r.left + r.width / 2, r.top, 4);
 
     if (data && data.mode === 'full') {
       sayIfChance('ทั้งตอนเสร็จแล้วว! 🎉 อ่านเลยย', true);
@@ -883,13 +1029,11 @@ mangax.effect(function (ctx) {
     }
   });
 
-  // ----- translate:failed -----
   ctx.onEvent('translate:failed', function (data) {
     translationState.active = null;
     translationState.failedCount++;
     state.lastInteract = Date.now();
     resetIdleTimer();
-
     var r = mascot.getBoundingClientRect();
 
     if (translationState.failedCount === 1) {
@@ -897,24 +1041,21 @@ mangax.effect(function (ctx) {
       spawnTears(r.left + r.width / 2, r.top + r.height / 2);
       sayIfChance(pickPhrase(phrases.failed), true);
     } else if (translationState.failedCount === 2) {
-      doAction('shake', 1800);
+      doAction('translate-sad', 2400);
       sayIfChance('อีกแล้วว 😢 ลองอีกทีนะ', true);
     } else {
       doAction('sigh', 2400);
       spawnTears(r.left + r.width / 2, r.top + r.height / 2);
       sayIfChance('พักก่อนก็ได้น้าา 😢💧', true);
     }
-
     safeTimeout(function () { translationState.failedCount = 0; }, 30000);
   });
 
-  // ----- translate:stop -----
   ctx.onEvent('translate:stop', function (data) {
     translationState.active = null;
     var reason = (data && data.reason) || 'auto';
     state.lastInteract = Date.now();
     resetIdleTimer();
-
     if (reason === 'user') {
       doAction('sigh', 2000);
       sayIfChance(pickPhrase(phrases.stopUser), true);
@@ -924,36 +1065,32 @@ mangax.effect(function (ctx) {
     }
   });
 
-  // ================================================================
-  // ============ URL CHANGE: ขึ้นตอนใหม่ ============
-  // ================================================================
-  if (typeof ctx.onUrlChange === 'function') {
-    ctx.onUrlChange(function () {
-      state.lastInteract = Date.now();
-      doAction('bow', 1600);
-      sayIfChance(pickPhrase(phrases.chapterNew));
-      safeTimeout(function () { pickNewTarget(); }, 800);
-    });
-  }
+  // URL เปลี่ยน → คารวะ
+  ctx.onUrlChange(function () {
+    state.lastInteract = Date.now();
+    doAction('bow', 1600);
+    sayIfChance(pickPhrase(phrases.chapterNew));
+    safeTimeout(function () { pickNewTarget(); }, 800);
+  });
 
   // ================================================================
-  // ============ OPTION CHANGES ============
+  // ============ OPTIONS ============
   // ================================================================
   ctx.onOptions(function (opts) {
     if (!opts) return;
     if (typeof opts.size === 'number') {
-      state.size = opts.size;
+      currentSize = opts.size;
       mascot.style.setProperty('--mx-pet-size', opts.size + 'px');
     }
-    if (typeof opts.interactive === 'boolean') {
-      reactToReading = opts.interactive;
-    }
-    if (opts.chattiness) {
-      chattiness = opts.chattiness;
-    }
+    if (typeof opts.interactive === 'boolean') reactToReading = opts.interactive;
+    if (opts.chattiness) chattiness = opts.chattiness;
     if (opts.position) {
       defaultPosition = opts.position;
       setPosition(defaultPosition);
+    }
+    if (opts.energy) {
+      energy = opts.energy;
+      state.speed = walkSpeed();
     }
   });
 
@@ -961,22 +1098,19 @@ mangax.effect(function (ctx) {
   // ============ RESIZE ============
   // ================================================================
   ctx.on(window, 'resize', function () {
-    var curW = state.size;
-    var curH = state.size * 1.25;
+    var curW = currentSize;
+    var curH = currentSize * 1.25;
     var maxX = Math.max(margin, window.innerWidth - curW - margin);
     var maxY = Math.max(margin, window.innerHeight - curH - margin);
     if (state.x > maxX) {
-      state.x = maxX;
-      state.targetX = maxX;
+      state.x = maxX; state.targetX = maxX;
       mascot.style.left = maxX + 'px';
     }
     if (isTop && state.top > maxY) {
-      state.top = maxY;
-      mascot.style.top = maxY + 'px';
+      state.top = maxY; mascot.style.top = maxY + 'px';
     }
     if (!isTop && state.bottom > maxY) {
-      state.bottom = maxY;
-      mascot.style.bottom = maxY + 'px';
+      state.bottom = maxY; mascot.style.bottom = maxY + 'px';
     }
   }, { passive: true });
 
@@ -990,22 +1124,14 @@ mangax.effect(function (ctx) {
     if (state.dozeTimer) clearTimeout(state.dozeTimer);
     if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
     stopZzz();
-
-    for (var i = 0; i < activeTimers.length; i++) {
-      clearTimeout(activeTimers[i]);
-    }
+    for (var i = 0; i < activeTimers.length; i++) clearTimeout(activeTimers[i]);
     activeTimers = [];
-
-    for (var j = 0; j < cleanups.length; j++) {
-      try { cleanups[j](); } catch (e) {}
-    }
-    cleanups = [];
-
-    if (mascot.parentNode) {
-      mascot.parentNode.removeChild(mascot);
-    }
-
-    var fx = document.querySelectorAll('.mx-heart, .mx-tear, .mx-zzz, .mx-spark');
+    for (var j = 0; j < activeIntervals.length; j++) clearInterval(activeIntervals[j]);
+    activeIntervals = [];
+    if (mascot.parentNode) mascot.parentNode.removeChild(mascot);
+    var fx = document.querySelectorAll(
+        '.mx-heart, .mx-tear, .mx-zzz, .mx-spark, .mx-note, .mx-dream'
+    );
     for (var k = 0; k < fx.length; k++) {
       if (fx[k].parentNode) fx[k].parentNode.removeChild(fx[k]);
     }

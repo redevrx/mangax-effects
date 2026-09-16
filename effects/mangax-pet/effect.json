@@ -2,11 +2,11 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.mangax-pet",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "name": { "en": "MangaX Pet", "th": "สัตว์เลี้ยง MangaX" },
   "description": {
-    "en": "A cute mascot that walks on the screen and reacts to reading.",
-    "th": "มาสคอตน่ารักเดินไปมาบนจอ ตอบสนองการอ่าน"
+    "en": "A cute mascot with 52 poses that walks, sleeps, and reacts to translation.",
+    "th": "มาสคอตน่ารัก 52 ท่าทาง เดินได้ นอนได้ ตอบสนองการแปล"
   },
   "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
   "type": "toggle",
@@ -16,13 +16,34 @@
   "matches": ["*://*/*"],
   "engines": ["any"],
   "permissions": ["toast"],
-  "keywords": ["mascot", "pet", "มาสคอต", "สัตว์เลี้ยง", "น่ารัก"],
+  "keywords": ["mascot", "pet", "มาสคอต", "สัตว์เลี้ยง", "น่ารัก", "ท่าทาง"],
   "options": [
     {
       "key": "size",
       "type": "slider",
       "label": { "en": "Size", "th": "ขนาด" },
       "min": 50, "max": 140, "step": 5, "default": 80, "unit": "px"
+    },
+    {
+      "key": "position",
+      "type": "select",
+      "label": { "en": "Default position", "th": "ตำแหน่งเริ่มต้น" },
+      "choices": [
+        { "value": "top", "label": { "en": "Top", "th": "ด้านบน" } },
+        { "value": "bottom", "label": { "en": "Bottom", "th": "ด้านล่าง" } }
+      ],
+      "default": "top"
+    },
+    {
+      "key": "energy",
+      "type": "select",
+      "label": { "en": "Energy", "th": "พลังงาน" },
+      "choices": [
+        { "value": "lazy", "label": { "en": "Lazy", "th": "ขี้เกียจ" } },
+        { "value": "normal", "label": { "en": "Normal", "th": "ปกติ" } },
+        { "value": "hyper", "label": { "en": "Hyper", "th": "ซนมาก" } }
+      ],
+      "default": "normal"
     },
     {
       "key": "interactive",
