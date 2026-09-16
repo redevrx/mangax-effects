@@ -5,11 +5,15 @@ mangax.effect(function (ctx) {
   var touching = false;
   var atEndSince = 0;
   var toldEnd = false;
-  var last = performance.now();
+  var last = 0;
   var carry = 0;
   var frame = 0;
   var target = null;
   var targetAt = -1e9;
+
+  // Pages with CSS scroll-behavior: smooth fight continuous frame-by-frame scrolling.
+  // Override it while auto-scrolling is active; ctx removes this style on stop.
+  ctx.addStyle('html, body, * { scroll-behavior: auto !important; }');
 
   function safeGetStyle(prop, el) {
     try {
@@ -19,31 +23,24 @@ mangax.effect(function (ctx) {
     }
   }
 
+  // Manga readers often scroll a box inside the page rather than the page itself: use the
+  // scrollable box under the middle of the screen, else the page. Every layer at that point
+  // is tried, so a banner floating over the reader does not hide it.
   function scroller() {
+    var page = document.scrollingElement || document.documentElement;
     try {
-      var page = document.scrollingElement || document.documentElement;
       var stack = document.elementsFromPoint(window.innerWidth / 2, window.innerHeight / 2);
       for (var i = 0; i < stack.length; i++) {
-        var el = stack[i];
-        if (!el || el === document.body || el === document.documentElement) continue;
-        try {
+        for (var el = stack[i]; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+          if (el.scrollHeight - el.clientHeight < 2) continue;
           var overflow = safeGetStyle('overflow-y', el);
-        } catch (e) {
-          continue;
-        }
-        if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
-          try {
-            var scrollable = el.scrollHeight - el.clientHeight > 1;
-          } catch (e) {
-            continue;
-          }
-          if (el.scrollTop > 0 || scrollable) return el;
+          if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') return el;
         }
       }
     } catch (e) {
       // Some sites block elementsFromPoint or getComputedStyle
     }
-    return null;
+    return page;
   }
 
   function currentScroller(now) {
@@ -54,129 +51,83 @@ mangax.effect(function (ctx) {
     return target;
   }
 
-  function safeGetScrollHeight(el) {
-    try {
-      return el.scrollHeight;
-    } catch (e) {
-      return Infinity;
-    }
-  }
-
-  function safeGetClientHeight(el) {
-    try {
-      return el.clientHeight;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  function findScrollableInIframe(el) {
-    for (var child = el.firstChild; child; child = child.nextSibling) {
-      if (child.nodeType === 1) {
-        try {
-          var childOverflow = safeGetStyle('overflow-y', child);
-        } catch (e) {
-          continue;
-        }
-        if (childOverflow === 'auto' || childOverflow === 'scroll' || childOverflow === 'overlay') {
-          try {
-            var childScrollable = safeGetScrollHeight(child) - safeGetClientHeight(child) > 1;
-          } catch (e) {
-            continue;
-          }
-          try {
-            if (child.scrollTop > 0 || childScrollable) return child;
-          } catch (e) {
-            continue;
-          }
-        }
-        var found = findScrollableInIframe(child);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
   function scrollBy(el, dy) {
     if (!el || !el.isConnected) return;
+    var page = document.scrollingElement || document.documentElement;
     try {
-      if (el === (document.scrollingElement || document.documentElement)) {
-        var target = findScrollableInIframe(el);
-        if (target) {
-          target.scrollTop += dy;
-          return;
-        }
+      if (el === page) {
+        var before = window.scrollY;
         window.scrollBy(0, dy);
+        if (window.scrollY === before) {
+          if (document.documentElement) document.documentElement.scrollTop += dy;
+          if (window.scrollY === before && document.body) document.body.scrollTop += dy;
+        }
       } else {
         el.scrollTop += dy;
       }
     } catch (e) {
-      // Some sites block scrollBy - fall back to direct manipulation
       try {
-        if (el === (document.scrollingElement || document.documentElement)) {
-          window.scrollBy(0, Math.round(dy));
+        if (el === page) {
+          if (document.documentElement) document.documentElement.scrollTop += Math.round(dy);
+          if (document.body) document.body.scrollTop += Math.round(dy);
         } else {
           el.scrollTop += Math.round(dy);
         }
-      } catch (e2) {
-        // Ignore - some sites block all scroll manipulation
-      }
+      } catch (e2) {}
     }
   }
 
   function move(now) {
-    try {
-      var dt = Math.min(now - last, 100);
+    if (!last) {
       last = now;
-      if (!(pauseOnTouch && touching)) {
-        var el = currentScroller(now);
-        if (!el || !el.isConnected) {
-          carry = 0;
-          return;
+      return;
+    }
+    var dt = Math.min(Math.max(now - last, 0), 100);
+    last = now;
+
+    if (!(pauseOnTouch && touching)) {
+      var el = currentScroller(now);
+      if (!el || !el.isConnected) {
+        carry = 0;
+        return;
+      }
+
+      var isPage = el === (document.scrollingElement || document.documentElement);
+      var scrollHeight = isPage ? Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) : el.scrollHeight;
+      var clientHeight = isPage ? window.innerHeight : el.clientHeight;
+      var scrollTop = isPage ? window.scrollY : el.scrollTop;
+      var maxScroll = scrollHeight - clientHeight;
+      var atBottom = maxScroll > 0 && scrollTop >= maxScroll - 2;
+
+      if (atBottom || maxScroll <= 0) {
+        if (!atEndSince) atEndSince = now;
+        if (!toldEnd && now - atEndSince > 2500) {
+          toldEnd = true;
+          ctx.toast('Reached the end of the page').catch(function () {});
         }
-        try {
-          var scrollable = el.scrollHeight - el.clientHeight > 1;
-        } catch (e) {
-          carry = 0;
-          return;
-        }
-        try {
-          if (el.scrollTop >= el.scrollHeight - el.clientHeight && scrollable) {
-            if (el.scrollTop < el.scrollHeight - el.clientHeight) scrollable = true;
-          }
-        } catch (e) {
-          carry = 0;
-          return;
-        }
-        if (!scrollable) {
-          if (!atEndSince) atEndSince = now;
-          if (!toldEnd && now - atEndSince > 2500) {
-            toldEnd = true;
-            ctx.toast('Reached the end of the page').catch(function () {});
-          }
-        } else {
-          carry += speed * dt / 1000;
-          var whole = Math.floor(carry);
-          if (whole >= 1) {
-            carry -= whole;
-            scrollBy(el, whole);
-          }
+      } else {
+        atEndSince = 0;
+        toldEnd = false;
+        carry += speed * dt / 1000;
+        var whole = Math.floor(carry);
+        if (whole >= 1) {
+          carry -= whole;
+          scrollBy(el, whole);
         }
       }
-    } catch (e) {
-      carry = 0;
     }
   }
 
-  frame = requestAnimationFrame(function (now) {
+  function step(now) {
     try {
       move(now);
     } catch (e) {
       ctx.stop();
       return;
     }
-    frame = requestAnimationFrame(function (n) { move(n); });
-  });
+    frame = requestAnimationFrame(step);
+  }
+  frame = requestAnimationFrame(step);
 
   ctx.on(window, 'touchstart', function () { touching = true; }, { passive: true });
   ctx.on(window, 'touchend', function () { touching = false; last = performance.now(); }, { passive: true });
