@@ -110,7 +110,7 @@ mangax.effect(function (ctx) {
       '@keyframes mx-halo-spin{to{transform:rotate(360deg)}}\n' +
       '#mx-pet .mx-halo{animation:mx-halo-spin 18s linear infinite;}\n' +
 
-      // ============ LOCOMOTION ============
+      // ============ 🚶 LOCOMOTION (14) ============
       '#mx-pet.jump svg{animation:mx-jump .55s cubic-bezier(.34,1.56,.64,1) 2!important;}\n' +
       '@keyframes mx-jump{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-38px) scale(1.08)}}\n' +
 
@@ -137,7 +137,36 @@ mangax.effect(function (ctx) {
       '#mx-pet.run .mx-leg-r{animation:mx-leg-r .16s ease-in-out infinite;}\n' +
       '#mx-pet.run svg{animation:mx-bounce .16s ease-in-out infinite;}\n' +
 
-      // ============ REST ============
+      '#mx-pet.crawl svg{animation:mx-crawl 1.6s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-crawl{0%,100%{transform:rotate(-14deg) scaleY(.86)}50%{transform:rotate(-12deg) scaleY(.84) translateY(4px)}}\n' +
+      '#mx-pet.crawl .mx-arm-l{animation:mx-arm-l .7s ease-in-out infinite;transform-origin:60px 180px;}\n' +
+      '#mx-pet.crawl .mx-arm-r{animation:mx-arm-r .7s ease-in-out infinite;transform-origin:180px 180px;}\n' +
+
+      '#mx-pet.limp .mx-leg-l{animation:mx-leg-l .6s ease-in-out infinite;}\n' +
+      '#mx-pet.limp .mx-leg-r{animation:mx-limp-r .6s ease-in-out infinite;}\n' +
+      '@keyframes mx-limp-r{0%,100%{transform:rotate(6deg)}50%{transform:rotate(-10deg) translateY(4px)}}\n' +
+      '#mx-pet.limp svg{animation:mx-limp-body .6s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-limp-body{0%,100%{transform:rotate(2deg)}50%{transform:rotate(-2deg) translateY(2px)}}\n' +
+      '#mx-pet.limp .mx-eye-l,#mx-pet.limp .mx-eye-r{transform:scaleY(.7)!important;}\n' +
+
+      '#mx-pet.strut .mx-leg-l{animation:mx-strut-l .5s ease-in-out infinite;}\n' +
+      '#mx-pet.strut .mx-leg-r{animation:mx-strut-r .5s ease-in-out infinite .25s;}\n' +
+      '@keyframes mx-strut-l{0%,100%{transform:rotate(-28deg) translateX(-2px)}50%{transform:rotate(18deg) translateX(2px)}}\n' +
+      '@keyframes mx-strut-r{0%,100%{transform:rotate(28deg) translateX(2px)}50%{transform:rotate(-18deg) translateX(-2px)}}\n' +
+      '#mx-pet.strut svg{animation:mx-strut-body .5s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-strut-body{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-3px)}}\n' +
+
+      '#mx-pet.bounce-walk .mx-leg-l{animation:mx-leg-l .28s ease-in-out infinite;}\n' +
+      '#mx-pet.bounce-walk .mx-leg-r{animation:mx-leg-r .28s ease-in-out infinite;}\n' +
+      '#mx-pet.bounce-walk svg{animation:mx-bounce-walk .28s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-bounce-walk{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-12px) scaleY(1.04)}}\n' +
+
+      '#mx-pet.slide svg{animation:mx-slide 1s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-slide{0%,100%{transform:rotate(-18deg) translateY(6px)}50%{transform:rotate(-15deg) translateY(4px)}}\n' +
+      '#mx-pet.slide .mx-arm-l{animation:mx-arm-l .5s ease-in-out infinite;transform-origin:60px 180px;}\n' +
+      '#mx-pet.slide .mx-arm-r{animation:mx-arm-r .5s ease-in-out infinite;transform-origin:180px 180px;}\n' +
+
+      // ============ 😴 REST (11) ============
       '#mx-pet.yawn svg{animation:mx-yawn 1.8s ease-in-out!important;}\n' +
       '@keyframes mx-yawn{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(8px) rotate(-4deg)}}\n' +
       '#mx-pet.yawn .mx-mouth{d:path("M112 98 Q120 110 128 98 Q120 116 112 98");}\n' +
@@ -168,7 +197,22 @@ mangax.effect(function (ctx) {
       '@keyframes mx-snore{0%,100%{transform:rotate(-12deg) scale(.96) translateY(0)}50%{transform:rotate(-12deg) scale(1.02) translateY(-2px)}}\n' +
       '#mx-pet.snore .mx-eye-l,#mx-pet.snore .mx-eye-r{animation:none!important;transform:scaleY(.08)!important;}\n' +
 
-      // ============ EMOTION ============
+      '#mx-pet.nap svg{animation:mx-nap 2.2s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-nap{0%,100%{transform:rotate(-9deg) scale(.98)}50%{transform:rotate(-9deg) scale(1)}}\n' +
+      '#mx-pet.nap .mx-eye-l,#mx-pet.nap .mx-eye-r{animation:none!important;transform:scaleY(.15)!important;}\n' +
+
+      '#mx-pet.snooze svg{animation:mx-snooze 5s ease-in-out infinite!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-snooze{0%,100%{transform:rotate(-13deg) scale(.95)}50%{transform:rotate(-13deg) scale(.97) translateY(2px)}}\n' +
+      '#mx-pet.snooze .mx-eye-l,#mx-pet.snooze .mx-eye-r{animation:none!important;transform:scaleY(.06)!important;}\n' +
+
+      '#mx-pet.wake svg{animation:mx-wake 1s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
+      '@keyframes mx-wake{0%{transform:rotate(-12deg) scale(.94)}60%{transform:rotate(4deg) scale(1.08)}100%{transform:rotate(0) scale(1)}}\n' +
+
+      '#mx-pet.dream-hop svg{animation:mx-dream-hop 1.4s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-dream-hop{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}\n' +
+      '#mx-pet.dream-hop .mx-eye-l,#mx-pet.dream-hop .mx-eye-r{animation:none!important;transform:scaleY(.15)!important;fill:#FF69B4!important;}\n' +
+
+      // ============ 😂 EMOTION (19) ============
       '#mx-pet.tap svg{animation:mx-tap .4s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
       '@keyframes mx-tap{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(12deg)}100%{transform:scale(1)}}\n' +
 
@@ -214,7 +258,41 @@ mangax.effect(function (ctx) {
       '@keyframes mx-bored{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-6deg) translateY(2px)}}\n' +
       '#mx-pet.bored .mx-eye-l,#mx-pet.bored .mx-eye-r{transform:scaleY(.5)!important;animation:none!important;}\n' +
 
-      // ============ CELEBRATE ============
+      '#mx-pet.smug svg{animation:mx-smug 2.4s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-smug{0%,100%{transform:rotate(2deg)}50%{transform:rotate(-2deg)}}\n' +
+      '#mx-pet.smug .mx-mouth{d:path("M112 98 Q120 96 128 92");}\n' +
+      '#mx-pet.smug .mx-eye-l,#mx-pet.smug .mx-eye-r{transform:scaleY(.65)!important;}\n' +
+
+      '#mx-pet.panic svg{animation:mx-panic .12s linear 15!important;}\n' +
+      '@keyframes mx-panic{0%,100%{transform:translate(0,0)}25%{transform:translate(-5px,-3px) rotate(-3deg)}75%{transform:translate(5px,3px) rotate(3deg)}}\n' +
+      '#mx-pet.panic .mx-mouth{d:path("M114 100 Q120 108 126 100");}\n' +
+      '#mx-pet.panic .mx-eye-l,#mx-pet.panic .mx-eye-r{transform:scaleY(1.2)!important;}\n' +
+
+      '#mx-pet.confused svg{animation:mx-confused 2.5s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-confused{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}\n' +
+      '#mx-pet.confused .mx-mouth{d:path("M114 100 Q120 96 126 102");}\n' +
+      '#mx-pet.confused .mx-eye-l{transform:scaleY(.5)!important;}\n' +
+
+      '#mx-pet.sweat svg{animation:mx-sweat 2s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-sweat{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg) translateY(-2px)}}\n' +
+      '#mx-pet.sweat .mx-mouth{d:path("M114 100 Q120 96 126 100");}\n' +
+      '#mx-pet.sweat .mx-eye-l,#mx-pet.sweat .mx-eye-r{transform:scaleY(.7)!important;}\n' +
+
+      '#mx-pet.relieved svg{animation:mx-relieved 2.4s ease-in-out!important;}\n' +
+      '@keyframes mx-relieved{0%{transform:scale(1.05) translateY(-4px)}100%{transform:scale(1) translateY(0)}}\n' +
+      '#mx-pet.relieved .mx-eye-l,#mx-pet.relieved .mx-eye-r{transform:scaleY(.3)!important;animation:none!important;}\n' +
+
+      '#mx-pet.determined svg{animation:mx-det 1.6s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-det{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}\n' +
+      '#mx-pet.determined .mx-mouth{d:path("M112 100 L128 100");}\n' +
+      '#mx-pet.determined .mx-eye-l,#mx-pet.determined .mx-eye-r{transform:scaleY(.85)!important;fill:#FF3B3B!important;}\n' +
+
+      '#mx-pet.mischievous svg{animation:mx-mis 2s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-mis{0%,100%{transform:rotate(-3deg) translateX(0)}50%{transform:rotate(3deg) translateX(2px)}}\n' +
+      '#mx-pet.mischievous .mx-mouth{d:path("M110 100 Q120 108 130 96");}\n' +
+      '#mx-pet.mischievous .mx-eye-l,#mx-pet.mischievous .mx-eye-r{transform:scaleY(.6)!important;}\n' +
+
+      // ============ 🎉 CELEBRATE (13) ============
       '#mx-pet.cheer svg{animation:mx-cheer .5s ease-in-out 4!important;}\n' +
       '@keyframes mx-cheer{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-22px) rotate(-8deg)}75%{transform:translateY(-22px) rotate(8deg)}}\n' +
 
@@ -252,7 +330,31 @@ mangax.effect(function (ctx) {
       '#mx-pet.backflip svg{animation:mx-backflip 1.2s cubic-bezier(.5,0,.5,1)!important;}\n' +
       '@keyframes mx-backflip{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(-360deg) translateY(-40px)}100%{transform:rotate(-720deg) translateY(0)}}\n' +
 
-      // ============ READING / TRANSLATE ============
+      '#mx-pet.fist-pump .mx-arm-r{animation:mx-fp .4s ease-in-out 4!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-fp{0%,100%{transform:rotate(0)}50%{transform:rotate(-80deg)}}\n' +
+      '#mx-pet.fist-pump svg{animation:mx-fp-body .4s ease-in-out 4!important;}\n' +
+      '@keyframes mx-fp-body{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}\n' +
+
+      '#mx-pet.high-five .mx-arm-r{animation:mx-hf .5s cubic-bezier(.34,1.56,.64,1) 3!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-hf{0%,100%{transform:rotate(0)}50%{transform:rotate(-95deg)}}\n' +
+
+      '#mx-pet.fanfare svg{animation:mx-fan 1.2s ease-in-out 3!important;}\n' +
+      '@keyframes mx-fan{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-12deg) scale(1.08)}' +
+      '75%{transform:rotate(12deg) scale(1.08)}}\n' +
+      '#mx-pet.fanfare .mx-eye-l,#mx-pet.fanfare .mx-eye-r{fill:#FFD93D!important;}\n' +
+
+      '#mx-pet.cartwheel svg{animation:mx-cart 1.6s cubic-bezier(.5,0,.5,1)!important;transform-origin:120px 200px;}\n' +
+      '@keyframes mx-cart{0%{transform:rotate(0) translateY(0)}25%{transform:rotate(-90deg) translateY(-20px)}' +
+      '50%{transform:rotate(-180deg) translateY(-30px)}75%{transform:rotate(-270deg) translateY(-20px)}' +
+      '100%{transform:rotate(-360deg) translateY(0)}}\n' +
+
+      '#mx-pet.victory svg{animation:mx-vic .6s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
+      '@keyframes mx-vic{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.15) translateY(-14px)}100%{transform:scale(1.05) translateY(-6px)}}\n' +
+      '#mx-pet.victory .mx-arm-l{transform:rotate(-100deg)!important;transform-origin:60px 180px;}\n' +
+      '#mx-pet.victory .mx-arm-r{transform:rotate(100deg)!important;transform-origin:180px 180px;}\n' +
+      '#mx-pet.victory .mx-eye-l,#mx-pet.victory .mx-eye-r{fill:#FFD93D!important;}\n' +
+
+      // ============ 📖 READING (13) ============
       '#mx-pet.scan svg{animation:mx-scan 1s ease-in-out infinite!important;}\n' +
       '@keyframes mx-scan{0%,100%{transform:scale(1)}50%{transform:scale(1.06) rotate(2deg)}}\n' +
       '#mx-pet.scan .mx-halo{animation:mx-halo-spin 1.2s linear infinite!important;}\n' +
@@ -280,7 +382,32 @@ mangax.effect(function (ctx) {
       '#mx-pet.page-flip .mx-arm-r{animation:mx-page .6s ease-in-out 3!important;transform-origin:180px 180px;}\n' +
       '@keyframes mx-page{0%,100%{transform:rotate(0)}50%{transform:rotate(-45deg)}}\n' +
 
-      // ============ MISC ============
+      '#mx-pet.book-hug .mx-arm-l{transform:rotate(-50deg)!important;transform-origin:60px 180px;}\n' +
+      '#mx-pet.book-hug .mx-arm-r{transform:rotate(50deg)!important;transform-origin:180px 180px;}\n' +
+      '#mx-pet.book-hug svg{animation:mx-bh 1.6s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-bh{0%,100%{transform:scale(1)}50%{transform:scale(1.05) rotate(-2deg)}}\n' +
+      '#mx-pet.book-hug .mx-cheek{fill:#FF69B4!important;opacity:1!important;}\n' +
+
+      '#mx-pet.tear-jerk svg{animation:mx-tj 1.2s ease-in-out 3!important;}\n' +
+      '@keyframes mx-tj{0%,100%{transform:translateY(0)}50%{transform:translateY(4px) rotate(-3deg)}}\n' +
+      '#mx-pet.tear-jerk .mx-mouth{d:path("M114 102 Q120 94 126 102");}\n' +
+
+      '#mx-pet.gasp svg{animation:mx-gasp .8s cubic-bezier(.34,1.56,.64,1)!important;}\n' +
+      '@keyframes mx-gasp{0%{transform:scale(1)}50%{transform:scale(1.12) translateY(-4px)}100%{transform:scale(1)}}\n' +
+      '#mx-pet.gasp .mx-mouth{d:path("M116 100 Q120 108 124 100 Q120 96 116 100");}\n' +
+      '#mx-pet.gasp .mx-eye-l,#mx-pet.gasp .mx-eye-r{transform:scaleY(1.15)!important;}\n' +
+
+      '#mx-pet.nod svg{animation:mx-nod .6s ease-in-out 4!important;transform-origin:120px 260px;}\n' +
+      '@keyframes mx-nod{0%,100%{transform:rotate(0)}50%{transform:rotate(8deg)}}\n' +
+
+      '#mx-pet.squint svg{animation:mx-squint 1.6s ease-in-out infinite!important;}\n' +
+      '@keyframes mx-squint{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}\n' +
+      '#mx-pet.squint .mx-eye-l,#mx-pet.squint .mx-eye-r{transform:scaleY(.35)!important;animation:none!important;}\n' +
+
+      '#mx-pet.bookmark .mx-arm-r{animation:mx-bm .8s ease-in-out 3!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-bm{0%,100%{transform:rotate(0)}50%{transform:rotate(-70deg)}}\n' +
+
+      // ============ 🎭 MISC (15) ============
       '#mx-pet.wave .mx-arm-r{animation:mx-wave .5s ease-in-out 4!important;transform-origin:180px 180px;}\n' +
       '@keyframes mx-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}\n' +
 
@@ -316,6 +443,31 @@ mangax.effect(function (ctx) {
       '#mx-pet.meditate svg{animation:mx-meditate 3s ease-in-out infinite!important;}\n' +
       '@keyframes mx-meditate{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.02)}}\n' +
       '#mx-pet.meditate .mx-halo{animation:mx-halo-spin 6s linear infinite!important;}\n' +
+
+      '#mx-pet.grumble svg{animation:mx-grumble .8s ease-in-out 3!important;}\n' +
+      '@keyframes mx-grumble{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}\n' +
+      '#mx-pet.grumble .mx-mouth{d:path("M114 102 Q120 96 126 102");}\n' +
+
+      '#mx-pet.shiver svg{animation:mx-shiver .1s linear 15!important;}\n' +
+      '@keyframes mx-shiver{0%,100%{transform:translateX(0)}50%{transform:translateX(-2px)}}\n' +
+      '#mx-pet.shiver .mx-eye-l,#mx-pet.shiver .mx-eye-r{transform:scaleY(.4)!important;}\n' +
+
+      '#mx-pet.stretch-arms .mx-arm-l{animation:mx-sa-l 1.6s ease-in-out!important;transform-origin:60px 180px;}\n' +
+      '#mx-pet.stretch-arms .mx-arm-r{animation:mx-sa-r 1.6s ease-in-out!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-sa-l{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}\n' +
+      '@keyframes mx-sa-r{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}\n' +
+
+      '#mx-pet.finger-heart svg{animation:mx-fh 1.4s ease-in-out 3!important;}\n' +
+      '@keyframes mx-fh{0%,100%{transform:scale(1)}50%{transform:scale(1.08) translateY(-2px)}}\n' +
+      '#mx-pet.finger-heart .mx-arm-r{transform:rotate(-45deg)!important;transform-origin:180px 180px;}\n' +
+      '#mx-pet.finger-heart .mx-cheek{fill:#FF69B4!important;opacity:1!important;}\n' +
+
+      '#mx-pet.cover-mouth .mx-arm-l{animation:mx-cm-l .8s ease-in-out 4!important;transform-origin:60px 180px;}\n' +
+      '#mx-pet.cover-mouth .mx-arm-r{animation:mx-cm-r .8s ease-in-out 4!important;transform-origin:180px 180px;}\n' +
+      '@keyframes mx-cm-l{0%,100%{transform:rotate(0)}50%{transform:rotate(40deg)}}\n' +
+      '@keyframes mx-cm-r{0%,100%{transform:rotate(0)}50%{transform:rotate(-40deg)}}\n' +
+      '#mx-pet.cover-mouth svg{animation:mx-cm-body .8s ease-in-out 4!important;}\n' +
+      '@keyframes mx-cm-body{0%,100%{transform:translateY(0)}50%{transform:translateY(3px) scale(.98)}}\n' +
 
       // ============ ENGINE SWITCH ============
       '#mx-pet.engine-switch svg{animation:mx-engine-switch 1.1s cubic-bezier(.5,0,.5,1)!important;}\n' +
@@ -379,7 +531,6 @@ mangax.effect(function (ctx) {
       '#mx-pet-menu-layer .mx-menu.right{align-items:flex-end;}\n' +
       '#mx-pet-menu-layer .mx-menu.left{align-items:flex-start;}\n' +
 
-      // ---- menu item ----
       '#mx-pet-menu-layer .mx-menu-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;' +
       'padding:6px 16px 6px 6px;border-radius:18px;' +
       'border:1.5px solid rgba(129,140,248,.55);' +
@@ -392,7 +543,6 @@ mangax.effect(function (ctx) {
       '#mx-pet-menu-layer .mx-menu.right .mx-menu-item{flex-direction:row-reverse;padding:6px 6px 6px 16px;}\n' +
       '#mx-pet-menu-layer .mx-menu-item:active{transform:scale(.95);}\n' +
 
-      // ---- icon ----
       '#mx-pet-menu-layer .mx-menu-icon{width:36px;height:36px;flex-shrink:0;border-radius:12px;' +
       'display:flex;align-items:center;justify-content:center;' +
       'background:linear-gradient(135deg,rgba(62,224,255,.22),rgba(168,85,247,.28));' +
@@ -404,12 +554,10 @@ mangax.effect(function (ctx) {
       '#mx-pet-menu-layer .mx-menu-item.active .mx-menu-icon{' +
       'background:linear-gradient(135deg,rgba(34,211,238,.4),rgba(34,211,238,.25));color:#fff;}\n' +
 
-      // ---- item สลับโหมด ----
       '#mx-pet-menu-layer .mx-menu-item.engine{' +
       'border-color:rgba(255,213,61,.6);' +
       'background:linear-gradient(135deg,rgba(40,25,60,.98),rgba(60,35,80,.98));}\n' +
 
-      // ---- สี icon ตามกลุ่ม ----
       '#mx-pet-menu-layer .mx-menu-item[data-group="0"] .mx-menu-icon{' +
       'background:linear-gradient(135deg,rgba(62,224,255,.28),rgba(99,102,241,.32));' +
       'color:#7dd3fc;}\n' +
@@ -426,7 +574,6 @@ mangax.effect(function (ctx) {
       'background:linear-gradient(135deg,rgba(255,213,61,.32),rgba(251,146,60,.3));' +
       'color:#fde68a;}\n' +
 
-      // ---- hover glow ตามกลุ่ม ----
       '#mx-pet-menu-layer .mx-menu-item[data-group="0"]:hover{' +
       'transform:translateY(-1px);border-color:rgba(62,224,255,.9);' +
       'box-shadow:0 8px 24px rgba(62,224,255,.4),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
@@ -443,7 +590,6 @@ mangax.effect(function (ctx) {
       'transform:translateY(-1px);border-color:rgba(255,213,61,.95);' +
       'box-shadow:0 8px 24px rgba(255,213,61,.45),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
 
-      // ---- icon bounce ตอน hover ----
       '#mx-pet-menu-layer .mx-menu-item:hover .mx-menu-icon svg{' +
       'animation:mx-icon-pop .35s cubic-bezier(.34,1.56,.64,1);}\n' +
       '@keyframes mx-icon-pop{' +
@@ -452,7 +598,6 @@ mangax.effect(function (ctx) {
       '  100% {transform:scale(1) rotate(0);}\n' +
       '}\n' +
 
-      // ---- group label ----
       '#mx-pet-menu-layer .mx-menu-group{display:flex;align-items:center;gap:6px;' +
       'margin:6px 4px 2px;font:700 10px/1 -apple-system,sans-serif;' +
       'letter-spacing:.5px;text-transform:uppercase;color:rgba(199,210,254,.55);' +
@@ -556,9 +701,46 @@ mangax.effect(function (ctx) {
       '  </g>\n' +
       '</svg>';
 
-  document.body.appendChild(mascot);
-  var bubble = mascot.querySelector('#mx-pet-bubble');
+  // ================================================================
+  // ============ 🛡 SAFE MOUNT — กัน document.body ยังไม่มี ============
+  // ================================================================
+  var bubble = null;
   var bubbleHideTimer = null;
+
+  function ensureBubble() {
+    if (!bubble && mascot) {
+      try { bubble = mascot.querySelector('#mx-pet-bubble'); } catch (e) { bubble = null; }
+    }
+    return bubble;
+  }
+
+  function mountMascot() {
+    if (document.body && !mascot.isConnected) {
+      try { document.body.appendChild(mascot); } catch (e) {}
+      ensureBubble();
+    }
+  }
+
+  if (document.body) {
+    mountMascot();
+  } else if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountMascot, { once: true });
+  } else {
+    var mountRetry = safeInterval(function () {
+      if (document.body) {
+        clearSafeInterval(mountRetry);
+        mountMascot();
+      }
+    }, 50);
+  }
+
+  // Re-mount อัตโนมัติถ้า mascot หลุดจาก DOM (SPA / page reload)
+  safeInterval(function () {
+    if (document.body && !mascot.isConnected) {
+      try { document.body.appendChild(mascot); } catch (e) {}
+      ensureBubble();
+    }
+  }, 1500);
 
   // ================================================================
   // ============ APP MENU ============
@@ -577,11 +759,7 @@ mangax.effect(function (ctx) {
     appCall('menu.replace', { on: replaceMenu });
   }
 
-  // ================================================================
-  // ============ MENU ICONS — Premium SVG Set ============
-  // ================================================================
   var MENU_ICON_SVG = {
-    // ============ กลุ่ม 0: แปล (Cyan/Blue) ============
     document_scanner:
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8" opacity=".9"/>' +
@@ -599,8 +777,6 @@ mangax.effect(function (ctx) {
         '<path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" fill="currentColor" opacity=".5" stroke-width="1.4"/>' +
         '<path d="M5 16l.6 1.7 1.7.6-1.7.6L5 20.6l-.6-1.7-1.7-.6 1.7-.6L5 16z" fill="currentColor" opacity=".5" stroke-width="1.4"/>' +
         '</svg>',
-
-    // ============ กลุ่ม 1: เอฟเฟกต์ (Purple/Pink) ============
     auto_fix_high:
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M9.5 14.5L3 21l1.5-6.5L9.5 14.5z" fill="currentColor" opacity=".22"/>' +
@@ -619,8 +795,6 @@ mangax.effect(function (ctx) {
         '<circle cx="16" cy="9" r="1.2" fill="currentColor" stroke="none"/>' +
         '<circle cx="17" cy="13.5" r="1.2" fill="currentColor" stroke="none"/>' +
         '</svg>',
-
-    // ============ กลุ่ม 2: อื่นๆ (Teal/Green) ============
     record_voice_over:
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         '<circle cx="9" cy="7" r="3.2" fill="currentColor" opacity=".22" stroke="none"/>' +
@@ -644,16 +818,12 @@ mangax.effect(function (ctx) {
         '<path d="M7 3.5v5h8v-5" opacity=".9"/>' +
         '<path d="M16.5 20.5v-6.5h-9v6.5" opacity=".9"/>' +
         '</svg>',
-
-    // ============ กลุ่ม 3: ตั้งค่า (Slate) ============
     settings:
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="currentColor" opacity=".22" stroke="none"/>' +
         '<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>' +
         '<path d="M19.4 14.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.5z"/>' +
         '</svg>',
-
-    // ============ กลุ่ม 4: โหมด (Gold/Orange) ============
     swap_horiz:
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M4 7.5h14" opacity=".55"/>' +
@@ -663,8 +833,6 @@ mangax.effect(function (ctx) {
         '<path d="M20 16.5H6"/>' +
         '<path d="M10 20.5l-4-4 4-4"/>' +
         '</svg>',
-
-    // ============ Fallback icons ============
     translate:
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M4 5h10M9 3v2c0 4-2 7-5 9M5 9c0 3 3 6 6 7"/>' +
@@ -711,19 +879,11 @@ mangax.effect(function (ctx) {
 
   var ENGINE_KEY = '__engine';
 
-  // ================================================================
-  // ============ MENU GROUPS ============
-  // ================================================================
   var MENU_GROUPS = {
-    // กลุ่ม 0: แปล
     scan: 0, full_context_scan: 0,
-    // กลุ่ม 1: เอฟเฟกต์ / แต่ง
     effects: 1, bubble_edit: 1,
-    // กลุ่ม 2: อื่นๆ
     read_aloud: 2, export_chapter: 2,
-    // กลุ่ม 3: ตั้งค่า
     settings: 3,
-    // กลุ่ม 4: โหมด
     __engine: 4
   };
   var MENU_ICON_GROUPS = {
@@ -734,11 +894,7 @@ mangax.effect(function (ctx) {
     swap_horiz: 4
   };
   var GROUP_LABELS = {
-    0: 'แปล',
-    1: 'เอฟเฟกต์',
-    2: 'อื่นๆ',
-    3: 'ตั้งค่า',
-    4: 'โหมด'
+    0: 'แปล', 1: 'เอฟเฟกต์', 2: 'อื่นๆ', 3: 'ตั้งค่า', 4: 'โหมด'
   };
 
   function itemGroup(item) {
@@ -799,6 +955,7 @@ mangax.effect(function (ctx) {
 
   function renderMenu() {
     if (menuLayer && menuLayer.parentNode) menuLayer.parentNode.removeChild(menuLayer);
+    if (!document.body) return;
 
     var r = mascot.getBoundingClientRect();
     var w = window.innerWidth;
@@ -880,10 +1037,8 @@ mangax.effect(function (ctx) {
     list.style.top = top + 'px';
   }
 
-  // ================================================================
-  // ============ PRESS MENU ============
-  // ================================================================
   function spawnRing(cx, cy) {
+    if (!document.body) return;
     var ring = document.createElement('div');
     ring.className = 'mx-ring';
     ring.style.left = cx + 'px';
@@ -935,33 +1090,32 @@ mangax.effect(function (ctx) {
   loadMenu();
   applyReplaceMenu();
 
-  safeInterval(function () {
-    if (!mascot.isConnected && document.body) document.body.appendChild(mascot);
-  }, 1500);
-
   // ================================================================
   // ============ SAY ============
   // ================================================================
   function keepBubbleOnScreen() {
+    var b = ensureBubble();
+    if (!b) return;
     var r = mascot.getBoundingClientRect();
-    var half = bubble.offsetWidth / 2;
+    var half = b.offsetWidth / 2;
     var center = r.left + r.width / 2;
     var edge = 8;
     var dx = 0;
     if (center - half < edge) dx = edge - (center - half);
     else if (center + half > window.innerWidth - edge) dx = (window.innerWidth - edge) - (center + half);
-    bubble.style.setProperty('--mx-bubble-dx', dx + 'px');
+    b.style.setProperty('--mx-bubble-dx', dx + 'px');
   }
 
   function say(text, showToast) {
     if (!text) return;
-    if (bubble) {
-      bubble.textContent = text;
+    var b = ensureBubble();
+    if (b) {
+      b.textContent = text;
       keepBubbleOnScreen();
-      bubble.classList.add('show');
+      b.classList.add('show');
       if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
       bubbleHideTimer = safeTimeout(function () {
-        bubble.classList.remove('show');
+        b.classList.remove('show');
       }, 2600);
     }
     if (showToast && typeof ctx.toast === 'function') {
@@ -1016,6 +1170,7 @@ mangax.effect(function (ctx) {
   // ============ FX ============
   // ================================================================
   function spawnFX(cx, cy, list, count, cssClass, opts) {
+    if (!document.body) return;
     var n = count || 3;
     for (var i = 0; i < n; i++) {
       (function () {
@@ -1038,6 +1193,7 @@ mangax.effect(function (ctx) {
     });
   }
   function spawnTears(cx, cy) {
+    if (!document.body) return;
     for (var i = 0; i < 4; i++) {
       (function (ii) {
         var t = document.createElement('div');
@@ -1226,7 +1382,7 @@ mangax.effect(function (ctx) {
       state.lastInteract = Date.now();
       resetIdleTimer();
       if (wasFast) {
-        doAction('backflip', 1200);
+        doAction('cartwheel', 1600);
         spawnSparks(e.clientX, e.clientY, 8);
       } else {
         spawnHearts(e.clientX, e.clientY, 2);
@@ -1257,11 +1413,12 @@ mangax.effect(function (ctx) {
           var tapPhrases = [
             'งื้ออ~ 💜', 'อย่าจิ้มเก๊าา 🐱', 'อ่านสนุกไหม? 📖',
             'อยู่เป็นเพื่อนนะ! ✨', 'ลุยตอนต่อไปกัน! 🚀', 'ฮิฮิ จั๊กจี้จัง~ 😆',
-            'จั๊กจี้นะ! 🤣', 'หืม? มีอะไรเหรอ 👀'
+            'จั๊กจี้นะ! 🤣', 'หืม? มีอะไรเหรอ 👀', 'เค้าอยู่นี่น้าา 💙',
+            'อยากอ่านต่อแล้ว~ 📚', 'แอบดึงความสนใจนิดนึง 😜'
           ];
-          var tapActions = ['tap', 'wink', 'hiccup', 'blush'];
+          var tapActions = ['tap', 'wink', 'hiccup', 'blush', 'finger-heart', 'smug'];
           var pick = tapActions[Math.floor(Math.random() * tapActions.length)];
-          doAction(pick, 600);
+          doAction(pick, 700);
           spawnHearts(e.clientX, e.clientY, 3);
           say(tapPhrases[Math.floor(Math.random() * tapPhrases.length)]);
         }
@@ -1317,14 +1474,24 @@ mangax.effect(function (ctx) {
   var idlePhrases = [
     'ง่วงจังง~ 🥱', 'พักสายตาบ้างน้า ☕️',
     'อ่านถึงไหนแล้วนะ? 🤔', 'คอยเชียร์อยู่นะ! ✌️',
-    'เมื่อยขาแล้วน้าา 🦵', 'ไปเดินเล่นกัน! 🚶'
+    'เมื่อยขาแล้วน้าา 🦵', 'ไปเดินเล่นกัน! 🚶',
+    'ทำอะไรอยู่น้า~ 👀', 'คิดถึงอยู่นะ 💭',
+    'เค้าอยากอ่านด้วยย 📖', 'หืมม~ เงียบจัง 🤫'
   ];
 
   var actionGroups = {
-    walkActions:  ['walk', 'walk', 'walk', 'hop', 'skip', 'tiptoe', 'sneak', 'run', 'moonwalk'],
-    shortActions: ['jump', 'yawn', 'shake', 'spin', 'wink', 'clap', 'hiccup', 'sneeze'],
-    moodActions:  ['laugh', 'dance', 'think', 'love', 'blush', 'pout', 'bored', 'surprised'],
-    restActions:  ['yawn', 'stretch', 'sigh', 'doze', 'meditate', 'bored']
+    walkActions:  ['walk', 'walk', 'walk', 'hop', 'skip', 'tiptoe', 'sneak', 'run',
+      'moonwalk', 'crawl', 'limp', 'strut', 'bounce-walk', 'slide'],
+    shortActions: ['jump', 'yawn', 'shake', 'spin', 'wink', 'clap', 'hiccup', 'sneeze',
+      'nod', 'gasp', 'shiver', 'wake'],
+    moodActions:  ['laugh', 'dance', 'think', 'love', 'blush', 'pout', 'bored', 'surprised',
+      'smug', 'panic', 'confused', 'sweat', 'relieved', 'determined',
+      'mischievous', 'grumble'],
+    restActions:  ['yawn', 'stretch', 'sigh', 'doze', 'meditate', 'bored',
+      'nap', 'snooze', 'dream-hop', 'stretch-arms'],
+    readActions:  ['read', 'book-hug', 'tear-jerk', 'gasp', 'nod', 'squint', 'bookmark'],
+    celebrateActions: ['cheer', 'clap', 'spin', 'translate-happy', 'star', 'party',
+      'fist-pump', 'high-five', 'fanfare', 'cartwheel', 'victory']
   };
 
   function pickFromGroup(group) {
@@ -1339,21 +1506,47 @@ mangax.effect(function (ctx) {
       'ฉากนี้พีคมากก! 🔥', 'พระเอกเท่ชะมัด 😳', 'ตัวร้ายน่ากลัวจังง 😱', 'ช่องนี้วาดสวยมากเลย 🎨',
       'ไม่นะ! ตัดจบตรงนี้เหรอ 😭', 'รอตอนต่อไปไม่ไหวแล้วว ⏳', 'คู่นี้ต้องได้กันนะ 💕',
       'ใครชอบเรื่องนี้ยกมือ! 🙋', 'หน้านี้ต้องแคปเก็บไว้ 📸', 'มุกนี้ฮามากก 🤣',
-      'ฉากต่อสู้มันส์สุดๆ ⚔️', 'เดาว่าตอนหน้าต้องหักมุมแน่ 🤔', 'ตัวประกอบคนนี้น่ารักจัง 🥰'
+      'ฉากต่อสู้มันส์สุดๆ ⚔️', 'เดาว่าตอนหน้าต้องหักมุมแน่ 🤔', 'ตัวประกอบคนนี้น่ารักจัง 🥰',
+      'ช่องนี้ CG หนักมาก 🌟', 'เส้นสายสวยเหมือนงานศิลป์ 🎨', 'ท่าไม้ตายนี่เท่มากก ⚡',
+      'เปิดช่องใหม่มาอีกแล้ว! 🎉', 'อ่านแล้วอยากวาดการ์ตูนเลย ✏️', 'หน้านี้เงียบเกินไป 😐',
+      'ตื่นเต้นจนลืมหายใจเลย 😰'
     ],
     novel: [
       'สำนวนเรื่องนี้ดีจัง ✍️', 'บรรยายเห็นภาพเลย 🌄', 'ตัวละครนี้น่าสงสัยนะ 🤔',
       'อ่านอีกบทเดียวน้า~ 📖', 'ประโยคนี้โดนใจมาก 💘', 'ปมเริ่มคลายแล้วว 🧩',
-      'ให้เค้าอ่านให้ฟังไหม? มีในเมนูนะ 🎧'
+      'ให้เค้าอ่านให้ฟังไหม? มีในเมนูนะ 🎧', 'ตัวละครนี้มีมิติมาก 🎭',
+      'บทนี้เศร้าจังง 😢', 'อ่านไปยิ้มไปเลย ☺️', 'อยากให้มีภาคต่อเร็วๆ ⏳',
+      'คำผิดไม่มีเลย นักแปลเก่งมาก 👏', 'บทสนทนาธรรมชาติมาก 💬',
+      'ฉากนี้ตื่นเต้นจนลืมหายใจ 😰', 'ได้กลิ่นอายแฟนตาซีเลย 🐉',
+      'อ่านแล้วคิดถึงตัวเองเลย 🥹', 'เนื้อเรื่องดำเนินไวมาก ⚡',
+      'ตัวร้ายเขียนดีจนเกลียดไม่ลง 😈', 'บทนี้ต้องอ่านซ้ำ 🔁',
+      'ประโยคสุดท้ายทำน้ำตาไหล 😭'
     ],
-    translating: ['กำลังแปลอยู่น้า รอแป๊บ ⏳', 'ช่องคำพูดเยอะจัง สู้ๆ 💪', 'ใกล้เสร็จแล้วว ✨'],
+    translating: [
+      'กำลังแปลอยู่น้า รอแป๊บ ⏳', 'ช่องคำพูดเยอะจัง สู้ๆ 💪', 'ใกล้เสร็จแล้วว ✨',
+      'ขอเวลาหน่อยน้าา~ 🕐', 'เค้าช่วยดูอยู่นะ 👀'
+    ],
     tips: [
       'กดค้างที่เค้าเพื่อเปิดเมนูนะ 👆', 'ลองแปลทั้งตอนด้วย Full Context Scan ดูสิ 🌟',
       'แตะเค้า 2 ครั้ง เค้าจะเต้นให้ดู 🕺', 'ลากเค้าไปวางตรงไหนก็ได้นะ 🛸',
-      'ปรับขนาดเค้าได้ในเมนู Effects 🎛️'
+      'ปรับขนาดเค้าได้ในเมนู Effects 🎛️', 'แตะ 3 ครั้ง เค้าจะหัวเราะให้ 😂',
+      'ปัดเร็วๆ เค้าจะตีลังกา 🤸', 'ปล่อยนิ่งๆ เค้าจะหลับ 💤',
+      'แตะ 4 ครั้ง มีเซอร์ไพรส์ 🎊', 'สลับโหมดได้ในเมนูของเค้านะ 🔄',
+      'อ่านตอนดึก เค้าจะหาวให้ดู 🥱', 'ถ้าอ่านจบตอน เค้าจะปรบมือให้ 👏',
+      'กดค้าง 2 วิ เค้าจะคิดอะไรอยู่นะ 🤔', 'อ่านตอนเช้า เค้าจะทักทาย ☀️',
+      'ขนาดตัวปรับได้ตามใจเลย 🎨'
     ],
-    lateNight: ['ดึกแล้วน้า อ่านอีกตอนเดียวพอนะ 🌙', 'ตาจะปิดแล้วว... อ่านต่อพรุ่งนี้ไหม 😪'],
-    morning: ['อรุณสวัสดิ์! อ่านตอนเช้าสดชื่นดีน้า ☀️']
+    morning: ['อรุณสวัสดิ์! ☀️', 'เช้าแบบนี้ อ่านมังงะกับกาแฟ ☕', 'ตื่นมาอ่านเลย! 🌅', 'วันใหม่แล้วน้าา 🌱'],
+    afternoon: ['บ่ายแล้วน้า พักสายตาบ้าง 👀', 'บ่ายแก่ๆ อ่านเพลินเลย 🌤️', 'อากาศดีนะวันนี้ 🌞'],
+    evening: ['เย็นแล้ว อ่านสบายๆ 🌆', 'พระอาทิตย์ตกแล้ว อ่านต่อน้า 🌇', 'ค่ำนี้มีมังงะอร่อย 🍵'],
+    lateNight: ['ดึกมากแล้วน้า 🌙', 'จะตี 2 แล้วนะ! 😴', 'อ่านอีกตอนเดียวจริงๆ นะ 🥱', 'ตาจะปิดแล้วว~ 😪'],
+    walking: ['ไปเดินเล่นก่อนน้า~ 🚶', 'ขอเดินย่อยหน่อย 🍃', 'ไปดูตรงโน้นดีกว่า 🚶‍♀️'],
+    yawning: ['ง่วงงงง~ 🥱', 'หาววว~ 😮‍💨'],
+    sleeping: ['นอนแป๊บนะ 💤', 'หลับฝันดี 😴', 'zzz...'],
+    eating: ['อร่อยจัง~ 😋', 'กินหน่อยน้า 🍰'],
+    surprised: ['ว้ายย! 😱', 'ตกใจหมดเลย! 😲', 'อะไรนะ!? 😮'],
+    happy: ['เย้! 🎉', 'ดีใจจังง~ ✨', 'สุขใจสุดๆ 💜'],
+    sad: ['แงง 😢', 'เศร้าเลย 💧', 'ไม่เป็นไรนะ 🥺']
   };
 
   var routines = {
@@ -1363,13 +1556,19 @@ mangax.effect(function (ctx) {
       ['page-flip', 1500, 'excited', 1400, 'clap', 1200],
       ['read', 1800, 'cry', 1800, 'sigh', 1400],
       ['peek', 1400, 'think', 1500, 'star', 1300],
-      ['read', 1500, 'blush', 1500, 'love', 1400]
+      ['read', 1500, 'blush', 1500, 'love', 1400],
+      ['read', 1800, 'gasp', 900, 'determined', 1400],
+      ['page-flip', 1500, 'squint', 1400, 'bookmark', 1200],
+      ['read', 1700, 'tear-jerk', 1500, 'book-hug', 1400]
     ],
     novel: [
       ['read', 2200, 'think', 1600],
       ['read', 1800, 'blush', 1400],
       ['meditate', 2000, 'read', 1800, 'wink', 800],
-      ['read', 2000, 'surprised', 900, 'excited', 1300]
+      ['read', 2000, 'surprised', 900, 'excited', 1300],
+      ['read', 2100, 'smug', 1500, 'nod', 1000],
+      ['read', 1900, 'squint', 1400, 'bookmark', 1200],
+      ['read', 2000, 'tear-jerk', 1600, 'book-hug', 1500]
     ]
   };
 
@@ -1399,13 +1598,26 @@ mangax.effect(function (ctx) {
       react('scan', 1600);
       return say(pickPhrase(talk.translating));
     }
-    if ((hour >= 23 || hour < 5) && roll < 0.25) {
-      react('yawn', 1800);
-      return say(pickPhrase(talk.lateNight));
-    }
-    if (hour >= 6 && hour < 9 && roll < 0.15) {
-      react('stretch', 1800);
-      return say(pickPhrase(talk.morning));
+    if (hour >= 23 || hour < 5) {
+      if (roll < 0.4) {
+        react('yawn', 1800);
+        return say(pickPhrase(talk.lateNight));
+      }
+    } else if (hour >= 6 && hour < 12) {
+      if (roll < 0.25) {
+        react('stretch-arms', 1800);
+        return say(pickPhrase(talk.morning));
+      }
+    } else if (hour >= 12 && hour < 17) {
+      if (roll < 0.15) {
+        react('wink', 800);
+        return say(pickPhrase(talk.afternoon));
+      }
+    } else {
+      if (roll < 0.15) {
+        react('relieved', 1600);
+        return say(pickPhrase(talk.evening));
+      }
     }
     if (roll < 0.2) {
       react('wave', 1400);
@@ -1420,37 +1632,54 @@ mangax.effect(function (ctx) {
   function randomAction() {
     if (state.isBusy || isDragging || state.isAsleep || menuState.open) return;
     if (reactToReading && Math.random() < talkChance()) return chatter();
-    var groups = ['walkActions', 'shortActions', 'moodActions', 'restActions'];
-    if (energy === 'lazy') groups = ['walkActions', 'restActions', 'restActions'];
-    if (energy === 'hyper') groups = ['walkActions', 'shortActions', 'shortActions', 'moodActions'];
+    var groups = ['walkActions', 'shortActions', 'moodActions', 'restActions',
+      'readActions', 'celebrateActions'];
+    if (energy === 'lazy') groups = ['walkActions', 'restActions', 'restActions', 'readActions'];
+    if (energy === 'hyper') groups = ['walkActions', 'shortActions', 'shortActions', 'moodActions',
+      'celebrateActions', 'celebrateActions'];
     var group = groups[Math.floor(Math.random() * groups.length)];
     var pick = pickFromGroup(group);
 
-    if (actionGroups.walkActions.indexOf(pick) >= 0) {
-      if (pick === 'walk' || pick === 'run' || pick === 'moonwalk') pickNewTarget();
-      else if (pick === 'hop') { doAction('hop', 1400); pickNewTarget(); }
+    if (group === 'walkActions') {
+      if (pick === 'walk' || pick === 'run' || pick === 'moonwalk' ||
+          pick === 'crawl' || pick === 'limp' || pick === 'strut' ||
+          pick === 'bounce-walk' || pick === 'slide') {
+        doAction(pick, 1800);
+        pickNewTarget();
+      } else if (pick === 'hop') { doAction('hop', 1400); pickNewTarget(); }
       else if (pick === 'skip') { doAction('skip', 1400); pickNewTarget(); }
       else if (pick === 'tiptoe') { doAction('tiptoe', 1600); pickNewTarget(); }
       else if (pick === 'sneak') { doAction('sneak', 1600); pickNewTarget(); }
-      if (chattiness === 'chatty' && Math.random() < 0.3) {
-        say(idlePhrases[Math.floor(Math.random() * idlePhrases.length)]);
-      }
+      if (chattiness === 'chatty' && Math.random() < 0.3) say(pickPhrase(talk.walking));
     } else {
       var durations = {
         jump: 1100, yawn: 1800, shake: 1500, spin: 1000, wink: 800,
         clap: 1500, hiccup: 1800, sneeze: 800, laugh: 1800, dance: 1800,
         think: 1600, love: 1500, blush: 2000, pout: 1800, bored: 2400,
-        surprised: 900, stretch: 1800, sigh: 2000, doze: 2000, meditate: 2400
+        surprised: 900, stretch: 1800, sigh: 2000, doze: 2000, meditate: 2400,
+        nap: 2000, snooze: 2500, wake: 1200, 'dream-hop': 1800,
+        smug: 2000, panic: 1500, confused: 2000, sweat: 2000,
+        relieved: 1800, determined: 1600, mischievous: 2000, grumble: 1800,
+        shiver: 1500, 'stretch-arms': 1600, 'finger-heart': 1400, 'cover-mouth': 1400,
+        read: 2000, 'book-hug': 1800, 'tear-jerk': 1800, gasp: 900, nod: 1200,
+        squint: 1600, bookmark: 1500,
+        cheer: 2000, party: 3000, star: 2000, excited: 1800,
+        'fist-pump': 1600, 'high-five': 1500, fanfare: 2000, cartwheel: 1600, victory: 1500,
+        'page-flip': 1500, 'translate-happy': 1800, 'translate-sad': 1800, relax: 1800
       };
       doAction(pick, durations[pick] || 1500);
 
-      if (pick === 'yawn') say('ง่วงจังง~ 🥱');
-      else if (pick === 'laugh') say('ฮิฮิ 😂');
-      else if (pick === 'love') say('รักเลยน้าา 💜');
+      if (pick === 'yawn' || pick === 'snooze' || pick === 'nap') say(pickPhrase(talk.yawning));
+      else if (pick === 'laugh') say(pickPhrase(talk.happy));
+      else if (pick === 'love' || pick === 'finger-heart') say('รักเลยน้าา 💜');
       else if (pick === 'bored') say('เบื่อจัง... 🥱');
       else if (pick === 'sneeze') say('ฮัดเช้ย! 🤧');
       else if (pick === 'hiccup') say('อึก! 😳');
       else if (pick === 'blush') say('ว้ายย~ 😳');
+      else if (pick === 'gasp') say(pickPhrase(talk.surprised));
+      else if (pick === 'cry') say(pickPhrase(talk.sad));
+      else if (pick === 'cheer' || pick === 'party' || pick === 'victory' ||
+          pick === 'fist-pump' || pick === 'fanfare') say(pickPhrase(talk.happy));
     }
   }
 
@@ -1467,8 +1696,9 @@ mangax.effect(function (ctx) {
     if (state.isAsleep) {
       state.isAsleep = false;
       state.isBusy = false;
-      mascot.classList.remove('sleep', 'doze', 'dream', 'snore');
-      doAction('stretch', 1800);
+      mascot.classList.remove('sleep', 'doze', 'dream', 'snore', 'nap', 'snooze');
+      doAction('wake', 1400);
+      safeTimeout(function () { doAction('stretch', 1800); }, 1450);
       sayIfChance('หืมม~ หลับไปเลย 😴', true);
       stopZzz();
     }
@@ -1482,7 +1712,7 @@ mangax.effect(function (ctx) {
       state.isAsleep = true;
       state.isBusy = true;
       state.isWalking = false;
-      var sleeps = ['sleep', 'doze', 'dream', 'snore'];
+      var sleeps = ['sleep', 'doze', 'dream', 'snore', 'nap', 'snooze'];
       var pick = sleeps[Math.floor(Math.random() * sleeps.length)];
       mascot.classList.remove('walking', 'idle', 'yawn');
       mascot.classList.add(pick);
@@ -1492,7 +1722,7 @@ mangax.effect(function (ctx) {
         var r = mascot.getBoundingClientRect();
         spawnDreams(r.left + r.width / 2, r.top, 5);
       }
-      sayIfChance('นอนแป๊บนะ 😴💤');
+      sayIfChance(pickPhrase(talk.sleeping));
     }, 50000);
   }
   resetIdleTimer();
@@ -1513,8 +1743,10 @@ mangax.effect(function (ctx) {
         if (state.isBusy || isDragging || state.isAsleep || Math.random() > talkChance() + 0.15) return;
         react(readingType === 'manga' ? 'peek' : 'read', 1600);
         say(readingType === 'manga'
-            ? pickPhrase(['ดูฉากนี้นานเลยนะ ชอบเหรอ? 👀', 'ช่องนี้สวยใช่ม้า 😍', 'อ่านละเอียดจังง 🔎'])
-            : pickPhrase(['ย่อหน้านี้ลึกซึ้งเนอะ 🤔', 'อ่านช้าๆ ซึมซับไปนะ 📖']));
+            ? pickPhrase(['ดูฉากนี้นานเลยนะ ชอบเหรอ? 👀', 'ช่องนี้สวยใช่ม้า 😍',
+              'อ่านละเอียดจังง 🔎', 'จดจำทุกช่องเลยนะ 🧐'])
+            : pickPhrase(['ย่อหน้านี้ลึกซึ้งเนอะ 🤔', 'อ่านช้าๆ ซึมซับไปนะ 📖',
+              'ประโยคนี้เพราะจัง 💭']));
       }, 7000);
       var now = Date.now();
       var curY = window.scrollY || window.pageYOffset || 0;
@@ -1539,7 +1771,7 @@ mangax.effect(function (ctx) {
       if (docH > winH * 1.4 && (curY + winH >= docH - 80)) {
         if (!state.cheeredEnd) {
           state.cheeredEnd = true;
-          doAction('cheer', 2400);
+          doAction('fanfare', 2400);
           say('อ่านจบแล้ว! เก่งมากก 🎉', true);
           safeTimeout(function () { state.cheeredEnd = false; }, 8000);
         }
@@ -1551,7 +1783,7 @@ mangax.effect(function (ctx) {
         for (var i = 0; i < entries.length; i++) {
           if (entries[i].isIntersecting) {
             state.lastInteract = Date.now();
-            doAction('cheer', 2400);
+            doAction('fanfare', 2400);
             say('อ่านจบแล้ว! เก่งมากก 🎉', true);
             break;
           }
@@ -1654,7 +1886,7 @@ mangax.effect(function (ctx) {
     if (mode === 'full') {
       translationState.active = null;
       setHalo(false);
-      react(type === 'manga' ? 'party' : 'cheer', 3000);
+      react(type === 'manga' ? 'party' : 'fanfare', 3000);
       spawnSparks(c.x, c.y, 16);
       spawnHearts(c.x, c.top, 8);
       spawnNotes(c.x, c.top, 5);
@@ -1666,8 +1898,8 @@ mangax.effect(function (ctx) {
     if (now - translationState.lastCelebrate > CELEBRATE_EVERY_MS) {
       translationState.lastCelebrate = now;
       var celebrates = type === 'manga'
-          ? ['cheer', 'clap', 'spin', 'translate-happy']
-          : ['clap', 'translate-happy', 'star', 'hop'];
+          ? ['cheer', 'clap', 'spin', 'translate-happy', 'fist-pump', 'high-five']
+          : ['clap', 'translate-happy', 'star', 'victory', 'fanfare'];
       react(pickPhrase(celebrates), 2400);
       spawnSparks(c.x, c.y, 12);
       spawnHearts(c.x, c.top, 6);
@@ -1702,7 +1934,7 @@ mangax.effect(function (ctx) {
       spawnTears(c.x, c.y);
       sayIfChance('อีกแล้วว 😢 ลองอีกทีนะ', true);
     } else {
-      react('sigh', 2400);
+      react('panic', 2400);
       spawnTears(c.x, c.y);
       sayIfChance('พักก่อนก็ได้น้าา 😢💧', true);
     }
@@ -1715,8 +1947,8 @@ mangax.effect(function (ctx) {
     setHalo(false);
     touch();
     if (reason === 'user') {
-      react('yawn', 1400);
-      safeTimeout(function () { react('relax', 1800); }, 1450);
+      react('sigh', 1800);
+      safeTimeout(function () { react('relax', 1800); }, 1850);
       sayIfChance(pickPhrase(phrases.stopUser), true);
     } else {
       react('wave', 1800);
@@ -1731,7 +1963,7 @@ mangax.effect(function (ctx) {
     effects: ['wink', 'เลือกเอฟเฟกต์กัน~ ✨'],
     read_aloud: ['read', 'อ่านให้ฟังนะ 🎧'],
     bubble_edit: ['think', 'แต่งกล่องข้อความกัน 🎨'],
-    export_chapter: ['clap', 'เก็บตอนนี้ไว้อ่านทีหลัง 💾'],
+    export_chapter: ['bookmark', 'เก็บตอนนี้ไว้อ่านทีหลัง 💾'],
     settings: ['think', 'ปรับอะไรดีน้า~ ⚙️']
   };
 
@@ -1765,9 +1997,9 @@ mangax.effect(function (ctx) {
       }, 2700);
       sayIfChance('โหมดนิยายมาแล้ว! 📖✨');
     } else {
-      react('jump', 1100);
-      safeTimeout(function () { react('spin', 1000); }, 1150);
-      safeTimeout(function () { react('wink', 800); }, 2200);
+      react('victory', 1500);
+      safeTimeout(function () { react('spin', 1000); }, 1550);
+      safeTimeout(function () { react('wink', 800); }, 2600);
       safeTimeout(function () {
         var c = center();
         spawnSparks(c.x, c.y, 10);
@@ -1848,7 +2080,8 @@ mangax.effect(function (ctx) {
     var c = mascot.getBoundingClientRect();
     if (ctx.auto) {
       react('wave', 1600);
-      sayIfChance(pickPhrase(['มาอ่านต่อกันเลย~ 👋', 'เจอกันอีกแล้วน้า 💜', 'หน้านี้มีอะไรน้า 👀']));
+      sayIfChance(pickPhrase(['มาอ่านต่อกันเลย~ 👋', 'เจอกันอีกแล้วน้า 💜',
+        'หน้านี้มีอะไรน้า 👀', 'เค้าพร้อมแล้วน้า ✨']));
     } else {
       react('excited', 1800);
       spawnHearts(c.left + c.width / 2, c.top, 4);

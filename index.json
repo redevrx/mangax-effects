@@ -113,14 +113,14 @@
     {
       "id": "redevrx.mangax-pet",
       "path": "effects/mangax-pet",
-      "version": "2.4.1",
+      "version": "2.4.2",
       "name": {
         "en": "MangaX Pet",
         "th": "สัตว์เลี้ยง MangaX"
       },
       "description": {
-        "en": "A cute mascot with 52 poses that walks, sleeps, reacts to translation, and can stand in for the menu button.",
-        "th": "มาสคอตน่ารัก 52 ท่าทาง เดินได้ นอนได้ ตอบสนองการแปล ใช้แทนปุ่มเมนูได้"
+        "en": "A cute mascot with 85+ poses, richer dialogue, and reacts to translation & reading.",
+        "th": "มาสคอตน่ารัก 85+ ท่าทาง คำพูดหลากหลาย ตอบสนองการแปลและการอ่าน"
       },
       "type": "toggle",
       "category": "appearance",
@@ -135,7 +135,8 @@
         "มาสคอต",
         "สัตว์เลี้ยง",
         "น่ารัก",
-        "ท่าทาง"
+        "ท่าทาง",
+        "อ่าน"
       ]
     },
     {

@@ -26,7 +26,7 @@ network API of the app's own.
 2. Write `effect.json` and `main.js` / `style.css`.
 3. Run `node tools/check.mjs --fix`. It must print ✓ for the effect. It also rewrites
    `index.json` — never edit `index.json` by hand.
-4. Try the script on the real site in desktop Chrome with `tools/devtools-runner.js`
+4. Try the script on the real site in desktop Chrome with `tools/devtools-runner.js` (for app events: `mangaxTest.emit(name, data)`; set `engine`, `auto`, `permissions` with `mangaxTest.setup`)
    (instructions at the top of that file). It implements the same `ctx` as the app.
 5. When changing an existing effect, bump `version` (semver) in the same commit, then run step 3
    again so `index.json` carries the new version. The market only offers **Update** when the
@@ -117,7 +117,7 @@ mangax.effect(function (ctx) {
 | `ctx.observe` | `(selector, fn(element))` | `selector` is **one CSS selector string** (use commas for several). `fn` runs once per matching element, now and for elements added later. Disconnected on stop |
 | `ctx.addStyle` | `(css) → <style>` | Removed on stop. Change `.textContent` of the returned element to update it |
 | `ctx.onUrlChange` | `(fn(href))` | Single-page sites changing URL without a reload |
-| `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`) — these carry `data.type` (`manga` \| `novel`) and `data.mode` (`realtime` \| `full`); `engine:change` (`data.type`); `menu:open` / `menu:close` (`data.key`, `null` when dismissed) for the app's own menu; `menu:change` (same data as `menu.items`) when the buttons change; `"*"` for all. Removed on stop. No permission needed |
+| `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`) — these carry `data.type` (`manga` \| `novel`) and `data.mode` (`realtime` \| `full`); `engine:change` (`data.type`); `menu:open` / `menu:close` (`data.key`, `null` when dismissed) for the app's own menu; `menu:change` (same data as `menu.items`) when the buttons change; `"*"` for all. Realtime `translate:done` fires once per batch; a full scan (`mode: "full"`) sends `translate:start` on press and ends with one of done / failed / stop. Removed on stop. No permission needed |
 | `ctx.toast` | `(text) → Promise` | Needs `"permissions": ["toast"]`. Add `.catch(function () {})` |
 | `ctx.call` | `(cmd, args) → Promise` | Always `.catch`. `toast` `{text}` (perm `toast`); `menu.items` → `{engine, items:[{key,label,icon,active}]}` (`icon` = Material icon name), `menu.press` `{key}` runs what the app's button runs, `menu.replace` `{on}` hides the app's menu button while the effect runs — the effect must then draw its own menu from `menu.items` and redraw on `menu:change` (perm `menu`); `engine.get` → `"manga"`\|`"novel"` (no perm); `engine.set` `{type}` (perm `engine`). Menu keys: `scan`, `effects`, `read_aloud`, `full_context_scan`, `bubble_edit`, `export_chapter`, `settings` — ask `menu.items`, they depend on engine and page. Anything else rejects |
 | `ctx.stop` | `()` | Turns the effect off from inside (runs all cleanups) |

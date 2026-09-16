@@ -13,6 +13,8 @@ where the files were downloaded (a repository owned by `redevrx`), never from wh
 | [Dark page](effects/dark-page) | appearance | toggle | Dark or dimmed pages for night reading |
 | [Hide ads](effects/hide-ads) | cleanup | style | Hides common ad slots with CSS only |
 | [Kill pop-ups](effects/kill-popups) | cleanup | action | Removes overlays and cookie walls covering the page |
+| [Webtoon Age Limit](effects/webtoon-age-limit) | cleanup | toggle | Hides Webtoon's 18+ content warning dialog |
+| [MangaX Pet](effects/mangax-pet) | appearance | toggle | A mascot that reacts to translation and reading; can stand in for the menu button (long-press for its menu) |
 
 ## Install in the app
 
@@ -81,6 +83,11 @@ One folder per effect. The folder name is the effect's id without the `redevrx.`
 
 3. Try it on the real site in desktop Chrome: paste [`tools/devtools-runner.js`](tools/devtools-runner.js)
    into the DevTools console, then paste your `main.js`. `mangaxTest.stop()` switches it off.
+   - Set it up like the app first when it needs to:
+     `mangaxTest.setup({ engine: 'manga', auto: true, permissions: ['toast', 'menu'], options: { … } })`
+   - Send it app events: `mangaxTest.emit('translate:start', { type: 'manga', engine: 'manga', mode: 'full' })`,
+     `mangaxTest.closeMenu('effects')`. `menu.*` and `engine.*` commands answer with a sample menu
+     and print what they would do.
 4. Try it on a phone by installing from your branch:
    `https://github.com/redevrx/mangax-effects/tree/<branch>/effects/<name>`
 5. Commit, push, merge.
@@ -181,6 +188,14 @@ Listen with `ctx.onEvent`. The `translate:*` events' `data` has `type` (`manga` 
 | `menu:change` | The menu's buttons changed (one came or went, a label or lit state changed, the engine switched) | same as `menu.items`: `engine`, `items` |
 
 - Treat them as signals, not a count: two changes in quick succession can arrive as one.
+- `mode: "realtime"`: `translate:done` comes once per batch while the scan keeps going, so a big
+  celebration on every one gets noisy. The scan ends with `translate:stop`.
+- `mode: "full"`: `translate:start` comes the moment the reader presses the button, before the
+  pages are collected. It ends with exactly one of `translate:done`, `translate:failed`, or
+  `translate:stop` (called off: `reason: "user"` from the cancel button, `"auto"` when the page
+  changed).
+- `menu:open` / `menu:close` are about the app's own button only. An effect that replaced it
+  (`menu.replace`) knows when its own menu opens.
 - A toggle's listeners are removed when it stops; an action's stay until the page changes.
 - No permission is needed.
 

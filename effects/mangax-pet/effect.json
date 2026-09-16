@@ -2,11 +2,11 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.mangax-pet",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "name": { "en": "MangaX Pet", "th": "สัตว์เลี้ยง MangaX" },
   "description": {
-    "en": "A cute mascot with 52 poses that walks, sleeps, reacts to translation, and can stand in for the menu button.",
-    "th": "มาสคอตน่ารัก 52 ท่าทาง เดินได้ นอนได้ ตอบสนองการแปล ใช้แทนปุ่มเมนูได้"
+    "en": "A cute mascot with 85+ poses, richer dialogue, and reacts to translation & reading.",
+    "th": "มาสคอตน่ารัก 85+ ท่าทาง คำพูดหลากหลาย ตอบสนองการแปลและการอ่าน"
   },
   "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
   "type": "toggle",
@@ -16,7 +16,7 @@
   "matches": ["*://*/*"],
   "engines": ["any"],
   "permissions": ["toast", "menu", "engine"],
-  "keywords": ["mascot", "pet", "มาสคอต", "สัตว์เลี้ยง", "น่ารัก", "ท่าทาง"],
+  "keywords": ["mascot", "pet", "มาสคอต", "สัตว์เลี้ยง", "น่ารัก", "ท่าทาง", "อ่าน"],
   "options": [
     {
       "key": "size",
