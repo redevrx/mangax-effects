@@ -25,7 +25,7 @@ const OPTION_KEY = /^[A-Za-z][A-Za-z0-9_]{0,39}$/;
 const TYPES = ['style', 'action', 'toggle'];
 const CATEGORIES = ['reading', 'cleanup', 'appearance', 'navigation', 'utility'];
 const ENGINES = ['any', 'manga', 'novel'];
-const PERMISSIONS = ['toast'];
+const PERMISSIONS = ['toast', 'menu', 'engine'];
 const RUN_AT = ['manual', 'pageLoad', 'documentStart'];
 
 const isText = (t) => (typeof t === 'string' && t.trim() !== '') ||

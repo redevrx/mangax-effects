@@ -1,6 +1,19 @@
 (function () {
-  var config = { type: 'toggle', engine: 'novel', options: {}, permissions: [] };
+  var config = { type: 'toggle', engine: 'novel', options: {}, permissions: [], auto: false };
   var run = null;
+
+  // What menu.items answers here. The app's list depends on the engine and the page.
+  var MENU_KEYS = {
+    manga: ['scan', 'effects', 'full_context_scan', 'settings'],
+    novel: ['scan', 'effects', 'read_aloud', 'settings']
+  };
+
+  var COMMAND_PERMISSIONS = {
+    toast: 'toast',
+    'menu.items': 'menu', 'menu.press': 'menu', 'menu.open': 'menu', 'menu.replace': 'menu',
+    'engine.get': null,
+    'engine.set': 'engine'
+  };
 
   function log(kind, text) {
     console.log('%c[mangax] ' + kind, 'color:#8b5cf6;font-weight:bold', text);
@@ -43,6 +56,7 @@
       options: config.options,
       engine: config.engine,
       site: location.host,
+      auto: !!config.auto,
       on: function (target, type, fn, options) {
         if (!target || typeof target.addEventListener !== 'function') {
           throw new TypeError('ctx.on(target, type, fn): target must be an element, document or window, got ' + JSON.stringify(target));
@@ -93,18 +107,69 @@
         }, 500);
         cleanup(r, function () { clearInterval(timer); });
       },
+      onEvent: function (name, fn) {
+        if (typeof fn !== 'function') throw new TypeError('ctx.onEvent(name, fn): fn must be a function');
+        var entry = { name: String(name), fn: guard(r, fn) };
+        r.eventListeners.push(entry);
+        cleanup(r, function () {
+          var i = r.eventListeners.indexOf(entry);
+          if (i >= 0) r.eventListeners.splice(i, 1);
+        });
+      },
       call: function (cmd, args) {
-        if (cmd !== 'toast') return Promise.reject(new Error('unknown command "' + cmd + '"'));
-        if (config.permissions.indexOf('toast') < 0) {
-          return Promise.reject(new Error('"toast" needs the "toast" permission in effect.json'));
+        if (!(cmd in COMMAND_PERMISSIONS)) return Promise.reject(new Error('unknown command "' + cmd + '"'));
+        var needs = COMMAND_PERMISSIONS[cmd];
+        if (needs && config.permissions.indexOf(needs) < 0) {
+          return Promise.reject(new Error('"' + cmd + '" needs the "' + needs + '" permission in effect.json'));
         }
-        log('toast', args && args.text);
-        return Promise.resolve(true);
+        args = args || {};
+        switch (cmd) {
+          case 'toast':
+            log('toast', args.text);
+            return Promise.resolve(null);
+          case 'menu.items':
+            return Promise.resolve({
+              engine: config.engine,
+              items: MENU_KEYS[config.engine].map(function (key) { return { key: key, label: key, active: false }; })
+            });
+          case 'menu.press':
+            if (MENU_KEYS[config.engine].indexOf(args.key) < 0) {
+              return Promise.reject(new Error('the menu has no "' + args.key + '" button right now'));
+            }
+            log('menu.press', args.key);
+            return Promise.resolve(null);
+          case 'menu.open':
+            log('menu.open', 'at ' + JSON.stringify({ x: args.x, y: args.y }) + ' — mangaxTest.closeMenu(key) to close it');
+            emit('menu:open', { byEffect: true });
+            return Promise.resolve(null);
+          case 'menu.replace':
+            log('menu.replace', args.on === false ? 'menu button back' : 'menu button hidden while this runs');
+            return Promise.resolve(args.on !== false);
+          case 'engine.get':
+            return Promise.resolve(config.engine);
+          case 'engine.set':
+            if (args.type !== 'manga' && args.type !== 'novel') {
+              return Promise.reject(new Error('"engine.set" needs { type: "manga" | "novel" }'));
+            }
+            if (args.type !== config.engine) {
+              config.engine = args.type;
+              emit('engine:change', { type: args.type });
+            }
+            return Promise.resolve(args.type);
+        }
       },
       toast: function (text) { return ctx.call('toast', { text: String(text) }); },
       stop: function () { stop(r, 'by the effect'); }
     };
     return ctx;
+  }
+
+  function emit(name, data) {
+    if (!run) return log('emit', 'nothing is running');
+    log('event', name + ' ' + JSON.stringify(data));
+    run.eventListeners.slice().forEach(function (entry) {
+      if (entry.name === name || entry.name === '*') entry.fn(data, name);
+    });
   }
 
   var called = false;
@@ -113,7 +178,7 @@
     effect: function (body) {
       if (typeof body !== 'function') throw new TypeError('mangax.effect(fn): fn must be a function');
       stop(run, 'restarted');
-      var r = { cleanups: [], optionListeners: [], stopped: false };
+      var r = { cleanups: [], optionListeners: [], eventListeners: [], stopped: false };
       var ctx = context(r);
       try {
         var result = body(ctx);
@@ -151,6 +216,9 @@
       run.ctx.options = next;
       run.optionListeners.forEach(function (fn) { fn(next); });
     },
+    // An app event, e.g. emit('translate:done', { type: 'manga', engine: 'manga', mode: 'realtime' })
+    emit: function (name, data) { emit(String(name), data || {}); },
+    closeMenu: function (key) { emit('menu:close', { key: key || null }); },
     stop: function () {
       if (!run) return log('stop', called ? 'already stopped' : 'nothing is running');
       stop(run, 'by the reader');

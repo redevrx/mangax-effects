@@ -2,11 +2,11 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.mangax-pet",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "name": { "en": "MangaX Pet", "th": "สัตว์เลี้ยง MangaX" },
   "description": {
-    "en": "A cute mascot with 52 poses that walks, sleeps, and reacts to translation.",
-    "th": "มาสคอตน่ารัก 52 ท่าทาง เดินได้ นอนได้ ตอบสนองการแปล"
+    "en": "A cute mascot with 52 poses that walks, sleeps, reacts to translation, and can stand in for the menu button.",
+    "th": "มาสคอตน่ารัก 52 ท่าทาง เดินได้ นอนได้ ตอบสนองการแปล ใช้แทนปุ่มเมนูได้"
   },
   "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
   "type": "toggle",
@@ -15,14 +15,14 @@
   "entry": "main.js",
   "matches": ["*://*/*"],
   "engines": ["any"],
-  "permissions": ["toast"],
+  "permissions": ["toast", "menu"],
   "keywords": ["mascot", "pet", "มาสคอต", "สัตว์เลี้ยง", "น่ารัก", "ท่าทาง"],
   "options": [
     {
       "key": "size",
       "type": "slider",
       "label": { "en": "Size", "th": "ขนาด" },
-      "min": 50, "max": 140, "step": 5, "default": 80, "unit": "px"
+      "min": 50, "max": 240, "step": 5, "default": 80, "unit": "px"
     },
     {
       "key": "position",
@@ -50,6 +50,12 @@
       "type": "boolean",
       "label": { "en": "React to reading", "th": "ตอบสนองการอ่าน" },
       "default": true
+    },
+    {
+      "key": "replaceMenu",
+      "type": "boolean",
+      "label": { "en": "Use instead of the menu button (long-press to open)", "th": "ใช้แทนปุ่มเมนู (กดค้างเพื่อเปิด)" },
+      "default": false
     },
     {
       "key": "chattiness",

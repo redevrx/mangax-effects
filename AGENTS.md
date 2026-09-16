@@ -66,7 +66,7 @@ network API of the app's own.
 | `matches` | URL patterns `scheme://host/path`. `*://*/*` = every site. `*.example.com` covers `example.com` **and** `www.example.com`; `example.com` alone does not cover `www.` |
 | `excludes` | same format; sites to skip |
 | `engines` | `["any"]` unless the effect truly only makes sense in one mode (`manga` or `novel`) |
-| `permissions` | `["toast"]` if the script calls `ctx.toast`; otherwise `[]` |
+| `permissions` | Only what the script calls: `toast` for `ctx.toast`, `menu` for `menu.*` commands, `engine` for `engine.set`; otherwise `[]` |
 | `runAt` | leave it out (`manual`) unless the effect should start by itself: `pageLoad` starts it whenever a matching page finishes loading, for any type including `action`. The reader can still run it by hand and can turn auto-start off. `documentStart` behaves like `pageLoad` for now |
 | `options` | settings the app draws; see below |
 
@@ -117,13 +117,14 @@ mangax.effect(function (ctx) {
 | `ctx.observe` | `(selector, fn(element))` | `selector` is **one CSS selector string** (use commas for several). `fn` runs once per matching element, now and for elements added later. Disconnected on stop |
 | `ctx.addStyle` | `(css) → <style>` | Removed on stop. Change `.textContent` of the returned element to update it |
 | `ctx.onUrlChange` | `(fn(href))` | Single-page sites changing URL without a reload |
-| `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`); `"*"` for all. `data.type` is `manga` \| `novel`, `data.mode` is `realtime` \| `full`. Removed on stop. No permission needed |
+| `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`) — these carry `data.type` (`manga` \| `novel`) and `data.mode` (`realtime` \| `full`); `engine:change` (`data.type`); `menu:open` (`data.byEffect`); `menu:close` (`data.key`, `null` when dismissed); `"*"` for all. Removed on stop. No permission needed |
 | `ctx.toast` | `(text) → Promise` | Needs `"permissions": ["toast"]`. Add `.catch(function () {})` |
-| `ctx.call` | `(cmd, args) → Promise` | Only `toast` exists today |
+| `ctx.call` | `(cmd, args) → Promise` | Always `.catch`. `toast` `{text}` (perm `toast`); `menu.items` → `{engine, items:[{key,label,active}]}`, `menu.press` `{key}`, `menu.open` `{x, y}` (0–1 of the screen), `menu.replace` `{on}` hides the app's menu button while the effect runs (perm `menu`); `engine.get` → `"manga"`\|`"novel"` (no perm); `engine.set` `{type}` (perm `engine`). Menu keys: `scan`, `effects`, `read_aloud`, `full_context_scan`, `bubble_edit`, `export_chapter`, `settings` — ask `menu.items`, they depend on engine and page. Anything else rejects |
 | `ctx.stop` | `()` | Turns the effect off from inside (runs all cleanups) |
 | `ctx.id` | string | The effect id |
-| `ctx.engine` | `'manga'` \| `'novel'` | The reader's current mode |
+| `ctx.engine` | `'manga'` \| `'novel'` | The reader's mode when the effect started; listen to `engine:change` for switches |
 | `ctx.site` | string | `location.host` — a plain string, not an element or a query function |
+| `ctx.auto` | boolean | `true` when the app started it on page load, `false` when the reader switched it on or ran it |
 
 There is **nothing else**: no `ctx.on('stop')`, no `ctx.storage`, no `ctx.fetch`, no `ctx.$`, no
 `ctx.log`, no `ctx.wait`. Do not invent members. For cleanup, **return a function** from the

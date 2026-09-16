@@ -159,21 +159,25 @@ mangax.effect(function (ctx) {
 | `ctx.onUrlChange(fn)` | The page changed its URL without reloading |
 | `ctx.onEvent(name, fn)` | `fn(data, name)` on app events (below); `"*"` hears all of them |
 | `ctx.toast(text)` | Shows a message in the app. Needs `"permissions": ["toast"]` |
-| `ctx.call(cmd, args)` | Sends a command to the app; returns a Promise |
+| `ctx.call(cmd, args)` | Sends a command to the app (below); returns a Promise |
 | `ctx.stop()` | Switches the effect off from inside |
 | `ctx.id` · `ctx.engine` · `ctx.site` | This effect, `manga` / `novel`, the page's host |
+| `ctx.auto` | `true` when the app started it on page load, `false` when the reader switched it on or ran it |
 
 ### App events
 
-Listen with `ctx.onEvent`. Every event's `data` has `type` (`manga` / `novel`) and `mode`
-(`realtime` for the scan button, `full` for a whole-chapter scan).
+Listen with `ctx.onEvent`. The `translate:*` events' `data` has `type` (`manga` / `novel`) and
+`mode` (`realtime` for the scan button, `full` for a whole-chapter scan).
 
-| Event | When | Extra `data` |
+| Event | When | `data` |
 |---|---|---|
-| `translate:start` | The reader starts a translation | |
-| `translate:done` | A batch (or the whole chapter) is translated | |
-| `translate:failed` | A batch or the chapter could not be translated | `message` |
-| `translate:stop` | The translation stopped | `reason`: `user` (pressed stop) or `auto` (page or chapter changed) |
+| `translate:start` | The reader starts a translation | `type`, `mode` |
+| `translate:done` | A batch (or the whole chapter) is translated | `type`, `mode` |
+| `translate:failed` | A batch or the chapter could not be translated | `type`, `mode`, `message` |
+| `translate:stop` | The translation stopped | `type`, `mode`, `reason`: `user` (pressed stop) or `auto` (page or chapter changed) |
+| `engine:change` | The reader switched between manga and novel | `type` |
+| `menu:open` | The browser menu opened | `byEffect`: `true` when a script opened it with `menu.open` |
+| `menu:close` | The browser menu closed | `key`: the button pressed, or `null` when dismissed |
 
 - Treat them as signals, not a count: two changes in quick succession can arrive as one.
 - A toggle's listeners are removed when it stops; an action's stay until the page changes.
@@ -187,6 +191,54 @@ mangax.effect(function (ctx) {
   return function () {};
 });
 ```
+
+### App commands
+
+`ctx.call(cmd, args)` returns a Promise. It rejects with a message when the command is unknown
+(an older app), the permission is missing, or the command cannot run right now — always add
+`.catch`.
+
+| Command | Permission | `args` | Resolves to |
+|---|---|---|---|
+| `toast` | `toast` | `{ text }` | `null` (same as `ctx.toast`) |
+| `menu.items` | `menu` | | `{ engine, items: [{ key, label, active }] }`, in the menu's order |
+| `menu.press` | `menu` | `{ key }` | `null`; rejects when that button is not in the menu right now |
+| `menu.open` | `menu` | `{ x, y }`, 0–1 of the screen | `null`; the menu opens next to that point |
+| `menu.replace` | `menu` | `{ on }` | `true` when the menu button is now hidden |
+| `engine.get` | none | | `"manga"` or `"novel"` |
+| `engine.set` | `engine` | `{ type: "manga" \| "novel" }` | the engine now in use |
+
+Menu keys: `scan` (start / stop the scan), `effects`, `read_aloud` (novel), `full_context_scan`
+(manga), `bubble_edit` and `export_chapter` (manga, once the page has translations), `settings`.
+Buttons come and go with the engine and the page, so ask `menu.items` rather than assuming.
+
+`menu.replace` hides the app's floating menu button **only while the effect runs**. Stopping
+the effect, an error, or leaving the page brings the button back, so the reader is never left
+without a way into the menu. An effect that hides it must give the reader another way to open
+it (`menu.open`).
+
+```js
+mangax.effect(function (ctx) {
+  var button = document.createElement('button');
+  button.textContent = '☰';
+  button.style.cssText = 'position:fixed;right:16px;bottom:96px;z-index:999999';
+  document.body.appendChild(button);
+
+  ctx.call('menu.replace', { on: true }).catch(function () {});
+  ctx.on(button, 'click', function () {
+    var r = button.getBoundingClientRect();
+    ctx.call('menu.open', {
+      x: (r.left + r.width / 2) / innerWidth,
+      y: (r.top + r.height / 2) / innerHeight,
+    }).catch(function () {});
+  });
+
+  return function () { button.remove(); };
+});
+```
+
+`effect.json`: `"permissions": ["menu"]`. MangaX Pet (`effects/mangax-pet`) does the same with
+its `replaceMenu` option and a long-press.
 
 ### Starting on page load
 

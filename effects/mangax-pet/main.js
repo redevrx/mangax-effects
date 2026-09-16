@@ -35,6 +35,7 @@ mangax.effect(function (ctx) {
   var chattiness = options.chattiness || 'normal';
   var defaultPosition = options.position || 'top';
   var energy = options.energy || 'normal'; // ใหม่: normal | hyper | lazy
+  var replaceMenu = options.replaceMenu === true; // ซ่อนปุ่มเมนูของแอพ ใช้กดค้างที่น้องแทน
   var isTop = defaultPosition === 'top';
 
   function sayChance() {
@@ -62,7 +63,7 @@ mangax.effect(function (ctx) {
       'width:var(--mx-pet-size,' + currentSize + 'px);' +
       'height:calc(var(--mx-pet-size,' + currentSize + 'px)*1.25);' +
       'z-index:999999;pointer-events:auto;cursor:grab;touch-action:none;' +
-      'user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;' +
+      'user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;' +
       'will-change:transform,left,top,bottom;' +
       'filter:drop-shadow(0 6px 12px rgba(99,102,241,.4));}\n' +
       '#mx-pet.at-top{top:24px;bottom:auto;}\n' +
@@ -452,6 +453,40 @@ mangax.effect(function (ctx) {
   var bubbleHideTimer = null;
 
   // ================================================================
+  // ============ APP MENU (permission "menu") ============
+  // ================================================================
+  var LONG_PRESS_MS = 500;
+
+  // แอพรุ่นเก่าไม่รู้จักคำสั่ง → reject; น้องทำงานต่อได้ปกติ
+  function appCall(cmd, args) {
+    try {
+      return ctx.call(cmd, args).catch(function () { return null; });
+    } catch (e) {
+      return Promise.resolve(null);
+    }
+  }
+
+  // แอพซ่อนปุ่มเมนูเฉพาะตอนที่น้องยังทำงานอยู่ ปิด effect / ออกจากหน้า / error → ปุ่มกลับมาเอง
+  function applyReplaceMenu() {
+    appCall('menu.replace', { on: replaceMenu });
+  }
+
+  // เปิดเมนูของแอพข้างตัวน้อง ตำแหน่งส่งเป็นสัดส่วน 0–1 ของหน้าจอ
+  function openAppMenu() {
+    var r = mascot.getBoundingClientRect();
+    var w = window.innerWidth || 1;
+    var h = window.innerHeight || 1;
+    appCall('menu.open', { x: (r.left + r.width / 2) / w, y: (r.top + r.height / 2) / h });
+  }
+
+  applyReplaceMenu();
+
+  // หน้าเว็บบางที่เขียน body ใหม่ทั้งก้อน ถ้าน้องหลุดไปด้วย ตอนแทนปุ่มเมนูอยู่จะไม่มีทางเปิดเมนูเลย
+  safeInterval(function () {
+    if (!mascot.isConnected && document.body) document.body.appendChild(mascot);
+  }, 1500);
+
+  // ================================================================
   // ============ SAY ============
   // ================================================================
   function say(text, showToast) {
@@ -589,8 +624,11 @@ mangax.effect(function (ctx) {
   // ================================================================
   // ============ ACTION ============
   // ================================================================
-  function doAction(name, duration) {
-    if (state.isBusy || isDragging) return;
+  // force = ตอบ event ของแอพ: ตัดท่าที่เล่นอยู่ทันที ไม่รอให้จบ
+  var actionToken = 0;
+  function doAction(name, duration, force) {
+    if (isDragging || (state.isBusy && !force)) return;
+    var token = ++actionToken;
     state.isBusy = true;
     state.isWalking = false;
     state.isAsleep = false;
@@ -603,11 +641,15 @@ mangax.effect(function (ctx) {
     stopZzz();
 
     safeTimeout(function () {
+      if (token !== actionToken) return; // มีท่าใหม่มาแทนแล้ว
       mascot.classList.remove(name);
       mascot.removeAttribute('data-action');
       if (!isDragging) mascot.classList.add('idle');
       state.isBusy = false;
     }, duration || 1500);
+  }
+  function react(name, duration) {
+    doAction(name, duration, true);
   }
 
   // ================================================================
@@ -618,6 +660,7 @@ mangax.effect(function (ctx) {
   var startPointerX = 0, startPointerY = 0;
   var startMascotLeft = 0, startMascotTop = 0, startMascotBottom = 0;
   var lastMoveX = 0, lastMoveT = 0, dragSpeed = 0;
+  var longPressed = false;
 
   ctx.on(mascot, 'pointerdown', function (e) {
     if (e.button !== undefined && e.button !== 0) return;
@@ -631,11 +674,27 @@ mangax.effect(function (ctx) {
     lastMoveX = e.clientX;
     lastMoveT = Date.now();
     dragSpeed = 0;
+    longPressed = false;
     state.lastInteract = Date.now();
     resetIdleTimer();
     if (mascot.setPointerCapture) {
       try { mascot.setPointerCapture(e.pointerId); } catch (err) {}
     }
+    // กดค้าง (ไม่ลาก) → เปิดเมนูของแอพ
+    var pointerId = e.pointerId;
+    clearTimeout(state.pressTimer);
+    state.pressTimer = safeTimeout(function () {
+      if (!isPointerDown || isDragging) return;
+      longPressed = true;
+      isPointerDown = false; // นิ้วที่ยังค้างอยู่ไม่นับเป็นลาก/แตะ
+      if (mascot.releasePointerCapture) {
+        try { mascot.releasePointerCapture(pointerId); } catch (err) {}
+      }
+      react('surprised', 900);
+      var r = mascot.getBoundingClientRect();
+      spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 5);
+      openAppMenu();
+    }, LONG_PRESS_MS);
   });
 
   ctx.on(mascot, 'pointermove', function (e) {
@@ -649,6 +708,7 @@ mangax.effect(function (ctx) {
     lastMoveT = now;
 
     if (!isDragging && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+      clearTimeout(state.pressTimer);
       isDragging = true;
       state.isWalking = false;
       state.isAsleep = false;
@@ -690,7 +750,8 @@ mangax.effect(function (ctx) {
   });
 
   function onPointerEnd(e) {
-    if (!isPointerDown) return;
+    clearTimeout(state.pressTimer);
+    if (!isPointerDown) return; // รวมถึงหลังกดค้างเปิดเมนูไปแล้ว
     isPointerDown = false;
     if (mascot.releasePointerCapture) {
       try { mascot.releasePointerCapture(e.pointerId); } catch (err) {}
@@ -963,106 +1024,203 @@ mangax.effect(function (ctx) {
   // ================================================================
   // ============ APP EVENTS ============
   // ================================================================
-  var translationState = { active: null, lastEventAt: 0, failedCount: 0 };
+  var translationState = { active: null, type: null, lastEventAt: 0, failedCount: 0, lastCelebrate: 0 };
+
+  // realtime ส่ง translate:done ทุก batch → ฉลองใหญ่ได้ไม่เกินทุก 20 วิ ที่เหลือแค่ท่าเล็ก
+  var CELEBRATE_EVERY_MS = 20000;
 
   var phrases = {
-    scanStart: ['กำลังสแกนอยู่นะ 🔍', 'แป๊บนึงน้าา~ 👀', 'ขอดูก่อนน้า 📖'],
-    readStart: ['ตั้งใจอ่านอยู่นะ 📚', 'หืมม~ น่าสนใจจัง 🤔'],
-    done:      ['แปลเสร็จแล้วว! 🎉', 'ได้อ่านแล้วน้า~ ✨', 'เย้! เก่งมากเลยย 💜'],
-    failed:    ['แงง แปลไม่ได้ 😢', 'มีอะไรผิดพลาดน้าา 💧', 'ลองอีกทีได้ไหม~ 🥺'],
-    stopUser:  ['หยุดก่อนก็ได้น้าา~ 😌', 'โอเค พักก่อนน้า ☕'],
-    stopAuto:  ['เปลี่ยนหน้าแล้วน้า~ 👋', 'ไปตอนต่อไปกันเลย! 📖'],
+    scanStart: {
+      manga: ['สแกนมังงะให้นะ 🔍', 'แป๊บนึงน้าา~ 👀', 'ขอดูช่องคำพูดก่อนน้า 💬'],
+      novel: ['อ่านนิยายให้เลย 📖', 'ตัวหนังสือเยอะจังง~ 👀', 'แปลทีละย่อหน้านะ ✍️']
+    },
+    fullStart: {
+      manga: ['แปลทั้งตอนเลยน้า 📚', 'เปิดทุกหน้ารอเลย~ 📖'],
+      novel: ['แปลทั้งตอนรวดเดียว! 📚', 'ตั้งใจอ่านอยู่นะ 🤓']
+    },
+    batchDone: {
+      manga: ['หน้านี้เสร็จแล้ว~ ✨', 'อีกนิดน้า 💜'],
+      novel: ['ย่อหน้านี้เสร็จแล้ว ✍️', 'อ่านต่อได้เลย~ 📖']
+    },
+    done: {
+      manga: ['แปลเสร็จแล้วว! 🎉', 'ได้อ่านมังงะแล้วน้า~ ✨', 'เย้! เก่งมากเลยย 💜'],
+      novel: ['แปลนิยายเสร็จแล้วว! 🎉', 'อ่านสนุกนะ~ 📖✨', 'เย้! เก่งมากเลยย 💜']
+    },
+    fullDone: {
+      manga: ['ทั้งตอนเสร็จแล้วว! 🎉 อ่านเลยย'],
+      novel: ['นิยายทั้งตอนเสร็จแล้วว! 🎉 อ่านเลยย']
+    },
+    failed: ['แงง แปลไม่ได้ 😢', 'มีอะไรผิดพลาดน้าา 💧', 'ลองอีกทีได้ไหม~ 🥺'],
+    stopUser: ['หยุดก่อนก็ได้น้าา~ 😌', 'โอเค พักก่อนน้า ☕'],
+    stopAuto: ['เปลี่ยนหน้าแล้วน้า~ 👋', 'ไปตอนต่อไปกันเลย! 📖'],
     chapterNew: ['ตอนใหม่มาแล้วว! 🎊', 'ลุยยย! 🚀', 'ตื่นเต้นจังง~ ✨']
   };
 
   function pickPhrase(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
   }
-
-  ctx.onEvent('translate:start', function (data) {
-    var mode = (data && data.mode) || 'realtime';
-    var type = (data && data.type) || 'manga';
-    translationState.active = mode;
+  function typeOf(data) {
+    return data && data.type === 'novel' ? 'novel' : 'manga';
+  }
+  function center() {
+    var r = mascot.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2, top: r.top };
+  }
+  function touch() {
     translationState.lastEventAt = Date.now();
     state.lastInteract = Date.now();
+    state.isAsleep = false;
+    stopZzz();
     resetIdleTimer();
+  }
+  // ระหว่างสแกนอยู่ มีวงแหวนหมุนรอบตัวน้องตลอด
+  function setHalo(on) {
+    if (on) mascot.classList.add('scan-halo');
+    else mascot.classList.remove('scan-halo');
+  }
+
+  // ----- กดแปล: ท่าตาม type (manga / novel) และ mode -----
+  ctx.onEvent('translate:start', function (data) {
+    var mode = (data && data.mode) || 'realtime';
+    var type = typeOf(data);
+    translationState.active = mode;
+    translationState.type = type;
+    touch();
+    var c = center();
 
     if (mode === 'full') {
-      doAction('read', 3000);
-      sayIfChance(type === 'manga' ? pickPhrase(phrases.readStart) : 'อ่านนิยายอยู่นะ 📖');
+      // ทั้งตอน: มังงะ = พลิกหน้า, นิยาย = นั่งอ่าน
+      react(type === 'manga' ? 'page-flip' : 'read', 3000);
+      sayIfChance(pickPhrase(phrases.fullStart[type]));
+      spawnNotes(c.x, c.top, 3);
     } else {
-      doAction('scan', 2200);
-      sayIfChance(pickPhrase(phrases.scanStart));
-      // halo พิเศษ
+      // realtime: มังงะ = สแกน, นิยาย = อ่าน
+      react(type === 'manga' ? 'scan' : 'read', 2200);
+      sayIfChance(pickPhrase(phrases.scanStart[type]));
+      setHalo(true);
       safeTimeout(function () {
         if (translationState.active) {
-          var r = mascot.getBoundingClientRect();
-          spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 4);
+          var cc = center();
+          spawnSparks(cc.x, cc.y, 4);
         }
       }, 3500);
     }
   });
 
+  // ----- แปลสำเร็จ -----
   ctx.onEvent('translate:done', function (data) {
-    translationState.active = null;
+    var mode = (data && data.mode) || 'realtime';
+    var type = typeOf(data);
     translationState.failedCount = 0;
-    state.lastInteract = Date.now();
-    resetIdleTimer();
+    touch();
+    var c = center();
+    var now = Date.now();
 
-    // ท่า celebrate สุ่ม
-    var celebrates = ['cheer', 'clap', 'spin', 'translate-happy'];
-    var pick = celebrates[Math.floor(Math.random() * celebrates.length)];
-    doAction(pick, 2400);
+    if (mode === 'full') {
+      translationState.active = null;
+      setHalo(false);
+      react(type === 'manga' ? 'party' : 'cheer', 3000);
+      spawnSparks(c.x, c.y, 16);
+      spawnHearts(c.x, c.top, 8);
+      spawnNotes(c.x, c.top, 5);
+      say(pickPhrase(phrases.fullDone[type]), true);
+      translationState.lastCelebrate = now;
+      return;
+    }
 
-    var r = mascot.getBoundingClientRect();
-    spawnSparks(r.left + r.width / 2, r.top + r.height / 2, 12);
-    spawnHearts(r.left + r.width / 2, r.top, 6);
-    spawnNotes(r.left + r.width / 2, r.top, 4);
-
-    if (data && data.mode === 'full') {
-      sayIfChance('ทั้งตอนเสร็จแล้วว! 🎉 อ่านเลยย', true);
-      if (typeof ctx.toast === 'function') {
-        try { ctx.toast('แปลครบตอนแล้ว! ✨').catch(function () {}); } catch (e) {}
-      }
+    // realtime ยังสแกนต่อ (วงแหวนอยู่ต่อ) ฉลองใหญ่เป็นระยะ
+    if (now - translationState.lastCelebrate > CELEBRATE_EVERY_MS) {
+      translationState.lastCelebrate = now;
+      var celebrates = type === 'manga'
+        ? ['cheer', 'clap', 'spin', 'translate-happy']
+        : ['clap', 'translate-happy', 'star', 'hop'];
+      react(pickPhrase(celebrates), 2400);
+      spawnSparks(c.x, c.y, 12);
+      spawnHearts(c.x, c.top, 6);
+      sayIfChance(pickPhrase(phrases.done[type]));
     } else {
-      sayIfChance(pickPhrase(phrases.done));
+      react(type === 'manga' ? 'wink' : 'blush', 700);
+      spawnSparks(c.x, c.y, 3);
+      sayIfChance(pickPhrase(phrases.batchDone[type]));
     }
   });
 
+  // ----- แปล failed: ยิ่งพลาดติดกัน ยิ่งเศร้า -----
   ctx.onEvent('translate:failed', function (data) {
-    translationState.active = null;
+    var mode = (data && data.mode) || 'realtime';
     translationState.failedCount++;
-    state.lastInteract = Date.now();
-    resetIdleTimer();
-    var r = mascot.getBoundingClientRect();
+    if (mode === 'full') {
+      translationState.active = null;
+      setHalo(false);
+    }
+    touch();
+    var c = center();
 
     if (translationState.failedCount === 1) {
-      doAction('cry', 2400);
-      spawnTears(r.left + r.width / 2, r.top + r.height / 2);
+      react('surprised', 900);
+      safeTimeout(function () {
+        react('cry', 2400);
+        var cc = center();
+        spawnTears(cc.x, cc.y);
+      }, 950);
       sayIfChance(pickPhrase(phrases.failed), true);
     } else if (translationState.failedCount === 2) {
-      doAction('translate-sad', 2400);
+      react('translate-sad', 2400);
+      spawnTears(c.x, c.y);
       sayIfChance('อีกแล้วว 😢 ลองอีกทีนะ', true);
     } else {
-      doAction('sigh', 2400);
-      spawnTears(r.left + r.width / 2, r.top + r.height / 2);
+      react('sigh', 2400);
+      spawnTears(c.x, c.y);
       sayIfChance('พักก่อนก็ได้น้าา 😢💧', true);
     }
     safeTimeout(function () { translationState.failedCount = 0; }, 30000);
   });
 
+  // ----- stop แปล: ผู้ใช้กดหยุด vs แอพหยุดเอง -----
   ctx.onEvent('translate:stop', function (data) {
-    translationState.active = null;
     var reason = (data && data.reason) || 'auto';
-    state.lastInteract = Date.now();
-    resetIdleTimer();
+    translationState.active = null;
+    setHalo(false);
+    touch();
     if (reason === 'user') {
-      doAction('sigh', 2000);
+      react('yawn', 1400);
+      safeTimeout(function () { react('relax', 1800); }, 1450);
       sayIfChance(pickPhrase(phrases.stopUser), true);
     } else {
-      doAction('wave', 1800);
+      react('wave', 1800);
       sayIfChance(pickPhrase(phrases.stopAuto));
     }
+  });
+
+  // ================================================================
+  // ============ APP MENU / ENGINE EVENTS ============
+  // ================================================================
+  var menuReactions = {
+    effects: ['wink', 'เลือกเอฟเฟกต์กัน~ ✨'],
+    read_aloud: ['read', 'อ่านให้ฟังนะ 🎧'],
+    bubble_edit: ['think', 'แต่งกล่องข้อความกัน 🎨'],
+    export_chapter: ['clap', 'เก็บตอนนี้ไว้อ่านทีหลัง 💾'],
+    settings: ['think', 'ปรับอะไรดีน้า~ ⚙️']
+  };
+
+  ctx.onEvent('menu:close', function (data) {
+    var key = data && data.key;
+    state.lastInteract = Date.now();
+    resetIdleTimer();
+    // scan / full_context_scan มี translate:start ตามมาอยู่แล้ว
+    if (key === 'scan' || key === 'full_context_scan') return;
+    var reaction = key ? menuReactions[key] : ['pout', 'ไม่เอาแล้วเหรอ~ 🥺'];
+    if (!reaction) return;
+    react(reaction[0], 1400);
+    sayIfChance(reaction[1]);
+  });
+
+  ctx.onEvent('engine:change', function (data) {
+    var type = (data && data.type) || 'manga';
+    state.lastInteract = Date.now();
+    resetIdleTimer();
+    react('spin', 1200);
+    sayIfChance(type === 'novel' ? 'โหมดนิยาย! 📖' : 'โหมดมังงะ! 🎨');
   });
 
   // URL เปลี่ยน → คารวะ
@@ -1078,9 +1236,17 @@ mangax.effect(function (ctx) {
   // ================================================================
   ctx.onOptions(function (opts) {
     if (!opts) return;
-    if (typeof opts.size === 'number') {
+    if (typeof opts.size === 'number' && opts.size !== currentSize) {
+      var grew = opts.size > currentSize;
       currentSize = opts.size;
       mascot.style.setProperty('--mx-pet-size', opts.size + 'px');
+      // ขยาย → กระโดดดีใจ, ย่อ → ตัวสั่น
+      react(grew ? 'jump' : 'shake', 1000);
+      var c = mascot.getBoundingClientRect();
+      if (grew) spawnSparks(c.left + c.width / 2, c.top + c.height / 2, 6);
+      say(grew ? 'ตัวโตขึ้นแล้วว! 💪' : 'ตัวเล็กลงง~ 🐣');
+      // ตัวใหญ่ขึ้นอาจล้นขอบจอ
+      clampToScreen();
     }
     if (typeof opts.interactive === 'boolean') reactToReading = opts.interactive;
     if (opts.chattiness) chattiness = opts.chattiness;
@@ -1092,12 +1258,17 @@ mangax.effect(function (ctx) {
       energy = opts.energy;
       state.speed = walkSpeed();
     }
+    if (typeof opts.replaceMenu === 'boolean' && opts.replaceMenu !== replaceMenu) {
+      replaceMenu = opts.replaceMenu;
+      applyReplaceMenu();
+      say(replaceMenu ? 'กดค้างที่เค้าเพื่อเปิดเมนูนะ! 👆' : 'ปุ่มเมนูกลับมาแล้ว~');
+    }
   });
 
   // ================================================================
   // ============ RESIZE ============
   // ================================================================
-  ctx.on(window, 'resize', function () {
+  function clampToScreen() {
     var curW = currentSize;
     var curH = currentSize * 1.25;
     var maxX = Math.max(margin, window.innerWidth - curW - margin);
@@ -1112,7 +1283,24 @@ mangax.effect(function (ctx) {
     if (!isTop && state.bottom > maxY) {
       state.bottom = maxY; mascot.style.bottom = maxY + 'px';
     }
-  }, { passive: true });
+  }
+  ctx.on(window, 'resize', clampToScreen, { passive: true });
+
+  // ================================================================
+  // ============ GREETING ============
+  // ================================================================
+  // ctx.auto = แอพเปิดให้เองตอนโหลดหน้า (runAt pageLoad), false = ผู้ใช้กดเปิดเอง
+  safeTimeout(function () {
+    var c = mascot.getBoundingClientRect();
+    if (ctx.auto) {
+      react('wave', 1600);
+      sayIfChance(pickPhrase(['มาอ่านต่อกันเลย~ 👋', 'เจอกันอีกแล้วน้า 💜', 'หน้านี้มีอะไรน้า 👀']));
+    } else {
+      react('excited', 1800);
+      spawnHearts(c.left + c.width / 2, c.top, 4);
+      say(replaceMenu ? 'มาแล้วว! กดค้างที่เค้าเพื่อเปิดเมนูนะ 👆' : 'เย้! มาแล้วว ✨');
+    }
+  }, 500);
 
   // ================================================================
   // ============ CLEANUP ============
@@ -1120,6 +1308,7 @@ mangax.effect(function (ctx) {
   return function () {
     if (state.rafId) cancelAnimationFrame(state.rafId);
     if (state.tapTimer) clearTimeout(state.tapTimer);
+    if (state.pressTimer) clearTimeout(state.pressTimer);
     if (state.idleTimer) clearTimeout(state.idleTimer);
     if (state.dozeTimer) clearTimeout(state.dozeTimer);
     if (bubbleHideTimer) clearTimeout(bubbleHideTimer);
