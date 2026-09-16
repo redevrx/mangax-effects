@@ -2,7 +2,7 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.mangax-pet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": { "en": "MangaX Pet", "th": "สัตว์เลี้ยง MangaX" },
   "description": {
     "en": "A cute mascot that walks on the screen and reacts to reading.",
