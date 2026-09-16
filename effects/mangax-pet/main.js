@@ -371,6 +371,99 @@ mangax.effect(function (ctx) {
       '#mx-pet .mx-spark-4{animation:mx-spark-in 3s ease-out infinite 2.1s;}\n' +
       '#mx-pet.face-left svg{transform:scaleX(-1);}\n' +
 
+      // ============ MENU LAYER ============
+      '#mx-pet-menu-layer{all:initial;position:fixed;inset:0;z-index:1000002;' +
+      'background:rgba(10,10,24,.32);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);' +
+      '-webkit-tap-highlight-color:transparent;}\n' +
+      '#mx-pet-menu-layer .mx-menu{position:fixed;display:flex;flex-direction:column;gap:8px;}\n' +
+      '#mx-pet-menu-layer .mx-menu.right{align-items:flex-end;}\n' +
+      '#mx-pet-menu-layer .mx-menu.left{align-items:flex-start;}\n' +
+
+      // ---- menu item ----
+      '#mx-pet-menu-layer .mx-menu-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;' +
+      'padding:6px 16px 6px 6px;border-radius:18px;' +
+      'border:1.5px solid rgba(129,140,248,.55);' +
+      'background:linear-gradient(135deg,rgba(26,26,46,.98),rgba(40,30,70,.98));' +
+      'color:#fff;font:600 13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
+      'box-shadow:0 6px 20px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);' +
+      'opacity:0;transform:translateY(10px) scale(.85);' +
+      'animation:mx-menu-in .3s cubic-bezier(.34,1.56,.64,1) forwards;cursor:pointer;white-space:nowrap;' +
+      'transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease;}\n' +
+      '#mx-pet-menu-layer .mx-menu.right .mx-menu-item{flex-direction:row-reverse;padding:6px 6px 6px 16px;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item:active{transform:scale(.95);}\n' +
+
+      // ---- icon ----
+      '#mx-pet-menu-layer .mx-menu-icon{width:36px;height:36px;flex-shrink:0;border-radius:12px;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'background:linear-gradient(135deg,rgba(62,224,255,.22),rgba(168,85,247,.28));' +
+      'color:#c7d2fe;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);' +
+      'transition:transform .2s ease;}\n' +
+      '#mx-pet-menu-layer .mx-menu-icon svg{width:20px;height:20px;display:block;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item.active{border-color:#22d3ee;' +
+      'box-shadow:0 0 16px rgba(34,211,238,.6),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item.active .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(34,211,238,.4),rgba(34,211,238,.25));color:#fff;}\n' +
+
+      // ---- item สลับโหมด ----
+      '#mx-pet-menu-layer .mx-menu-item.engine{' +
+      'border-color:rgba(255,213,61,.6);' +
+      'background:linear-gradient(135deg,rgba(40,25,60,.98),rgba(60,35,80,.98));}\n' +
+
+      // ---- สี icon ตามกลุ่ม ----
+      '#mx-pet-menu-layer .mx-menu-item[data-group="0"] .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(62,224,255,.28),rgba(99,102,241,.32));' +
+      'color:#7dd3fc;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="1"] .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(255,158,199,.28));' +
+      'color:#d8b4fe;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="2"] .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(20,184,166,.3),rgba(34,211,238,.28));' +
+      'color:#5eead4;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="3"] .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(148,163,184,.28),rgba(100,116,139,.32));' +
+      'color:#cbd5e1;}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="4"] .mx-menu-icon{' +
+      'background:linear-gradient(135deg,rgba(255,213,61,.32),rgba(251,146,60,.3));' +
+      'color:#fde68a;}\n' +
+
+      // ---- hover glow ตามกลุ่ม ----
+      '#mx-pet-menu-layer .mx-menu-item[data-group="0"]:hover{' +
+      'transform:translateY(-1px);border-color:rgba(62,224,255,.9);' +
+      'box-shadow:0 8px 24px rgba(62,224,255,.4),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="1"]:hover{' +
+      'transform:translateY(-1px);border-color:rgba(168,85,247,.9);' +
+      'box-shadow:0 8px 24px rgba(168,85,247,.4),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="2"]:hover{' +
+      'transform:translateY(-1px);border-color:rgba(20,184,166,.9);' +
+      'box-shadow:0 8px 24px rgba(20,184,166,.4),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="3"]:hover{' +
+      'transform:translateY(-1px);border-color:rgba(148,163,184,.9);' +
+      'box-shadow:0 8px 24px rgba(148,163,184,.35),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+      '#mx-pet-menu-layer .mx-menu-item[data-group="4"]:hover{' +
+      'transform:translateY(-1px);border-color:rgba(255,213,61,.95);' +
+      'box-shadow:0 8px 24px rgba(255,213,61,.45),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
+
+      // ---- icon bounce ตอน hover ----
+      '#mx-pet-menu-layer .mx-menu-item:hover .mx-menu-icon svg{' +
+      'animation:mx-icon-pop .35s cubic-bezier(.34,1.56,.64,1);}\n' +
+      '@keyframes mx-icon-pop{' +
+      '  0%   {transform:scale(1) rotate(0);}\n' +
+      '  50%  {transform:scale(1.18) rotate(-6deg);}\n' +
+      '  100% {transform:scale(1) rotate(0);}\n' +
+      '}\n' +
+
+      // ---- group label ----
+      '#mx-pet-menu-layer .mx-menu-group{display:flex;align-items:center;gap:6px;' +
+      'margin:6px 4px 2px;font:700 10px/1 -apple-system,sans-serif;' +
+      'letter-spacing:.5px;text-transform:uppercase;color:rgba(199,210,254,.55);' +
+      'opacity:0;animation:mx-menu-in .3s ease .1s forwards;}\n' +
+      '#mx-pet-menu-layer .mx-menu.right .mx-menu-group{flex-direction:row-reverse;}\n' +
+      '#mx-pet-menu-layer .mx-menu-group::before,' +
+      '#mx-pet-menu-layer .mx-menu-group::after{content:"";height:1px;flex:1;' +
+      'background:linear-gradient(90deg,transparent,rgba(129,140,248,.45),transparent);}\n' +
+
+      '@keyframes mx-menu-in{to{opacity:1;transform:none;}}\n' +
+
       '@media (prefers-reduced-motion: reduce){' +
       '#mx-pet svg{animation-duration:.01s!important;animation-iteration-count:1!important;}}'
   );
@@ -485,102 +578,161 @@ mangax.effect(function (ctx) {
   }
 
   // ================================================================
-  // ============ MENU ICONS — ใหม่ ใช้ SVG สวย ๆ ============
+  // ============ MENU ICONS — Premium SVG Set ============
   // ================================================================
-  // ใช้ inline SVG แทน emoji → ดูสะอาด ต่างเครื่องเหมือนกัน
-  // icon: ชื่อจาก manifest ของแอพ, สีจาก theme หลัก
   var MENU_ICON_SVG = {
-    // ---- แปล / สแกน ----
+    // ============ กลุ่ม 0: แปล (Cyan/Blue) ============
     document_scanner:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>' +
-        '<path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>' +
-        '<circle cx="12" cy="12" r="3"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8" opacity=".9"/>' +
+        '<path d="M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8" opacity=".9"/>' +
+        '<path d="M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16" opacity=".9"/>' +
+        '<path d="M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" opacity=".9"/>' +
+        '<circle cx="12" cy="12" r="3.2" fill="currentColor" opacity=".22" stroke="none"/>' +
+        '<circle cx="12" cy="12" r="3.2"/>' +
+        '<path d="M12 8.8v6.4M8.8 12h6.4" opacity=".35" stroke-width="1.2"/>' +
+        '</svg>',
     auto_awesome:
-        '<svg viewBox="0 0 24 24" fill="currentColor">' +
-        '<path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/>' +
-        '<path d="M19 14l.9 2.6L22.5 17.5l-2.6.9L19 21l-.9-2.6L15.5 17.5l2.6-.9L19 14z"/>' +
-        '<path d="M5 14l.7 2 2 .7-2 .7L5 19.4l-.7-2-2-.7 2-.7L5 14z"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 2.5l1.7 4.8 4.8 1.7-4.8 1.7L12 15.5l-1.7-4.8L5.5 9l4.8-1.7L12 2.5z" fill="currentColor" opacity=".22"/>' +
+        '<path d="M12 2.5l1.7 4.8 4.8 1.7-4.8 1.7L12 15.5l-1.7-4.8L5.5 9l4.8-1.7L12 2.5z"/>' +
+        '<path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" fill="currentColor" opacity=".5" stroke-width="1.4"/>' +
+        '<path d="M5 16l.6 1.7 1.7.6-1.7.6L5 20.6l-.6-1.7-1.7-.6 1.7-.6L5 16z" fill="currentColor" opacity=".5" stroke-width="1.4"/>' +
+        '</svg>',
+
+    // ============ กลุ่ม 1: เอฟเฟกต์ (Purple/Pink) ============
     auto_fix_high:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/>' +
-        '<path d="M17.8 11.8L19 13"/><path d="M15 9h0"/><path d="M17.8 6.2L19 5"/>' +
-        '<path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>',
-    menu_book:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>' +
-        '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-    record_voice_over:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>' +
-        '<path d="M16 11a3 3 0 0 1 0 6"/><path d="M19 8a7 7 0 0 1 0 12"/></svg>',
-    volume_up:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>',
-    stop:
-        '<svg viewBox="0 0 24 24" fill="currentColor">' +
-        '<rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
-    close:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>',
-    // ---- เอฟเฟกต์ / แต่ง ----
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M9.5 14.5L3 21l1.5-6.5L9.5 14.5z" fill="currentColor" opacity=".22"/>' +
+        '<path d="M9.5 14.5L3 21l1.5-6.5L9.5 14.5z"/>' +
+        '<path d="M14 10l-4.5 4.5L14 19l4.5-4.5L14 10z" fill="currentColor" opacity=".22"/>' +
+        '<path d="M14 10l-4.5 4.5L14 19l4.5-4.5L14 10z"/>' +
+        '<path d="M18 4l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" fill="currentColor" stroke-width="1.4"/>' +
+        '<path d="M20 13l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3L18.2 15l1.3-.5.5-1.5z" fill="currentColor" opacity=".7" stroke-width="1.2"/>' +
+        '</svg>',
     palette:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/>' +
-        '<circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/>' +
-        '<path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.5A4.5 4.5 0 0 0 22 11c0-5-4.5-9-10-9z"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 2.5C6.5 2.5 2.5 6.8 2.5 12S6.5 21.5 12 21.5c1.3 0 2.3-1 2.3-2.3 0-.6-.2-1.1-.6-1.5-.3-.4-.5-.9-.5-1.5 0-1.2 1-2.2 2.2-2.2h2.1c2.1 0 3.8-1.7 3.8-3.8 0-4.6-4.1-7.7-9.3-7.7z" fill="currentColor" opacity=".18"/>' +
+        '<path d="M12 2.5C6.5 2.5 2.5 6.8 2.5 12S6.5 21.5 12 21.5c1.3 0 2.3-1 2.3-2.3 0-.6-.2-1.1-.6-1.5-.3-.4-.5-.9-.5-1.5 0-1.2 1-2.2 2.2-2.2h2.1c2.1 0 3.8-1.7 3.8-3.8 0-4.6-4.1-7.7-9.3-7.7z"/>' +
+        '<circle cx="8" cy="10" r="1.2" fill="currentColor" stroke="none"/>' +
+        '<circle cx="12" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>' +
+        '<circle cx="16" cy="9" r="1.2" fill="currentColor" stroke="none"/>' +
+        '<circle cx="17" cy="13.5" r="1.2" fill="currentColor" stroke="none"/>' +
+        '</svg>',
+
+    // ============ กลุ่ม 2: อื่นๆ (Teal/Green) ============
+    record_voice_over:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="9" cy="7" r="3.2" fill="currentColor" opacity=".22" stroke="none"/>' +
+        '<circle cx="9" cy="7" r="3.2"/>' +
+        '<path d="M3 20.5v-1.5a4.5 4.5 0 0 1 4.5-4.5h3A4.5 4.5 0 0 1 15 19v1.5" fill="currentColor" opacity=".22" stroke="none"/>' +
+        '<path d="M3 20.5v-1.5a4.5 4.5 0 0 1 4.5-4.5h3A4.5 4.5 0 0 1 15 19v1.5"/>' +
+        '<path d="M17.5 8.5a3 3 0 0 1 0 6" opacity=".9"/>' +
+        '<path d="M20 6a6.5 6.5 0 0 1 0 11" opacity=".6"/>' +
+        '</svg>',
+    volume_up:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M11 5.5L6.5 9.5H3.5v5h3L11 18.5V5.5z" fill="currentColor" opacity=".22"/>' +
+        '<path d="M11 5.5L6.5 9.5H3.5v5h3L11 18.5V5.5z"/>' +
+        '<path d="M15 9.5a3.5 3.5 0 0 1 0 5"/>' +
+        '<path d="M18 6.5a7 7 0 0 1 0 11" opacity=".7"/>' +
+        '</svg>',
     save_alt:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>' +
-        '<path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>',
-    // ---- ตั้งค่า ----
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M19.5 20.5H4.5a1.5 1.5 0 0 1-1.5-1.5V5a1.5 1.5 0 0 1 1.5-1.5h11L20 7.9V19a1.5 1.5 0 0 1-.5 1.5z" fill="currentColor" opacity=".18"/>' +
+        '<path d="M19.5 20.5H4.5a1.5 1.5 0 0 1-1.5-1.5V5a1.5 1.5 0 0 1 1.5-1.5h11L20 7.9V19a1.5 1.5 0 0 1-.5 1.5z"/>' +
+        '<path d="M7 3.5v5h8v-5" opacity=".9"/>' +
+        '<path d="M16.5 20.5v-6.5h-9v6.5" opacity=".9"/>' +
+        '</svg>',
+
+    // ============ กลุ่ม 3: ตั้งค่า (Slate) ============
     settings:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<circle cx="12" cy="12" r="3"/>' +
-        '<path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 8.9 19a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 5 8.9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
-    // ---- สลับโหมด ----
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="currentColor" opacity=".22" stroke="none"/>' +
+        '<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>' +
+        '<path d="M19.4 14.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.5z"/>' +
+        '</svg>',
+
+    // ============ กลุ่ม 4: โหมด (Gold/Orange) ============
     swap_horiz:
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M16 3l4 4-4 4"/><path d="M20 7H4"/>' +
-        '<path d="M8 21l-4-4 4-4"/><path d="M4 17h16"/></svg>'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M4 7.5h14" opacity=".55"/>' +
+        '<path d="M4 7.5h14"/>' +
+        '<path d="M14 3.5l4 4-4 4"/>' +
+        '<path d="M20 16.5H6" opacity=".55"/>' +
+        '<path d="M20 16.5H6"/>' +
+        '<path d="M10 20.5l-4-4 4-4"/>' +
+        '</svg>',
+
+    // ============ Fallback icons ============
+    translate:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M4 5h10M9 3v2c0 4-2 7-5 9M5 9c0 3 3 6 6 7"/>' +
+        '<path d="M13 21l4-9 4 9M14.5 17.5h5"/>' +
+        '</svg>',
+    star:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 3.5l2.6 5.6 6 .7-4.5 4.2 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.8l6-.7L12 3.5z" fill="currentColor" opacity=".22"/>' +
+        '<path d="M12 3.5l2.6 5.6 6 .7-4.5 4.2 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.8l6-.7L12 3.5z"/>' +
+        '</svg>',
+    favorite:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 20.5s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10.5c0 5.7-7 10-7 10z" fill="currentColor" opacity=".22"/>' +
+        '<path d="M12 20.5s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10.5c0 5.7-7 10-7 10z"/>' +
+        '</svg>',
+    download:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 3v13M6.5 11L12 16.5 17.5 11"/>' +
+        '<path d="M4 20h16" opacity=".6"/>' +
+        '</svg>',
+    notifications:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M6 8a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6z" fill="currentColor" opacity=".18"/>' +
+        '<path d="M6 8a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/>' +
+        '<path d="M10 20a2 2 0 0 0 4 0"/>' +
+        '</svg>',
+    content_copy:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="8" y="8" width="12" height="12" rx="2"/>' +
+        '<path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>' +
+        '</svg>',
+    refresh:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M20.5 12a8.5 8.5 0 1 1-2.5-6L21 8.5"/>' +
+        '<path d="M21 3v5.5h-5.5"/>' +
+        '</svg>'
   };
-  // fallback: emoji ถ้า icon ใน manifest ไม่รู้จัก
-  var MENU_ICON_EMOJI = {
-    auto_awesome: '🌟', palette: '🎨', save_alt: '💾', settings: '⚙️',
-    swap_horiz: '🔄', stop: '⏹️', close: '⏹️'
-  };
+
+  var MENU_ICON_DEFAULT =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+      '<circle cx="12" cy="12" r="8"/>' +
+      '<path d="M12 8v8M8 12h8" opacity=".6"/>' +
+      '</svg>';
 
   var ENGINE_KEY = '__engine';
 
   // ================================================================
-  // ============ MENU GROUPS — จัดกลุ่มใหม่ ============
+  // ============ MENU GROUPS ============
   // ================================================================
-  // กลุ่มตาม "ลำดับความสำคัญในการใช้งาน":
-  //   grp 0 → แปล (scan)                     ใกล้น้องที่สุด
-  //   grp 1 → เอฟเฟกต์ / แต่งกล่อง
-  //   grp 2 → อ่านออกเสียง / export
-  //   grp 3 → ตั้งค่า
-  //   grp 4 → สลับโหมด (แยกออกไปไกลสุด มีเส้นคั่น)
   var MENU_GROUPS = {
-    // กลุ่ม 0
+    // กลุ่ม 0: แปล
     scan: 0, full_context_scan: 0,
-    // กลุ่ม 1
-    effects: 1, bubble_edit: 1, palette: 1,
-    // กลุ่ม 2
-    read_aloud: 2, export_chapter: 2, volume_up: 2,
-    // กลุ่ม 3
+    // กลุ่ม 1: เอฟเฟกต์ / แต่ง
+    effects: 1, bubble_edit: 1,
+    // กลุ่ม 2: อื่นๆ
+    read_aloud: 2, export_chapter: 2,
+    // กลุ่ม 3: ตั้งค่า
     settings: 3,
-    // กลุ่ม 4
+    // กลุ่ม 4: โหมด
     __engine: 4
   };
   var MENU_ICON_GROUPS = {
-    document_scanner: 0, auto_awesome: 0, auto_fix_high: 0,
-    palette: 1, save_alt: 1,
-    record_voice_over: 2, volume_up: 2,
+    document_scanner: 0, auto_awesome: 0,
+    auto_fix_high: 1, palette: 1,
+    record_voice_over: 2, volume_up: 2, save_alt: 2,
     settings: 3,
     swap_horiz: 4
   };
-  // ชื่อกลุ่ม (สำหรับแสดง label เล็กๆ ระหว่างคั่น)
   var GROUP_LABELS = {
     0: 'แปล',
     1: 'เอฟเฟกต์',
@@ -592,69 +744,11 @@ mangax.effect(function (ctx) {
   function itemGroup(item) {
     if (typeof MENU_GROUPS[item.key] === 'number') return MENU_GROUPS[item.key];
     if (typeof MENU_ICON_GROUPS[item.icon] === 'number') return MENU_ICON_GROUPS[item.icon];
-    return 2; // ค่ากลางสำหรับปุ่มใหม่จากแอพ
+    return 2;
   }
 
-  // ================================================================
-  // ============ MENU STATE ============
-  // ================================================================
   var menuState = { items: [], engine: ctx.engine === 'novel' ? 'novel' : 'manga', open: false };
   var menuLayer = null;
-
-  ctx.addStyle(
-      '#mx-pet-menu-layer{all:initial;position:fixed;inset:0;z-index:1000002;' +
-      'background:rgba(10,10,24,.32);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);' +
-      '-webkit-tap-highlight-color:transparent;}\n' +
-      '#mx-pet-menu-layer .mx-menu{position:fixed;display:flex;flex-direction:column;gap:8px;}\n' +
-      '#mx-pet-menu-layer .mx-menu.right{align-items:flex-end;}\n' +
-      '#mx-pet-menu-layer .mx-menu.left{align-items:flex-start;}\n' +
-
-      // ---- menu item ----
-      '#mx-pet-menu-layer .mx-menu-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;' +
-      'padding:6px 16px 6px 6px;border-radius:18px;' +
-      'border:1.5px solid rgba(129,140,248,.55);' +
-      'background:linear-gradient(135deg,rgba(26,26,46,.98),rgba(40,30,70,.98));' +
-      'color:#fff;font:600 13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
-      'box-shadow:0 6px 20px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);' +
-      'opacity:0;transform:translateY(10px) scale(.85);' +
-      'animation:mx-menu-in .3s cubic-bezier(.34,1.56,.64,1) forwards;cursor:pointer;white-space:nowrap;' +
-      'transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease;}\n' +
-      '#mx-pet-menu-layer .mx-menu.right .mx-menu-item{flex-direction:row-reverse;padding:6px 6px 6px 16px;}\n' +
-      '#mx-pet-menu-layer .mx-menu-item:hover{transform:translateY(-1px);' +
-      'border-color:rgba(168,85,247,.9);' +
-      'box-shadow:0 8px 24px rgba(99,102,241,.5),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
-      '#mx-pet-menu-layer .mx-menu-item:active{transform:scale(.95);}\n' +
-
-      // ---- icon ----
-      '#mx-pet-menu-layer .mx-menu-icon{width:36px;height:36px;flex-shrink:0;border-radius:12px;' +
-      'display:flex;align-items:center;justify-content:center;' +
-      'background:linear-gradient(135deg,rgba(62,224,255,.22),rgba(168,85,247,.28));' +
-      'color:#c7d2fe;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);}\n' +
-      '#mx-pet-menu-layer .mx-menu-icon svg{width:20px;height:20px;display:block;}\n' +
-      '#mx-pet-menu-layer .mx-menu-item.active{border-color:#22d3ee;' +
-      'box-shadow:0 0 16px rgba(34,211,238,.6),inset 0 1px 0 rgba(255,255,255,.1);}\n' +
-      '#mx-pet-menu-layer .mx-menu-item.active .mx-menu-icon{' +
-      'background:linear-gradient(135deg,rgba(34,211,238,.4),rgba(34,211,238,.25));color:#fff;}\n' +
-
-      // ---- item สลับโหมด (ไฮไลต์พิเศษ) ----
-      '#mx-pet-menu-layer .mx-menu-item.engine{' +
-      'border-color:rgba(255,213,61,.6);' +
-      'background:linear-gradient(135deg,rgba(40,25,60,.98),rgba(60,35,80,.98));}\n' +
-      '#mx-pet-menu-layer .mx-menu-item.engine .mx-menu-icon{' +
-      'background:linear-gradient(135deg,rgba(255,213,61,.35),rgba(168,85,247,.35));color:#fff8c2;}\n' +
-
-      // ---- group label ----
-      '#mx-pet-menu-layer .mx-menu-group{display:flex;align-items:center;gap:6px;' +
-      'margin:6px 4px 2px;font:700 10px/1 -apple-system,sans-serif;' +
-      'letter-spacing:.5px;text-transform:uppercase;color:rgba(199,210,254,.55);' +
-      'opacity:0;animation:mx-menu-in .3s ease .1s forwards;}\n' +
-      '#mx-pet-menu-layer .mx-menu.right .mx-menu-group{flex-direction:row-reverse;}\n' +
-      '#mx-pet-menu-layer .mx-menu-group::before,' +
-      '#mx-pet-menu-layer .mx-menu-group::after{content:"";height:1px;flex:1;' +
-      'background:linear-gradient(90deg,transparent,rgba(129,140,248,.45),transparent);}\n' +
-
-      '@keyframes mx-menu-in{to{opacity:1;transform:none;}}\n'
-  );
 
   function setMenuItems(data) {
     if (!data || !data.items) return;
@@ -677,7 +771,6 @@ mangax.effect(function (ctx) {
     }]);
   }
 
-  // เรียงใหม่ตาม group → ในกลุ่มเดียวกันคงลำดับเดิม
   function sortMenuItems(items) {
     return items
         .map(function (it, i) { return { it: it, i: i, g: itemGroup(it) }; })
@@ -717,7 +810,6 @@ mangax.effect(function (ctx) {
     var items = sortMenuItems(withEngineItem(menuState.items));
     var groupOf = items.map(itemGroup);
 
-    // ถ้าอยู่ด้านบน → reverse ทั้ง list และ group
     var ordered = above ? items.slice().reverse() : items;
     var orderedGroups = above ? groupOf.slice().reverse() : groupOf;
 
@@ -732,7 +824,6 @@ mangax.effect(function (ctx) {
     ordered.forEach(function (item, i) {
       var grp = orderedGroups[i];
 
-      // ขึ้น label กลุ่มใหม่ (ยกเว้นอันแรก)
       if (i > 0 && grp !== lastGroup) {
         var label = document.createElement('div');
         label.className = 'mx-menu-group';
@@ -747,17 +838,13 @@ mangax.effect(function (ctx) {
       button.className = 'mx-menu-item' +
           (item.active ? ' active' : '') +
           (isEngine ? ' engine' : '');
+      button.setAttribute('data-group', grp);
       button.style.animationDelay = (nearIdx * 40) + 'ms';
       nearIdx++;
 
       var icon = document.createElement('span');
       icon.className = 'mx-menu-icon';
-      // ใช้ SVG ถ้ามี, ไม่งั้น fallback เป็น emoji
-      if (MENU_ICON_SVG[item.icon]) {
-        icon.innerHTML = MENU_ICON_SVG[item.icon];
-      } else {
-        icon.textContent = MENU_ICON_EMOJI[item.icon] || '•';
-      }
+      icon.innerHTML = MENU_ICON_SVG[item.icon] || MENU_ICON_DEFAULT;
 
       var labelEl = document.createElement('span');
       labelEl.textContent = item.label;
@@ -810,38 +897,28 @@ mangax.effect(function (ctx) {
     state.lastInteract = Date.now();
     resetIdleTimer();
 
-    // ---- สลับโหมด: เล่น animation 1.1 วิ ก่อนยิงคำสั่ง ----
     if (item.key === ENGINE_KEY) {
       var to = menuState.engine === 'novel' ? 'manga' : 'novel';
       var c = center();
 
-      // 1. ใส่ class engine-switch (หมุน 360° + halo หมุนเร็ว)
       mascot.classList.add('engine-switch');
-      // 2. วงแหวนขยาย
       spawnRing(c.x, c.y);
-      // 3. ประกาย + หัวใจ
       spawnSparks(c.x, c.y, 12);
       spawnHearts(c.x, c.top, 5);
-      // 4. พูดบอก
       say(to === 'novel' ? 'ไปโหมดนิยายกัน~ 📖' : 'ไปโหมดมังงะกัน~ 🎨', false);
 
-      // 5. รอ animation จบ → ยิงคำสั่ง
       safeTimeout(function () {
         appCall('engine.set', { type: to }).then(function (engine) {
           if (!engine) {
-            // ล้มเหลว → เอา class ออก + สั่นหัว
             mascot.classList.remove('engine-switch');
             react('shake', 900);
             say('สลับไม่ได้น้า 🥺');
           }
-          // ถ้าสำเร็จ หน้าใหม่จะโหลด → effect ถูก stop → class หายไปเอง
         });
       }, 1100);
-
       return;
     }
 
-    // ---- ปุ่มปกติ ----
     var reaction = menuReactions[item.key];
     if (reaction) {
       react(reaction[0], 1400);
@@ -1648,7 +1725,7 @@ mangax.effect(function (ctx) {
   });
 
   // ================================================================
-  // ============ APP MENU / ENGINE EVENTS ============
+  // ============ MENU / ENGINE EVENTS ============
   // ================================================================
   var menuReactions = {
     effects: ['wink', 'เลือกเอฟเฟกต์กัน~ ✨'],
@@ -1676,12 +1753,9 @@ mangax.effect(function (ctx) {
     state.lastInteract = Date.now();
     resetIdleTimer();
 
-    // ล้าง animation สลับโหมด (ถ้ามีค้างอยู่)
     mascot.classList.remove('engine-switch');
 
-    // ---- ต้อนรับด้วยท่าที่ต่างกันตามโหมด ----
     if (type === 'novel') {
-      // นิยาย: เปิดหนังสือ → ค้อม → หัวใจ
       react('read', 1400);
       safeTimeout(function () { react('bow', 1200); }, 1450);
       safeTimeout(function () {
@@ -1691,7 +1765,6 @@ mangax.effect(function (ctx) {
       }, 2700);
       sayIfChance('โหมดนิยายมาแล้ว! 📖✨');
     } else {
-      // มังงะ: กระโดด → หมุน → ขยิบตา
       react('jump', 1100);
       safeTimeout(function () { react('spin', 1000); }, 1150);
       safeTimeout(function () { react('wink', 800); }, 2200);
