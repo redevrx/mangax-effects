@@ -185,7 +185,8 @@
       timer = 0;
       lastScan = Date.now();
       var showing = new Set(), appeared = [];
-      document.body.querySelectorAll('*').forEach(function (el) {
+      // As the app does: under <html> too, where some ad scripts pin their boxes.
+      document.querySelectorAll('body *, html > :not(head):not(body), html > :not(head):not(body) *').forEach(function (el) {
         var style = getComputedStyle(el);
         if (style.position !== 'fixed' && style.position !== 'sticky') return;
         for (var p = el.parentElement; p; p = p.parentElement) if (showing.has(p)) return;

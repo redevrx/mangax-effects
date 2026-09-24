@@ -42,7 +42,8 @@ mangax.effect(function (ctx) {
   }
 
   var removed = 0;
-  var candidates = document.querySelectorAll('body *');
+  // Not only the body: some ad scripts pin their box straight under <html>.
+  var candidates = document.querySelectorAll('body *, html > :not(head):not(body), html > :not(head):not(body) *');
   for (var i = 0; i < candidates.length; i++) {
     var el = candidates[i];
     if (!el.isConnected) continue;
