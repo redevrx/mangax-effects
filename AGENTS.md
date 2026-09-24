@@ -117,7 +117,7 @@ mangax.effect(function (ctx) {
 | `ctx.observe` | `(selector, fn(element))` | `selector` is **one CSS selector string** (use commas for several). `fn` runs once per matching element, now and for elements added later. Disconnected on stop |
 | `ctx.addStyle` | `(css) → <style>` | Removed on stop. Change `.textContent` of the returned element to update it |
 | `ctx.onUrlChange` | `(fn(href))` | Single-page sites changing URL without a reload |
-| `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`) — these carry `data.type` (`manga` \| `novel`) and `data.mode` (`realtime` \| `full`); `engine:change` (`data.type`); `menu:open` / `menu:close` (`data.key`, `null` when dismissed) for the app's own menu; `menu:change` (same data as `menu.items`) when the buttons change; `"*"` for all. Realtime `translate:done` fires once per batch; a full scan (`mode: "full"`) sends `translate:start` on press and ends with one of done / failed / stop. Removed on stop. No permission needed |
+| `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`) — these carry `data.type` (`manga` \| `novel`) and `data.mode` (`realtime` \| `full`); `engine:change` (`data.type`); `menu:open` / `menu:close` (`data.key`, `null` when dismissed) for the app's own menu; `menu:change` (same data as `menu.items`) when the buttons change; `page:overlay` when a pinned box comes up on the page (see "Pop-ups and floating ads" below); `"*"` for all. Realtime `translate:done` fires once per batch; a full scan (`mode: "full"`) sends `translate:start` on press and ends with one of done / failed / stop. Removed on stop. No permission needed |
 | `ctx.toast` | `(text) → Promise` | Needs `"permissions": ["toast"]`. Add `.catch(function () {})` |
 | `ctx.call` | `(cmd, args) → Promise` | Always `.catch`. `toast` `{text}` (perm `toast`); `menu.items` → `{engine, items:[{key,label,icon,active}]}` (`icon` = Material icon name), `menu.press` `{key}` runs what the app's button runs, `menu.replace` `{on}` hides the app's menu button while the effect runs — the effect must then draw its own menu from `menu.items` and redraw on `menu:change` (perm `menu`); `engine.get` → `"manga"`\|`"novel"` (no perm); `engine.set` `{type}` (perm `engine`). Menu keys: `scan`, `effects`, `read_aloud`, `full_context_scan`, `bubble_edit`, `export_chapter`, `settings` — ask `menu.items`, they depend on engine and page. Anything else rejects |
 | `ctx.stop` | `()` | Turns the effect off from inside (runs all cleanups) |
@@ -130,6 +130,58 @@ There is **nothing else**: no `ctx.on('stop')`, no `ctx.storage`, no `ctx.fetch`
 `ctx.log`, no `ctx.wait`. Do not invent members. For cleanup, **return a function** from the
 effect (toggle), or register work through `ctx.on` / `ctx.observe` / `ctx.addStyle`, which clean up
 by themselves.
+
+### Pop-ups and floating ads: `page:overlay`
+
+Ads are different on every site, so the app does not decide what an ad is. It reports every box
+the site pins over the page, and your effect picks out the ones it knows are ads. Listening for
+the event is what turns the watch on; nothing is watched on a page where nobody listens (a `"*"`
+listener hears it but does not turn it on).
+
+`ctx.onEvent('page:overlay', fn(data))` fires once each time an element with `position: fixed` or
+`sticky` becomes visible — when it is added, or when the site flips it visible again after hiding
+it. Boxes already on screen when you start listening are reported too. A pinned element inside
+another is part of the outer one and is not reported separately. Tiny ones (under 400 px²) are
+skipped.
+
+| `data` | Meaning |
+|---|---|
+| `selector` | Finds the element: `document.querySelector(data.selector)`. It may be gone already |
+| `id` | The same, as the value of `data-mangax-overlay` |
+| `position` | `fixed` or `sticky` |
+| `cover` | Share of the screen it covers, 0–1 (0.3 = 30%) |
+| `left`, `top`, `width`, `height` | The visible part, in viewport CSS pixels |
+| `z` | Its `z-index` as a number, 0 for `auto` |
+| `sinceTap` | ms since the reader last touched the page, `-1` if never. A box that comes up within about a second of a tap is usually one the reader opened (a menu, a chapter list) — leave it |
+
+The app filters nothing, so filter well: a site's own header, bottom bar and reader
+are pinned boxes too. Check what is inside before removing, and prefer a site-specific
+`matches` with the site's own selectors when you can.
+
+```js
+// A floating ad on one site: a pinned box in the bottom corner holding an iframe.
+mangax.effect(function (ctx) {
+  ctx.onEvent('page:overlay', function (data) {
+    if (data.sinceTap >= 0 && data.sinceTap < 1000) return;
+    var el = document.querySelector(data.selector);
+    if (!el || !el.querySelector('iframe, a[target="_blank"]')) return;
+    if (data.cover > 0.25) return;   // not the small floating kind this effect is for
+    el.setAttribute('data-mx-float-ad', '');
+  });
+  ctx.addStyle('[data-mx-float-ad] { display: none !important; }');
+  return function () {
+    document.querySelectorAll('[data-mx-float-ad]').forEach(function (el) {
+      el.removeAttribute('data-mx-float-ad');
+    });
+  };
+});
+```
+
+Use `"type": "toggle"` with `"runAt": "pageLoad"` for an effect like this, so it starts on every
+matching page and switching it off shows everything again. An `action` works too — its
+listeners stay until the page changes — but it cannot be undone. `effects/kill-popups` is the
+official one for big pop-ups on every site; write your own for a site's floating ads.
+`tools/devtools-runner.js` raises `page:overlay` the same way.
 
 ### Rules
 

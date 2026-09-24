@@ -2,20 +2,21 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.kill-popups",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "name": { "en": "Kill pop-ups", "th": "ปิดป๊อปอัป" },
   "description": {
-    "en": "Removes overlays, cookie walls and boxes covering the page, and lets it scroll again.",
-    "th": "ลบกล่องที่บังหน้าเว็บ เช่น ป๊อปอัปหรือแจ้งเตือนคุกกี้ แล้วทำให้หน้าเลื่อนได้อีกครั้ง"
+    "en": "Removes overlays, cookie walls and boxes covering the page, and lets it scroll again. Runs on page load and keeps removing pop-up ads that come back.",
+    "th": "ลบกล่องที่บังหน้าเว็บ เช่น ป๊อปอัปหรือแจ้งเตือนคุกกี้ แล้วทำให้หน้าเลื่อนได้อีกครั้ง เริ่มเองเมื่อโหลดหน้า และคอยลบโฆษณาที่เด้งขึ้นมาใหม่"
   },
   "author": { "name": "redevrx", "url": "https://github.com/redevrx" },
   "type": "action",
   "category": "cleanup",
   "icon": "close",
   "entry": "main.js",
+  "runAt": "pageLoad",
   "matches": ["*://*/*"],
   "engines": ["any"],
   "permissions": ["toast"],
-  "keywords": ["popup", "overlay", "cookie", "modal", "ป๊อปอัป"],
+  "keywords": ["popup", "overlay", "cookie", "modal", "ads", "ป๊อปอัป", "โฆษณา"],
   "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/kill-popups"
 }

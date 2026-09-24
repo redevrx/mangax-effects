@@ -116,6 +116,7 @@
         if (typeof fn !== 'function') throw new TypeError('ctx.onEvent(name, fn): fn must be a function');
         var entry = { name: String(name), fn: guard(r, fn) };
         r.eventListeners.push(entry);
+        if (entry.name === 'page:overlay') watchOverlays(r);
         cleanup(r, function () {
           var i = r.eventListeners.indexOf(entry);
           if (i >= 0) r.eventListeners.splice(i, 1);
@@ -166,6 +167,69 @@
       stop: function () { stop(r, 'by the effect'); }
     };
     return ctx;
+  }
+
+  // page:overlay, raised the way the app raises it: every pinned box that comes up, once.
+  function watchOverlays(r) {
+    if (r.overlayWatch) return;
+    var shown = new Set(), seq = 0, lastTap = 0, timer = 0, lastScan = 0;
+    function box(el, style) {
+      if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.05) return null;
+      var b = el.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+      var left = Math.max(b.left, 0), top = Math.max(b.top, 0);
+      var w = Math.min(b.right, vw) - left, h = Math.min(b.bottom, vh) - top;
+      if (w <= 0 || h <= 0 || w * h < 400) return null;
+      return { left: left, top: top, width: w, height: h, cover: (w * h) / (vw * vh) };
+    }
+    function scan() {
+      timer = 0;
+      lastScan = Date.now();
+      var showing = new Set(), appeared = [];
+      document.body.querySelectorAll('*').forEach(function (el) {
+        var style = getComputedStyle(el);
+        if (style.position !== 'fixed' && style.position !== 'sticky') return;
+        for (var p = el.parentElement; p; p = p.parentElement) if (showing.has(p)) return;
+        var b = box(el, style);
+        if (!b) return;
+        showing.add(el);
+        if (shown.has(el)) return;
+        var id = el.getAttribute('data-mangax-overlay') || String(++seq);
+        el.setAttribute('data-mangax-overlay', id);
+        appeared.push({
+          id: id, selector: '[data-mangax-overlay="' + id + '"]', position: style.position,
+          cover: Math.round(b.cover * 100) / 100, left: Math.round(b.left), top: Math.round(b.top),
+          width: Math.round(b.width), height: Math.round(b.height),
+          z: parseInt(style.zIndex, 10) || 0, sinceTap: lastTap ? Date.now() - lastTap : -1
+        });
+      });
+      shown = showing;
+      // Straight to this run: an action is not `run`, and its listeners stay until the page goes.
+      appeared.forEach(function (data) {
+        log('event', 'page:overlay ' + JSON.stringify(data));
+        r.eventListeners.slice().forEach(function (entry) {
+          if (entry.name === 'page:overlay' || entry.name === '*') entry.fn(data, 'page:overlay');
+        });
+      });
+    }
+    function schedule() {
+      if (!timer) timer = setTimeout(scan, Math.max(0, lastScan + 200 - Date.now()));
+    }
+    function tap() { lastTap = Date.now(); }
+    var observer = new MutationObserver(schedule);
+    observer.observe(document.documentElement, {
+      childList: true, subtree: true, attributes: true,
+      attributeFilter: ['class', 'style', 'hidden', 'open', 'aria-hidden']
+    });
+    addEventListener('pointerdown', tap, true);
+    addEventListener('touchstart', tap, true);
+    r.overlayWatch = true;
+    schedule();
+    cleanup(r, function () {
+      observer.disconnect();
+      clearTimeout(timer);
+      removeEventListener('pointerdown', tap, true);
+      removeEventListener('touchstart', tap, true);
+    });
   }
 
   function emit(name, data) {
