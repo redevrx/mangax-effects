@@ -15,6 +15,7 @@ where the files were downloaded (a repository owned by `redevrx`), never from wh
 | [Kill pop-ups](effects/kill-popups) | cleanup | action | Removes overlays and cookie walls covering the page |
 | [Webtoon Age Limit](effects/webtoon-age-limit) | cleanup | toggle | Hides Webtoon's 18+ content warning dialog |
 | [MangaX Pet](effects/mangax-pet) | appearance | toggle | A mascot that reacts to translation and reading; can stand in for the menu button (long-press for its menu) |
+| [Read aloud with SpeechGen](effects/speechgen-reader) | reading | toggle | Reads the novel aloud from where you are with SpeechGen.io voices (uses SpeechGen credits); opens speechgen.io as a hidden companion page |
 
 ## Install in the app
 

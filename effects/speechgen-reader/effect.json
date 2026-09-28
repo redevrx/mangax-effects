@@ -1,0 +1,75 @@
+{
+  "$schema": "../../schema/effect.schema.json",
+  "schema": 1,
+  "id": "redevrx.speechgen-reader",
+  "version": "1.0.0",
+  "name": {
+    "en": "Read aloud with SpeechGen",
+    "th": "อ่านออกเสียงด้วย SpeechGen"
+  },
+  "description": {
+    "en": "Reads the novel aloud from where you are with SpeechGen.io voices, highlighting each paragraph. Uses your SpeechGen credits.",
+    "th": "อ่านนิยายออกเสียงจากตรงที่อ่านอยู่ด้วยเสียงของ SpeechGen.io พร้อมไฮไลต์ย่อหน้าที่กำลังอ่าน ใช้เครดิต SpeechGen ของคุณ"
+  },
+  "author": {
+    "name": "redevrx",
+    "url": "https://github.com/redevrx"
+  },
+  "type": "toggle",
+  "category": "reading",
+  "icon": "record_voice_over",
+  "entry": "main.js",
+  "matches": [
+    "*://*/*"
+  ],
+  "engines": [
+    "novel"
+  ],
+  "keywords": [
+    "tts",
+    "text to speech",
+    "read aloud",
+    "speechgen",
+    "voice",
+    "อ่านออกเสียง",
+    "เสียง"
+  ],
+  "permissions": [
+    "companion",
+    "toast"
+  ],
+  "companion": {
+    "url": "https://speechgen.io/th/",
+    "matches": [
+      "https://speechgen.io/*"
+    ]
+  },
+  "options": [
+    {
+      "key": "voice",
+      "type": "select",
+      "label": {
+        "en": "Voice",
+        "th": "เสียง"
+      },
+      "choices": [],
+      "default": "",
+      "dynamic": true
+    },
+    {
+      "key": "rate",
+      "type": "slider",
+      "label": {
+        "en": "Speed",
+        "th": "ความเร็ว"
+      },
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1,
+      "default": 1,
+      "unit": "x"
+    }
+  ],
+  "settingsUi": true,
+  "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/speechgen-reader"
+}
