@@ -62,6 +62,8 @@ function check(dir) {
     if (m.style) problems.push('an action cannot have "style"');
   }
   if (m.type === 'toggle' && !m.entry) problems.push('a toggle needs "entry"');
+  if (m.settingsUi !== undefined && typeof m.settingsUi !== 'boolean') problems.push('settingsUi must be true or false');
+  if (m.settingsUi && !m.entry) problems.push('"settingsUi" needs a script ("entry") that calls mangax.settings');
 
   for (const file of [m.entry, m.style].filter(Boolean)) {
     if (!isFile(file)) { problems.push(`"${file}" is not a file inside the folder`); continue; }
@@ -71,7 +73,9 @@ function check(dir) {
     if (file === m.entry) {
       try { execFileSync(process.execPath, ['--check', path], { stdio: 'pipe' }); }
       catch (e) { problems.push(`${file} does not parse:\n${String(e.stderr).trim()}`); }
-      if (!readFileSync(path, 'utf8').includes('mangax.effect(')) problems.push(`${file} never calls mangax.effect(...)`);
+      const code = readFileSync(path, 'utf8');
+      if (!code.includes('mangax.effect(')) problems.push(`${file} never calls mangax.effect(...)`);
+      if (m.settingsUi && !code.includes('mangax.settings(')) problems.push(`${file} never calls mangax.settings(...), which "settingsUi" needs`);
     }
   }
 
@@ -104,7 +108,9 @@ function check(dir) {
         if (!(o.default >= o.min && o.default <= o.max)) problems.push(`option "${k}": default is outside min..max`);
         break;
       case 'select':
-        if (!o.choices?.length) problems.push(`option "${k}" has no choices`);
+        if (o.dynamic) {
+          if (typeof o.default !== 'string' || o.default.length > 200) problems.push(`option "${k}": default must be a string of up to 200 characters`);
+        } else if (!o.choices?.length) problems.push(`option "${k}" has no choices`);
         else if (!o.choices.some((c) => c.value === o.default)) problems.push(`option "${k}": default is not a choice`);
         break;
       case 'text':

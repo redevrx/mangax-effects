@@ -176,6 +176,10 @@
       },
       "description": "Extra words the market search matches, in any language."
     },
+    "settingsUi": {
+      "type": "boolean",
+      "description": "The script draws its own settings on the page with mangax.settings(fn); the sheet shows a settings button."
+    },
     "options": {
       "type": "array",
       "maxItems": 20,
@@ -355,13 +359,15 @@
           },
           "then": {
             "required": [
-              "choices",
               "default"
             ],
             "properties": {
+              "dynamic": {
+                "type": "boolean",
+                "description": "Any string up to 200 characters is kept; the choices are only known on the page."
+              },
               "choices": {
                 "type": "array",
-                "minItems": 1,
                 "items": {
                   "type": "object",
                   "required": [

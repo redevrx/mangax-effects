@@ -69,6 +69,7 @@ network API of the app's own.
 | `permissions` | Only what the script calls: `toast` for `ctx.toast`, `menu` for `menu.*` commands, `engine` for `engine.set`; otherwise `[]` |
 | `runAt` | leave it out (`manual`) unless the effect should start by itself: `pageLoad` starts it whenever a matching page finishes loading, for any type including `action`. The reader can still run it by hand and can turn auto-start off. `documentStart` behaves like `pageLoad` for now |
 | `options` | settings the app draws; see below |
+| `settingsUi` | `true` when the script also draws its own settings on the page with `mangax.settings(fn)`; the sheet then shows a settings button. Needs `entry`. See "Settings on the page" |
 
 ### Options
 
@@ -81,14 +82,19 @@ network API of the app's own.
 |---|---|---|
 | `boolean` | `default` | `true` / `false` |
 | `slider` | `min`, `max`, `step`, `default`, `unit` | number, already clamped to min..max |
-| `select` | `choices: [{ "value", "label" }]`, `default` | one of the `value` strings |
+| `select` | `choices: [{ "value", "label" }]`, `default`, `dynamic` | one of the `value` strings; with `"dynamic": true` any string up to 200 characters |
 | `text` | `default`, `placeholder`, `maxLength` | string |
 
 `key`: letters, digits, `_`; starts with a letter.
 
+`"dynamic": true` is for choices only the page knows — the voices a text-to-speech site offers.
+`choices` may then be empty and `default` need not be one of them; the value is saved from the
+page with `ctx.setOption`, and the sheet shows it as it is.
+
 ## `main.js`
 
-Exactly one call to `mangax.effect`, nothing else at the top level:
+Exactly one call to `mangax.effect` at the top level — and, with `settingsUi`, one to
+`mangax.settings` (see "Settings on the page"):
 
 ```js
 mangax.effect(function (ctx) {
@@ -120,16 +126,66 @@ mangax.effect(function (ctx) {
 | `ctx.onEvent` | `(name, fn(data, name))` | App events: `translate:start`, `translate:done`, `translate:failed` (`data.message`), `translate:stop` (`data.reason`: `user` \| `auto`) — these carry `data.type` (`manga` \| `novel`) and `data.mode` (`realtime` \| `full`); `engine:change` (`data.type`); `menu:open` / `menu:close` (`data.key`, `null` when dismissed) for the app's own menu; `menu:change` (same data as `menu.items`) when the buttons change; `page:overlay` when a pinned box comes up on the page (see "Pop-ups and floating ads" below); `"*"` for all. Realtime `translate:done` fires once per batch; a full scan (`mode: "full"`) sends `translate:start` on press and ends with one of done / failed / stop. Removed on stop. No permission needed |
 | `ctx.toast` | `(text) → Promise` | Needs `"permissions": ["toast"]`. Add `.catch(function () {})` |
 | `ctx.call` | `(cmd, args) → Promise` | Always `.catch`. `toast` `{text}` (perm `toast`); `menu.items` → `{engine, items:[{key,label,icon,active}]}` (`icon` = Material icon name), `menu.press` `{key}` runs what the app's button runs, `menu.replace` `{on}` hides the app's menu button while the effect runs — the effect must then draw its own menu from `menu.items` and redraw on `menu:change` (perm `menu`); `engine.get` → `"manga"`\|`"novel"` (no perm); `engine.set` `{type}` (perm `engine`). Menu keys: `scan`, `effects`, `read_aloud`, `full_context_scan`, `bubble_edit`, `export_chapter`, `settings` — ask `menu.items`, they depend on engine and page. Anything else rejects |
+| `ctx.setOption` | `(key, value) → Promise` | Saves one of the effect's own options, as if the reader set it in the sheet; resolves to the value kept (a slider value is clamped). `key` must be declared in `options` and `value` of its type, or it rejects. The running effect and an open settings panel both get it through `onOptions`. No permission needed. Always `.catch` |
 | `ctx.stop` | `()` | Turns the effect off from inside (runs all cleanups) |
 | `ctx.id` | string | The effect id |
 | `ctx.engine` | `'manga'` \| `'novel'` | The reader's mode when the effect started; listen to `engine:change` for switches |
 | `ctx.site` | string | `location.host` — a plain string, not an element or a query function |
 | `ctx.auto` | boolean | `true` when the app started it on page load, `false` when the reader switched it on or ran it |
 
-There is **nothing else**: no `ctx.on('stop')`, no `ctx.storage`, no `ctx.fetch`, no `ctx.$`, no
+Settings panels add `ctx.panel`, `ctx.theme`, `ctx.lang` and `ctx.close` (see "Settings on the
+page"). There is **nothing else**: no `ctx.on('stop')`, no `ctx.storage`, no `ctx.fetch`, no `ctx.$`, no
 `ctx.log`, no `ctx.wait`. Do not invent members. For cleanup, **return a function** from the
 effect (toggle), or register work through `ctx.on` / `ctx.observe` / `ctx.addStyle`, which clean up
 by themselves.
+
+### Settings on the page: `mangax.settings`
+
+With `"settingsUi": true` an effect draws its own settings screen over the page the reader is on,
+the way a browser extension has an options page. The app only adds a settings button (tune
+icon) to the effect's row in the sheet, hands over its colours and language, and saves what the
+screen saves. What the screen looks like and does is up to the effect.
+
+```js
+mangax.effect(function (ctx) { /* the effect itself, as always */ });
+
+// Same file. Guarded: apps from before settings panels have no mangax.settings.
+if (mangax.settings) mangax.settings(function (ctx) {
+  var box = ctx.panel();                        // floating box: backdrop + card, in a shadow root
+  box.css('button { background: var(--mx-primary); color: #fff; }');
+  box.card.innerHTML = '<button>OK</button>';
+  ctx.on(box.card.querySelector('button'), 'click', function () {
+    ctx.setOption('speed', 120).catch(function () {});
+    ctx.close();
+  });
+  ctx.onOptions(function (options) { /* changed elsewhere — the sheet, the effect */ });
+});
+```
+
+- Pressing the button closes the sheet and runs the function given to `mangax.settings` on the
+  page as a **panel run**, apart from the effect itself: it opens whether the effect is on or off,
+  starting or stopping neither, and does not count as running. Opening it again closes the old
+  one first; leaving the page takes it away.
+- Its `ctx` has every member in the table above (cleaned up when the panel closes), plus:
+
+| Member | Notes |
+|---|---|
+| `ctx.panel(opts?)` | Makes the floating box and returns `{ host, root, card, css(text), close() }`; calling it again returns the same one. Put your UI in `card`, add CSS with `css(text)`. `opts`: `position` `'bottom'` (default) or `'center'`, `dim` backdrop 0–1 (0.45), `dismissible` tap the backdrop to close (`true`) |
+| `ctx.theme` | The app's colours, `#rrggbb`: `dark` (boolean), `background`, `surface`, `surface2`, `primary`, `secondary`, `text`, `textBody`, `textMuted` |
+| `ctx.lang` | The app's language: `'th'` or `'en'` |
+| `ctx.close` | `()` closes the settings (same as `ctx.stop`) |
+
+- The box is `position: fixed` at the highest z-index, and everything in it lives in a shadow
+  root, so the site's CSS does not reach it. Its styles are set through the CSSOM and `css()` uses
+  a constructed stylesheet, so it also looks right on sites whose CSP forbids inline `<style>`.
+  The app's colours are CSS variables on it: `--mx-background`, `--mx-surface`, `--mx-surface2`,
+  `--mx-primary`, `--mx-secondary`, `--mx-text`, `--mx-text-body`, `--mx-text-muted`.
+- You may build your own box instead of `ctx.panel()`; mark it with a `data-mangax-ui` attribute
+  and remove it in the returned cleanup. Boxes marked `data-mangax-ui` (and anything inside) are
+  never reported as `page:overlay`, so pop-up killers leave settings screens alone.
+- Save with `ctx.setOption`; declare every key in `options` (use `"dynamic": true` for a `select`
+  whose choices come from the page). `effects/auto-scroll` is a complete example.
+- Try it with `tools/devtools-runner.js`: paste the script, then `mangaxTest.settings()`.
 
 ### Pop-ups and floating ads: `page:overlay`
 
@@ -215,6 +271,8 @@ official one for big pop-ups on every site; write your own for a site's floating
 
 - [ ] `node tools/check.mjs --fix` prints ✓ for the effect
 - [ ] every `ctx` member used is in the table above, with the right arguments
+- [ ] with `settingsUi`: `mangax.settings` is guarded (`if (mangax.settings)`), every key it saves is
+      in `options`, and `mangaxTest.settings()` opens and closes it cleanly
 - [ ] ran it with `tools/devtools-runner.js` on the real site; toggled it off and the page was back
       to normal
 - [ ] `version` bumped if the effect already existed; `index.json` regenerated

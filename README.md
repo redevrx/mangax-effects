@@ -167,6 +167,7 @@ mangax.effect(function (ctx) {
 | `ctx.onEvent(name, fn)` | `fn(data, name)` on app events (below); `"*"` hears all of them |
 | `ctx.toast(text)` | Shows a message in the app. Needs `"permissions": ["toast"]` |
 | `ctx.call(cmd, args)` | Sends a command to the app (below); returns a Promise |
+| `ctx.setOption(key, value)` | Saves one of the effect's own options (declared in `effect.json`); returns a Promise |
 | `ctx.stop()` | Switches the effect off from inside |
 | `ctx.id` · `ctx.engine` · `ctx.site` | This effect, `manga` / `novel`, the page's host |
 | `ctx.auto` | `true` when the app started it on page load, `false` when the reader switched it on or ran it |
@@ -222,6 +223,7 @@ mangax.effect(function (ctx) {
 | `menu.replace` | `menu` | `{ on }` | `true` when the menu button is now hidden |
 | `engine.get` | none | | `"manga"` or `"novel"` |
 | `engine.set` | `engine` | `{ type: "manga" \| "novel" }` | the engine now in use |
+| `options.set` | none | `{ key, value }` | the value kept (same as `ctx.setOption`); rejects for a key not in `options` or a value of the wrong type |
 
 Menu keys: `scan` (start / stop the scan), `effects`, `read_aloud` (novel), `full_context_scan`
 (manga), `bubble_edit` and `export_chapter` (manga, once the page has translations), `settings`.
@@ -278,8 +280,32 @@ Declared in `effect.json`; the app draws the settings and passes the values in `
 |---|---|
 | `boolean` | `default` |
 | `slider` | `min`, `max`, `step`, `default`, `unit` |
-| `select` | `choices: [{ "value", "label" }]`, `default` |
+| `select` | `choices: [{ "value", "label" }]`, `default`, `dynamic` (any string up to 200 characters, for choices only the page knows) |
 | `text` | `default`, `placeholder`, `maxLength` |
+
+### Settings on the page
+
+An effect can also draw its own settings screen over the page, like a browser extension's
+options page. Set `"settingsUi": true` in `effect.json`; the Effects sheet then shows a settings
+button (tune icon) on the effect's row. Pressing it closes the sheet and runs the function the
+script gave `mangax.settings` — whether or not the effect itself is on:
+
+```js
+if (mangax.settings) mangax.settings(function (ctx) {
+  var box = ctx.panel();                 // a floating box over the page, in a shadow root
+  box.card.innerHTML = '<button>Faster</button>';
+  ctx.on(box.card.querySelector('button'), 'click', function () {
+    ctx.setOption('speed', ctx.options.speed + 20).catch(function () {});
+  });
+});
+```
+
+Besides the usual `ctx`, it gets `ctx.panel(opts)` (the box: `{ host, root, card, css(text),
+close() }`), `ctx.theme` (the app's colours, also as `--mx-*` CSS variables on the box),
+`ctx.lang` (`th` / `en`) and `ctx.close()`. Values saved with `ctx.setOption` reach the running
+effect through `onOptions`, and the sheet shows them. Boxes marked `data-mangax-ui` are never
+reported as `page:overlay`. Full details in [`AGENTS.md`](AGENTS.md); `effects/auto-scroll` is an
+example.
 
 ### Rules
 

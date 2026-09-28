@@ -2,7 +2,7 @@
   "$schema": "../../schema/effect.schema.json",
   "schema": 1,
   "id": "redevrx.auto-scroll",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "name": {
     "en": "Auto scroll",
     "th": "เลื่อนอัตโนมัติ"
@@ -60,5 +60,6 @@
       "default": true
     }
   ],
+  "settingsUi": true,
   "homepage": "https://github.com/redevrx/mangax-effects/tree/main/effects/auto-scroll"
 }

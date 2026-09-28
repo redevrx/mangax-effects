@@ -144,3 +144,50 @@ mangax.effect(function (ctx) {
     cancelAnimationFrame(frame);
   };
 });
+
+// Its own settings, on the page: the settings button in the effects sheet opens this as a floating
+// panel, so the speed can be tried against the page it scrolls. Apps before settings panels have
+// no mangax.settings, and there the sheet's own controls still work.
+if (mangax.settings) mangax.settings(function (ctx) {
+  var th = ctx.lang === 'th';
+  var box = ctx.panel();
+  box.css(
+    '.title{font-weight:700;font-size:16px;margin:0 0 12px}' +
+    '.row{display:flex;align-items:center;gap:12px;margin:10px 0}' +
+    '.label{flex:1;color:var(--mx-text-body)}' +
+    '.value{font:12px ui-monospace,monospace;color:var(--mx-text);min-width:64px;text-align:right}' +
+    'input[type=range]{width:100%;accent-color:var(--mx-primary)}' +
+    'input[type=checkbox]{width:22px;height:22px;accent-color:var(--mx-primary)}' +
+    '.done{display:block;width:100%;margin-top:14px;padding:12px;border:0;border-radius:12px;' +
+    'background:var(--mx-primary);color:#fff;font:600 14px system-ui,sans-serif}'
+  );
+  box.card.innerHTML =
+    '<p class="title"></p>' +
+    '<div class="row"><span class="label speed-label"></span><span class="value"></span></div>' +
+    '<input type="range" min="10" max="400" step="10">' +
+    '<label class="row"><span class="label pause-label"></span><input type="checkbox"></label>' +
+    '<button class="done"></button>';
+  var q = function (s) { return box.card.querySelector(s); };
+  q('.title').textContent = th ? 'เลื่อนอัตโนมัติ' : 'Auto scroll';
+  q('.speed-label').textContent = th ? 'ความเร็ว' : 'Speed';
+  q('.pause-label').textContent = th ? 'หยุดระหว่างแตะจอ' : 'Pause while touching';
+  q('.done').textContent = th ? 'เสร็จ' : 'Done';
+
+  var slider = q('input[type=range]');
+  var pause = q('input[type=checkbox]');
+  var value = q('.value');
+
+  function show(options) {
+    slider.value = options.speed;
+    value.textContent = options.speed + ' px/s';
+    pause.checked = !!options.pauseOnTouch;
+  }
+  show(ctx.options);
+
+  ctx.on(slider, 'input', function () { value.textContent = slider.value + ' px/s'; });
+  // Saved when let go: the running scroll picks it up through ctx.onOptions.
+  ctx.on(slider, 'change', function () { ctx.setOption('speed', Number(slider.value)).catch(function () {}); });
+  ctx.on(pause, 'change', function () { ctx.setOption('pauseOnTouch', pause.checked).catch(function () {}); });
+  ctx.on(q('.done'), 'click', function () { ctx.close(); });
+  ctx.onOptions(show);
+});

@@ -1,6 +1,10 @@
+// mangaxTest.settings() opens what mangax.settings(fn) draws, as the app's settings button does
+// (mangaxTest.setup({ theme: { dark: false }, lang: 'en' }) for a light app in English).
 (function () {
-  var config = { type: 'toggle', engine: 'novel', options: {}, permissions: [], auto: false };
+  var config = { type: 'toggle', engine: 'novel', options: {}, permissions: [], auto: false, theme: { dark: true }, lang: 'th' };
   var run = null;
+  var settingsBody = null;
+  var panel = null;
 
   // What menu.items answers here. The app's list depends on the engine and the page.
   var MENU_KEYS = {
@@ -17,8 +21,17 @@
     toast: 'toast',
     'menu.items': 'menu', 'menu.press': 'menu', 'menu.replace': 'menu',
     'engine.get': null,
-    'engine.set': 'engine'
+    'engine.set': 'engine',
+    'options.set': null
   };
+
+  function tellOptions(next) {
+    [run, panel].forEach(function (r) {
+      if (!r) return;
+      r.ctx.options = next;
+      r.optionListeners.forEach(function (fn) { fn(next); });
+    });
+  }
 
   function log(kind, text) {
     console.log('%c[mangax] ' + kind, 'color:#8b5cf6;font-weight:bold', text);
@@ -32,7 +45,8 @@
     }
     r.cleanups = [];
     if (run === r) run = null;
-    log('stopped', why || '');
+    if (panel === r) panel = null;
+    log(r.isPanel ? 'settings closed' : 'stopped', why || '');
   }
 
   function fail(r, e) {
@@ -147,6 +161,16 @@
           case 'menu.replace':
             log('menu.replace', args.on === false ? 'menu button back' : 'menu button hidden while this runs');
             return Promise.resolve(args.on !== false);
+          case 'options.set':
+            // The app also checks the key and the value against effect.json's options.
+            if (typeof args.key !== 'string') return Promise.reject(new Error('"options.set" needs { key, value }'));
+            var next = {};
+            for (var k in config.options) next[k] = config.options[k];
+            next[args.key] = args.value;
+            config.options = next;
+            log('options.set', args.key + ' = ' + JSON.stringify(args.value));
+            tellOptions(next);
+            return Promise.resolve(args.value);
           case 'engine.get':
             return Promise.resolve(config.engine);
           case 'engine.set':
@@ -164,6 +188,7 @@
         }
       },
       toast: function (text) { return ctx.call('toast', { text: String(text) }); },
+      setOption: function (key, value) { return ctx.call('options.set', { key: String(key), value: value }); },
       stop: function () { stop(r, 'by the effect'); }
     };
     return ctx;
@@ -241,9 +266,54 @@
     });
   }
 
+  // What ctx.panel() gives in the app, close enough to try a settings screen on: a backdrop and a
+  // card in a shadow root, coloured by config.theme.
+  function makePanel(r, ctx, opts) {
+    if (r.box) return r.box;
+    var dark = ctx.theme.dark !== false;
+    var center = opts.position === 'center';
+    var host = document.createElement('div');
+    host.setAttribute('data-mangax-ui', ctx.id);
+    host.style.cssText = 'position:fixed!important;inset:0!important;z-index:2147483647!important;display:flex!important;' +
+      'justify-content:center!important;align-items:' + (center ? 'center' : 'flex-end') + '!important';
+    var vars = {
+      '--mx-background': dark ? '#0f0f14' : '#ffffff', '--mx-surface': dark ? '#1b1b22' : '#f4f4f7',
+      '--mx-surface2': dark ? '#26262f' : '#e7e7ec', '--mx-primary': '#6c5ce7', '--mx-secondary': '#00cec9',
+      '--mx-text': dark ? '#ffffff' : '#111111', '--mx-text-body': dark ? '#d0d0d8' : '#333333',
+      '--mx-text-muted': dark ? '#8a8a96' : '#777777'
+    };
+    for (var name in vars) host.style.setProperty(name, vars[name]);
+    var root = host.attachShadow({ mode: 'open' });
+    var backdrop = document.createElement('div');
+    backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,' + (opts.dim === undefined ? 0.45 : opts.dim) + ')';
+    var card = document.createElement('div');
+    card.style.cssText = 'position:relative;box-sizing:border-box;width:' + (center ? 'calc(100% - 32px)' : '100%') +
+      ';max-width:520px;max-height:85vh;overflow:auto;padding:16px;border-radius:' + (center ? '16px' : '16px 16px 0 0') +
+      ';background:var(--mx-surface);color:var(--mx-text);font:14px/1.45 system-ui,sans-serif';
+    root.appendChild(backdrop);
+    root.appendChild(card);
+    if (opts.dismissible !== false) backdrop.addEventListener('click', guard(r, function () { ctx.close(); }));
+    document.body.appendChild(host);
+    cleanup(r, function () { host.remove(); });
+    r.box = {
+      host: host, root: root, card: card, close: function () { ctx.close(); },
+      css: function (text) {
+        var sheet = new CSSStyleSheet();
+        sheet.replaceSync(String(text));
+        root.adoptedStyleSheets = root.adoptedStyleSheets.concat([sheet]);
+      }
+    };
+    return r.box;
+  }
+
   var called = false;
   window.mangax = {
     version: 1,
+    settings: function (body) {
+      if (typeof body !== 'function') throw new TypeError('mangax.settings(fn): fn must be a function');
+      settingsBody = body;
+      log('settings', 'mangaxTest.settings() opens it');
+    },
     effect: function (body) {
       if (typeof body !== 'function') throw new TypeError('mangax.effect(fn): fn must be a function');
       stop(run, 'restarted');
@@ -291,6 +361,25 @@
     stop: function () {
       if (!run) return log('stop', called ? 'already stopped' : 'nothing is running');
       stop(run, 'by the reader');
+    },
+    settings: function () {
+      if (!settingsBody) return log('settings', 'the effect never called mangax.settings(fn)');
+      stop(panel, 'reopened');
+      var r = { cleanups: [], optionListeners: [], eventListeners: [], stopped: false, isPanel: true };
+      var ctx = context(r);
+      ctx.theme = config.theme;
+      ctx.lang = config.lang;
+      ctx.close = function () { stop(r, 'by the effect'); };
+      ctx.stop = ctx.close;
+      ctx.panel = function (opts) { return makePanel(r, ctx, opts || {}); };
+      r.ctx = ctx;
+      panel = r;
+      try {
+        var result = settingsBody(ctx);
+        if (typeof result === 'function') cleanup(r, result);
+      } catch (e) {
+        fail(r, e);
+      }
     }
   };
 

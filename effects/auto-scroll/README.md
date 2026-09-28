@@ -5,7 +5,8 @@ Scrolls the page down at a steady pace while it is switched on.
 - Touching the screen pauses it until you let go.
 - When the page stops moving for a few seconds (the end, or a page still loading more) it says so
   once, and carries on by itself as soon as there is more to scroll.
-- Speed can be changed from the effect's settings while it is running.
+- Speed can be changed from the effect's settings while it is running — in the effects sheet, or with
+  the settings button (tune icon), which opens a panel over the page so the new speed shows at once.
 
 | Option | Default | Range |
 |---|---|---|
