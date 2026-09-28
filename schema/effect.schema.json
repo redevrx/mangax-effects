@@ -163,7 +163,8 @@
         "enum": [
           "toast",
           "menu",
-          "engine"
+          "engine",
+          "companion"
         ]
       }
     },
@@ -175,6 +176,15 @@
         "maxLength": 40
       },
       "description": "Extra words the market search matches, in any language."
+    },
+    "companion": {
+      "type": "object",
+      "description": "A second page the effect opens beside the one being read and runs mangax.companion(fn) in. Needs the companion permission.",
+      "required": ["url"],
+      "properties": {
+        "url": { "type": "string", "pattern": "^https://" },
+        "matches": { "type": "array", "items": { "$ref": "#/$defs/pattern" } }
+      }
     },
     "settingsUi": {
       "type": "boolean",

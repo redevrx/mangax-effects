@@ -25,7 +25,7 @@ const OPTION_KEY = /^[A-Za-z][A-Za-z0-9_]{0,39}$/;
 const TYPES = ['style', 'action', 'toggle'];
 const CATEGORIES = ['reading', 'cleanup', 'appearance', 'navigation', 'utility'];
 const ENGINES = ['any', 'manga', 'novel'];
-const PERMISSIONS = ['toast', 'menu', 'engine'];
+const PERMISSIONS = ['toast', 'menu', 'engine', 'companion'];
 const RUN_AT = ['manual', 'pageLoad', 'documentStart'];
 
 const isText = (t) => (typeof t === 'string' && t.trim() !== '') ||
@@ -33,6 +33,19 @@ const isText = (t) => (typeof t === 'string' && t.trim() !== '') ||
 const isFile = (f) => typeof f === 'string' && f.length <= 200 && !f.startsWith('/') &&
   f.split('/').every((s) => s !== '.' && s !== '..' && FILE_SEGMENT.test(s));
 const isPattern = (p) => p === '<all_urls>' || PATTERN.test(p);
+// Whether pattern [p] covers [url], the way the app's MatchPattern decides it.
+function covers(p, url) {
+  const m = PATTERN.exec(p);
+  const u = /^([a-z][a-z0-9+.-]*):\/\/([^/?#:@]+)(?::\d+)?([^#]*)/i.exec(url);
+  if (!m || !u) return false;
+  const [, scheme, host, path] = m;
+  const uHost = u[2].toLowerCase();
+  if (scheme !== '*' && scheme !== u[1].toLowerCase()) return false;
+  if (scheme === '*' && !/^https?$/i.test(u[1])) return false;
+  const hostOk = host === '*' || (host.startsWith('*.') ? uHost === host.slice(2) || uHost.endsWith(host.slice(1)) : uHost === host);
+  const re = new RegExp('^' + path.split('*').map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$');
+  return hostOk && re.test(u[3] || '/');
+}
 
 function check(dir) {
   const problems = [];
@@ -85,6 +98,24 @@ function check(dir) {
   for (const e of m.engines ?? ['any']) if (!ENGINES.includes(e)) problems.push(`engine "${e}" is unknown`);
   for (const p of m.permissions ?? []) if (!PERMISSIONS.includes(p)) problems.push(`permission "${p}" is not known to the app`);
   for (const u of [m.homepage, m.author?.url].filter(Boolean)) if (!u.startsWith('https://')) problems.push(`"${u}" must be https`);
+
+  const wantsCompanion = (m.permissions ?? []).includes('companion');
+  if (wantsCompanion && !m.companion) problems.push('the "companion" permission needs a "companion" page');
+  if (m.companion) {
+    const c = m.companion;
+    if (!wantsCompanion) problems.push('"companion" needs the "companion" permission');
+    if (!m.entry) problems.push('"companion" needs a script ("entry") that calls mangax.companion');
+    if (typeof c.url !== 'string' || !c.url.startsWith('https://')) problems.push(`companion url "${c.url}" must be https`);
+    const sites = c.matches?.length ? c.matches : [];
+    for (const p of sites) {
+      if (!isPattern(p)) problems.push(`companion match "${p}" is not a site pattern`);
+      else if (p === '<all_urls>' || p === '*://*/*') problems.push('companion matches must name sites, not every site');
+    }
+    if (sites.length && typeof c.url === 'string' && !sites.some((p) => covers(p, c.url))) problems.push(`companion url "${c.url}" is not covered by its own matches`);
+    if (m.entry && existsSync(join(at, m.entry)) && !readFileSync(join(at, m.entry), 'utf8').includes('mangax.companion(')) {
+      problems.push(`${m.entry} never calls mangax.companion(...), which "companion" needs`);
+    }
+  }
 
   if (m.keywords !== undefined && !(Array.isArray(m.keywords) && m.keywords.length <= 20 &&
       m.keywords.every((k) => typeof k === 'string' && k.length <= 40))) {

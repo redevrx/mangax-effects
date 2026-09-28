@@ -1,3 +1,4 @@
+// Companion pages: see mangaxTest.fromCompanion / companionState / companion / toCompanion below.
 // mangaxTest.settings() opens what mangax.settings(fn) draws, as the app's settings button does
 // (mangaxTest.setup({ theme: { dark: false }, lang: 'en' }) for a light app in English).
 (function () {
@@ -22,8 +23,35 @@
     'menu.items': 'menu', 'menu.press': 'menu', 'menu.replace': 'menu',
     'engine.get': null,
     'engine.set': 'engine',
-    'options.set': null
+    'options.set': null,
+    'companion.open': 'companion', 'companion.view': 'companion', 'companion.close': 'companion',
+    'companion.state': 'companion', 'companion.send': 'companion'
   };
+
+  // The companion page, pretended: the app would open a second page and run mangax.companion(fn)
+  // there. Here the effect's side is simulated — what it sends is logged, and
+  // mangaxTest.fromCompanion(data) / mangaxTest.companionState(state) answer it. To try the
+  // companion code itself, paste this file and the script into the companion site's console and
+  // run mangaxTest.companion(); mangaxTest.toCompanion(data) then plays the page being read.
+  var companionState = {open: false};
+  var companionRun = null;
+  var companionBody = null;
+
+  function tellCompanion(type, data) {
+    [run, panel].forEach(function (r) {
+      if (!r) return;
+      r.companionListeners.slice().forEach(function (entry) {
+        if (entry.type === type) entry.fn(data);
+      });
+    });
+  }
+
+  function setCompanion(next) {
+    companionState = next;
+    log('companion', JSON.stringify(next));
+    // Later, as from the app: a state reaches the effect after the call that changed it.
+    Promise.resolve().then(function () { tellCompanion('state', next); });
+  }
 
   function tellOptions(next) {
     [run, panel].forEach(function (r) {
@@ -67,6 +95,15 @@
   function cleanup(r, fn) {
     if (r.stopped) { try { fn(); } catch (e) {} return; }
     r.cleanups.push(fn);
+  }
+
+  function companionListen(r, type, fn) {
+    var entry = { type: type, fn: guard(r, fn) };
+    r.companionListeners.push(entry);
+    cleanup(r, function () {
+      var i = r.companionListeners.indexOf(entry);
+      if (i >= 0) r.companionListeners.splice(i, 1);
+    });
   }
 
   function context(r) {
@@ -171,6 +208,24 @@
             log('options.set', args.key + ' = ' + JSON.stringify(args.value));
             tellOptions(next);
             return Promise.resolve(args.value);
+          case 'companion.open':
+            var view = args.view || companionState.view || 'hidden';
+            setCompanion({open: true, url: args.url || '(effect.json companion.url)', view: view, loading: false, ready: true});
+            return Promise.resolve(companionState);
+          case 'companion.view':
+            if (!companionState.open) return Promise.reject(new Error('the companion page is not open'));
+            if (['hidden', 'mini', 'sheet', 'full'].indexOf(args.view) < 0) return Promise.reject(new Error('view must be hidden, mini, sheet or full'));
+            setCompanion(Object.assign({}, companionState, {view: args.view}));
+            return Promise.resolve(companionState);
+          case 'companion.close':
+            if (companionState.open) setCompanion({open: false, reason: 'effect'});
+            return Promise.resolve(null);
+          case 'companion.state':
+            return Promise.resolve(companionState);
+          case 'companion.send':
+            if (!companionState.open) return Promise.reject(new Error('the companion page is not open'));
+            log('→ companion', JSON.stringify(args.data));
+            return Promise.resolve(true);
           case 'engine.get':
             return Promise.resolve(config.engine);
           case 'engine.set':
@@ -189,6 +244,15 @@
       },
       toast: function (text) { return ctx.call('toast', { text: String(text) }); },
       setOption: function (key, value) { return ctx.call('options.set', { key: String(key), value: value }); },
+      companion: {
+        open: function (opts) { opts = opts || {}; return ctx.call('companion.open', { url: opts.url || null, view: opts.view || null }); },
+        show: function (view) { return ctx.call('companion.view', { view: String(view) }); },
+        close: function () { return ctx.call('companion.close', null); },
+        state: function () { return ctx.call('companion.state', null); },
+        send: function (data) { return ctx.call('companion.send', { data: data === undefined ? null : data }); },
+        onMessage: function (fn) { companionListen(r, 'message', fn); },
+        onState: function (fn) { companionListen(r, 'state', fn); }
+      },
       stop: function () { stop(r, 'by the effect'); }
     };
     return ctx;
@@ -309,6 +373,11 @@
   var called = false;
   window.mangax = {
     version: 1,
+    companion: function (body) {
+      if (typeof body !== 'function') throw new TypeError('mangax.companion(fn): fn must be a function');
+      companionBody = body;
+      log('companion', 'mangaxTest.companion() runs it on this page, as if this were the companion page');
+    },
     settings: function (body) {
       if (typeof body !== 'function') throw new TypeError('mangax.settings(fn): fn must be a function');
       settingsBody = body;
@@ -317,7 +386,7 @@
     effect: function (body) {
       if (typeof body !== 'function') throw new TypeError('mangax.effect(fn): fn must be a function');
       stop(run, 'restarted');
-      var r = { cleanups: [], optionListeners: [], eventListeners: [], stopped: false };
+      var r = { cleanups: [], optionListeners: [], eventListeners: [], companionListeners: [], stopped: false };
       var ctx = context(r);
       try {
         var result = body(ctx);
@@ -361,11 +430,41 @@
     stop: function () {
       if (!run) return log('stop', called ? 'already stopped' : 'nothing is running');
       stop(run, 'by the reader');
+      // As in the app: switching the effect off closes the companion page it opened.
+      if (companionState.open) setCompanion({ open: false, reason: 'stopped' });
+    },
+    // The companion page's side: messages as if from the effect on the page being read.
+    fromCompanion: function (data) { tellCompanion('message', data); },
+    companionState: function (state) { setCompanion(state); },
+    companion: function () {
+      if (!companionBody) return log('companion', 'the effect never called mangax.companion(fn)');
+      stop(companionRun, 'restarted');
+      var r = { cleanups: [], optionListeners: [], eventListeners: [], companionListeners: [], stopped: false };
+      var ctx = context(r);
+      delete ctx.companion;
+      ctx.role = 'companion';
+      ctx.send = function (data) { log('companion → page', JSON.stringify(data)); };
+      ctx.onMessage = function (fn) { companionListen(r, 'message', fn); };
+      ctx.show = function (view) { log('companion.view', view); return Promise.resolve({ open: true, view: view }); };
+      ctx.close = function () { stop(r, 'companion closed'); return Promise.resolve(null); };
+      r.ctx = ctx;
+      companionRun = r;
+      try {
+        var result = companionBody(ctx);
+        if (typeof result === 'function') cleanup(r, result);
+        log('companion', 'running — mangaxTest.toCompanion(data) sends it a message');
+      } catch (e) {
+        fail(r, e);
+      }
+    },
+    toCompanion: function (data) {
+      if (!companionRun) return log('toCompanion', 'mangaxTest.companion() first');
+      companionRun.companionListeners.slice().forEach(function (entry) { if (entry.type === 'message') entry.fn(data); });
     },
     settings: function () {
       if (!settingsBody) return log('settings', 'the effect never called mangax.settings(fn)');
       stop(panel, 'reopened');
-      var r = { cleanups: [], optionListeners: [], eventListeners: [], stopped: false, isPanel: true };
+      var r = { cleanups: [], optionListeners: [], eventListeners: [], companionListeners: [], stopped: false, isPanel: true };
       var ctx = context(r);
       ctx.theme = config.theme;
       ctx.lang = config.lang;

@@ -223,6 +223,7 @@ mangax.effect(function (ctx) {
 | `menu.replace` | `menu` | `{ on }` | `true` when the menu button is now hidden |
 | `engine.get` | none | | `"manga"` or `"novel"` |
 | `engine.set` | `engine` | `{ type: "manga" \| "novel" }` | the engine now in use |
+| `companion.open` · `.view` · `.send` · `.state` · `.close` | `companion` | see below | use `ctx.companion` instead |
 | `options.set` | none | `{ key, value }` | the value kept (same as `ctx.setOption`); rejects for a key not in `options` or a value of the wrong type |
 
 Menu keys: `scan` (start / stop the scan), `effects`, `read_aloud` (novel), `full_context_scan`
@@ -306,6 +307,25 @@ close() }`), `ctx.theme` (the app's colours, also as `--mx-*` CSS variables on t
 effect through `onOptions`, and the sheet shows them. Boxes marked `data-mangax-ui` are never
 reported as `page:overlay`. Full details in [`AGENTS.md`](AGENTS.md); `effects/auto-scroll` is an
 example.
+
+### Companion pages
+
+An effect can open a second page beside the one being read — a text-to-speech site, a
+dictionary — and run its own code there, like a browser extension's background page. Declare it
+and ask for the `companion` permission:
+
+```json
+"permissions": ["companion"],
+"companion": { "url": "https://tts.example.com/app", "matches": ["https://*.tts.example.com/*"] }
+```
+
+The page being read uses `ctx.companion` (`open({ url, view })`, `show(view)`, `send(data)`,
+`onMessage(fn)`, `onState(fn)`, `state()`, `close()`); the code for the companion page goes in
+`mangax.companion(fn)` in the same `main.js`, with `ctx.send(data)`, `ctx.onMessage(fn)`,
+`ctx.show(view)` and `ctx.close()`. Views: `hidden` (running, not on screen), `mini`, `sheet`,
+`full`. The reader can always see that one is running and close it, and it closes by itself when
+the effect is switched off, removed or no longer running — the full contract, lifecycle included,
+is in [`AGENTS.md`](AGENTS.md). `tools/devtools-runner.js` simulates both sides.
 
 ### Rules
 

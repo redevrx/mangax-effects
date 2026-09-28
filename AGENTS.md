@@ -66,10 +66,11 @@ network API of the app's own.
 | `matches` | URL patterns `scheme://host/path`. `*://*/*` = every site. `*.example.com` covers `example.com` **and** `www.example.com`; `example.com` alone does not cover `www.` |
 | `excludes` | same format; sites to skip |
 | `engines` | `["any"]` unless the effect truly only makes sense in one mode (`manga` or `novel`) |
-| `permissions` | Only what the script calls: `toast` for `ctx.toast`, `menu` for `menu.*` commands, `engine` for `engine.set`; otherwise `[]` |
+| `permissions` | Only what the script calls: `toast` for `ctx.toast`, `menu` for `menu.*` commands, `engine` for `engine.set`, `companion` for `ctx.companion`; otherwise `[]` |
 | `runAt` | leave it out (`manual`) unless the effect should start by itself: `pageLoad` starts it whenever a matching page finishes loading, for any type including `action`. The reader can still run it by hand and can turn auto-start off. `documentStart` behaves like `pageLoad` for now |
 | `options` | settings the app draws; see below |
 | `settingsUi` | `true` when the script also draws its own settings on the page with `mangax.settings(fn)`; the sheet then shows a settings button. Needs `entry`. See "Settings on the page" |
+| `companion` | `{ "url": "https://…", "matches": ["https://*.site.com/*"] }` — a second page the effect opens beside the one being read and runs `mangax.companion(fn)` in. Needs the `companion` permission and `entry`. `matches` defaults to the site of `url`, must name sites (not `*://*/*`) and must cover `url`. See "Companion pages" |
 
 ### Options
 
@@ -134,7 +135,8 @@ mangax.effect(function (ctx) {
 | `ctx.auto` | boolean | `true` when the app started it on page load, `false` when the reader switched it on or ran it |
 
 Settings panels add `ctx.panel`, `ctx.theme`, `ctx.lang` and `ctx.close` (see "Settings on the
-page"). There is **nothing else**: no `ctx.on('stop')`, no `ctx.storage`, no `ctx.fetch`, no `ctx.$`, no
+page"); `ctx.companion` and the companion page's own `ctx` are in "Companion pages". There is
+**nothing else**: no `ctx.on('stop')`, no `ctx.storage`, no `ctx.fetch`, no `ctx.$`, no
 `ctx.log`, no `ctx.wait`. Do not invent members. For cleanup, **return a function** from the
 effect (toggle), or register work through `ctx.on` / `ctx.observe` / `ctx.addStyle`, which clean up
 by themselves.
@@ -186,6 +188,87 @@ if (mangax.settings) mangax.settings(function (ctx) {
 - Save with `ctx.setOption`; declare every key in `options` (use `"dynamic": true` for a `select`
   whose choices come from the page). `effects/auto-scroll` is a complete example.
 - Try it with `tools/devtools-runner.js`: paste the script, then `mangaxTest.settings()`.
+
+### Companion pages: `ctx.companion` and `mangax.companion`
+
+An effect can open a **second page** beside the one being read — a text-to-speech site, a
+dictionary, a translator — and run its own code there, much like a browser extension's
+background page. The two sides talk by messages; the app carries them and draws the page. Nothing
+about it is specific to one site or one use: what the page is for is up to the effect.
+
+```json
+"permissions": ["companion"],
+"companion": { "url": "https://tts.example.com/app", "matches": ["https://*.tts.example.com/*"] }
+```
+
+```js
+// main.js — one file, three parts. Top-level code runs on BOTH pages, so keep it to these calls.
+mangax.effect(function (ctx) {                       // on the page being read
+  ctx.companion.onMessage(function (msg) { /* from the companion page */ });
+  ctx.companion.onState(function (s) {               // { open, url, view, loading, ready } or { open: false, reason }
+    if (!s.open) { /* closed: s.reason */ }
+  });
+  ctx.companion.open({ view: 'hidden' })             // loads companion.url (or opts.url, within matches)
+    .then(function () { return ctx.companion.send({ type: 'speak', text: 'hello' }); })
+    .catch(function () {});
+  return function () {};                            // toggle: switching it off closes the companion too
+});
+
+if (mangax.companion) mangax.companion(function (ctx) {   // on the companion page
+  ctx.onMessage(function (msg) {
+    if (msg.type === 'speak') { /* drive the site */ ctx.send({ type: 'started' }); }
+  });
+});
+```
+
+On the page being read (`ctx.companion`, permission `companion`; every call returns a Promise — always `.catch`):
+
+| Member | Notes |
+|---|---|
+| `open({ url?, view? })` | Opens the companion page, or re-shows it when already open. `url` defaults to `companion.url` and must be covered by `companion.matches`. Resolves to the state |
+| `show(view)` | `'hidden'` (not on screen, still running), `'mini'` (small window), `'sheet'` (half screen), `'full'` |
+| `send(data)` | Any JSON value. Resolves `true` when handed over, `false` when queued because the companion code has not started yet (it gets it once it has, up to 50 messages) |
+| `onMessage(fn(data))` | What the companion code sends with `ctx.send` |
+| `onState(fn(state))` | `{ open: true, url, view, loading, ready }` whenever it changes (`ready` = the companion code runs), `{ open: false, reason }` when it closes |
+| `state()` | The current state |
+| `close()` | Closes it |
+
+On the companion page, `mangax.companion(fn)` gets a `ctx` with `on`, `observe`, `addStyle`,
+`onUrlChange`, `options`, `onOptions`, `setOption`, `toast`, `id`, `site`, plus:
+
+| Member | Notes |
+|---|---|
+| `ctx.role` | `'companion'` |
+| `ctx.send(data)` | To the effect on the page being read (`ctx.companion.onMessage`) |
+| `ctx.onMessage(fn(data))` | What the page being read sends |
+| `ctx.show(view)` | Asks to be shown — e.g. `'full'` when the site needs the reader to sign in or pass a check |
+| `ctx.close()` | Closes the companion page |
+
+It runs whenever a page covered by `matches` finishes loading in the companion view (again after
+each navigation). It cannot use `menu.*`, `engine.*` or `ctx.companion` — the companion is someone
+else's site, so its side gets nothing of the page being read except what the effect sends.
+
+**Lifecycle — when a companion page closes.** There is one at a time. It closes, and is destroyed
+completely (page, audio, timers, scripts), when:
+
+| `reason` | When |
+|---|---|
+| `effect` | `ctx.companion.close()` or the companion code's `ctx.close()` |
+| `user` | The reader closed it from its bar — the reader can always close it, hidden ones too |
+| `stopped` | The reader switched the effect off, or it failed |
+| `replaced` | Another effect opened its companion |
+| `removed` | The effect was removed or updated |
+| `orphaned` | A toggle stopped running with its page (a navigation) and did not run again within 20 seconds |
+| `crashed` | The companion page's renderer died |
+
+A toggle keeps its companion across chapters when it starts on page load (`runAt: pageLoad`) —
+it is running again within the grace period, and the companion is still there. An `action` owns it
+until it is closed, but receives no messages (actions keep nothing running), so use a `toggle` for
+two-way work.
+
+Rules: only open a companion when the reader asked for what it does; keep it `hidden` unless the
+reader must see it; send only what the site needs (the text to read, not the page); never read or
+send the site's cookies, tokens or account details. The install screen lists the companion sites.
 
 ### Pop-ups and floating ads: `page:overlay`
 
@@ -273,6 +356,9 @@ official one for big pop-ups on every site; write your own for a site's floating
 - [ ] every `ctx` member used is in the table above, with the right arguments
 - [ ] with `settingsUi`: `mangax.settings` is guarded (`if (mangax.settings)`), every key it saves is
       in `options`, and `mangaxTest.settings()` opens and closes it cleanly
+- [ ] with `companion`: `mangax.companion` is guarded, top-level code is only the `mangax.*` calls,
+      `matches` names only the sites needed, and both sides were tried with the devtools runner
+      (`mangaxTest.fromCompanion`, and `mangaxTest.companion()` on the companion site)
 - [ ] ran it with `tools/devtools-runner.js` on the real site; toggled it off and the page was back
       to normal
 - [ ] `version` bumped if the effect already existed; `index.json` regenerated
