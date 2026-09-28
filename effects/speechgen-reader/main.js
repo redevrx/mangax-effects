@@ -13,6 +13,7 @@
 //   { type: 'started', id, credits }            the speech for id began playing
 //   { type: 'ended', id, credits }              …and finished
 //   { type: 'error', id, message, needsUser }   needsUser: the site is shown full screen for the reader
+//   { type: 'noCredits', id, credits }          the site will not make it: out of credits
 //   { type: 'resumed', id }                     the reader dealt with it, the site is hidden again
 //   { type: 'notice', message }                 worth telling the reader, reading goes on
 //   { type: 'voices', voices: [{ value, name, tier, sex }], current, lang }
@@ -212,6 +213,13 @@ mangax.effect(function (ctx) {
         break;
       case 'notice':
         toast('SpeechGen: ' + String(msg.message || '').slice(0, 160));
+        break;
+      case 'noCredits':
+        // Nothing to wait for: the reading stops, and the reader tops up on speechgen.io.
+        if (msg.id !== waiting) return;
+        clearTimeout(watchdog);
+        toast(th ? 'เครดิต SpeechGen หมดแล้ว ปิดการอ่านออกเสียง' : 'Out of SpeechGen credits — read aloud turned off');
+        ctx.stop();
         break;
       case 'error':
         if (msg.id !== waiting) return;
@@ -413,6 +421,19 @@ if (mangax.companion) mangax.companion(function (ctx) {
     for (var i = 0; i < audios.length; i++) { try { audios[i].pause(); } catch (e) {} }
   }
 
+  // Out of credits is a notice the site puts on the page, not an error result, so the result the
+  // job waits for never comes. Matched on its text: the element has no stable id.
+  var NO_CREDITS = /ไม่เพียงพอ|not enough credits|insufficient credits/i;
+
+  function outOfCredits() {
+    if (credits() === 0) return true;
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (var n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (NO_CREDITS.test(n.textContent) && visible(n.parentElement)) return true;
+    }
+    return false;
+  }
+
   function needsUser() {
     // The check the site shows on some settings. Out of credits comes back as an error result.
     var boxes = document.querySelectorAll('#div_cptch, iframe[src*="recaptcha"]');
@@ -445,6 +466,10 @@ if (mangax.companion) mangax.companion(function (ctx) {
   // Until the result for the job shows up: done → play (the site autoplays it), error → tell.
   function watch(mine) {
     if (job !== mine) return;
+    if (outOfCredits()) {
+      job = null;
+      return ctx.send({ type: 'noCredits', id: mine.id, credits: credits() });
+    }
     if (needsUser() && !mine.user) {
       mine.user = true;
       ctx.show('full').catch(function () {});
@@ -565,92 +590,216 @@ if (mangax.companion) mangax.companion(function (ctx) {
 // ── Settings, drawn over the page being read ────────────────────────────
 if (mangax.settings) mangax.settings(function (ctx) {
   var th = ctx.lang === 'th';
-  var TIER = { standard: 'Standard ×0.5', pro: 'PRO ×1', prohd: 'HD ×2' };
+  var TIER = {
+    standard: { name: 'Standard', cost: '×0.5' },
+    pro: { name: 'PRO', cost: '×1' },
+    prohd: { name: 'HD', cost: '×2' }
+  };
+  var RATE_MIN = 0.5;
+  var RATE_MAX = 2;
+  var RATE_STEP = 0.1;
+  var ICON = {
+    voice: '<svg viewBox="0 0 24 24"><path d="M9 13c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4zm7.8-9.6-1.7 1.7c.8 1.2.8 2.7 0 3.9l1.7 1.7c2-2 2-5.2 0-7.3zM20.1 2l-1.6 1.6c2.8 3 2.8 7.6 0 10.8l1.6 1.6c3.9-3.8 3.9-9.8 0-14z"/></svg>',
+    close: '<svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>',
+    info: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+    speed: '<svg viewBox="0 0 24 24"><path d="m20.4 8.6-1.2 1.9a8 8 0 0 1-.2 7.5H5a8 8 0 0 1 10.6-11l1.9-1.2A10 10 0 0 0 3.3 19a2 2 0 0 0 1.7 1h14a2 2 0 0 0 1.7-1 10 10 0 0 0-.3-10.4zm-9.8 6.8a2 2 0 0 0 2.8 0l5.7-8.5-8.5 5.7a2 2 0 0 0 0 2.8z"/></svg>',
+    minus: '<svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg>',
+    plus: '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>',
+    check: '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>'
+  };
   var openedHere = false;
   var voices = null;
-
-  var box = ctx.panel();
-  box.css(
-    '.title{font-weight:700;font-size:16px;margin:0 0 4px}' +
-    '.note{color:var(--mx-text-muted);font-size:12px;margin:0 0 12px}' +
-    '.row{display:flex;align-items:center;gap:12px;margin:10px 0 4px}' +
-    '.label{flex:1;color:var(--mx-text-body)}' +
-    '.value{font:12px ui-monospace,monospace;color:var(--mx-text);min-width:48px;text-align:right}' +
-    'input[type=range]{width:100%;accent-color:var(--mx-primary)}' +
-    '.filter{display:flex;gap:6px;margin:6px 0}' +
-    '.filter button{flex:1;padding:6px;border-radius:10px;border:1px solid var(--mx-surface2);background:none;color:var(--mx-text-body);font:12px system-ui,sans-serif}' +
-    '.filter button.on{background:var(--mx-primary);border-color:var(--mx-primary);color:#fff}' +
-    '.list{max-height:38vh;overflow:auto;border-radius:12px;background:var(--mx-surface2)}' +
-    '.voice{display:flex;justify-content:space-between;gap:8px;width:100%;padding:10px 12px;border:0;background:none;color:var(--mx-text);text-align:left;font:14px system-ui,sans-serif}' +
-    '.voice+.voice{border-top:1px solid var(--mx-surface)}' +
-    '.voice small{color:var(--mx-text-muted)}' +
-    '.voice.on{background:var(--mx-primary);color:#fff}.voice.on small{color:#fff}' +
-    '.status{padding:14px;color:var(--mx-text-muted);text-align:center;font-size:13px}' +
-    '.done{display:block;width:100%;margin-top:14px;padding:12px;border:0;border-radius:12px;background:var(--mx-primary);color:#fff;font:600 14px system-ui,sans-serif}'
-  );
-  box.card.innerHTML =
-    '<p class="title"></p><p class="note"></p>' +
-    '<div class="row"><span class="label rate-label"></span><span class="value"></span></div>' +
-    '<input type="range" min="0.5" max="2" step="0.1">' +
-    '<div class="row"><span class="label voice-label"></span></div>' +
-    '<div class="filter"><button data-f="">' + (th ? 'ทั้งหมด' : 'All') + '</button>' +
-    '<button data-f="female">' + (th ? 'หญิง' : 'Female') + '</button>' +
-    '<button data-f="male">' + (th ? 'ชาย' : 'Male') + '</button></div>' +
-    '<div class="list"><div class="status"></div></div>' +
-    '<button class="done"></button>';
-  var q = function (s) { return box.card.querySelector(s); };
-  q('.title').textContent = th ? 'อ่านออกเสียงด้วย SpeechGen' : 'Read aloud with SpeechGen';
-  q('.note').textContent = th
-    ? 'ทุกตัวอักษรใช้เครดิต SpeechGen (×0.5 – ×2 ตามเสียง) ฟรีประมาณ 2,000 เครดิต หลังจากนั้นต้องเข้าสู่ระบบหรือซื้อเพิ่มบนเว็บ'
-    : 'Every character uses SpeechGen credits (×0.5 – ×2 by voice). About 2,000 are free; after that sign in or buy more on the site.';
-  q('.rate-label').textContent = th ? 'ความเร็ว' : 'Speed';
-  q('.voice-label').textContent = th ? 'เสียง' : 'Voice';
-  q('.done').textContent = th ? 'เสร็จ' : 'Done';
-  q('.status').textContent = th ? 'กำลังโหลดรายชื่อเสียงจาก SpeechGen…' : 'Loading voices from SpeechGen…';
-
-  var slider = q('input[type=range]');
-  var value = q('.value');
-  var list = q('.list');
   var filter = '';
   var chosen = String(ctx.options.voice || '');
 
-  function showRate(r) {
+  var box = ctx.panel();
+  box.css(
+    'svg{width:20px;height:20px;fill:currentColor;flex:none}' +
+    'button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;cursor:pointer}' +
+    '.handle{width:36px;height:4px;border-radius:2px;margin:-4px auto 14px;background:var(--mx-text-muted);opacity:.4}' +
+    '.head{display:flex;align-items:center;gap:12px}' +
+    '.badge{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;color:#fff;' +
+    'background:linear-gradient(135deg,var(--mx-primary),var(--mx-secondary))}' +
+    '.titles{flex:1;min-width:0}' +
+    '.title{font-weight:700;font-size:17px;margin:0}' +
+    '.sub{color:var(--mx-text-muted);font-size:12px;margin:2px 0 0}' +
+    '.icon-btn{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;' +
+    'background:var(--mx-surface2);color:var(--mx-text-body)}' +
+    '.note{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;padding:10px 12px;border-radius:12px;' +
+    'background:var(--mx-surface2);color:var(--mx-text-body);font-size:12px;line-height:1.5}' +
+    '.note svg{width:16px;height:16px;margin-top:1px;color:var(--mx-secondary)}' +
+    '.section{margin-top:18px}' +
+    '.section-title{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:13px;font-weight:600;' +
+    'color:var(--mx-text-body)}' +
+    '.section-title svg{width:16px;height:16px;color:var(--mx-primary)}' +
+    '.section-title .grow{flex:1}' +
+    '.pill{padding:3px 10px;border-radius:999px;background:var(--mx-primary);color:#fff;' +
+    'font:600 12px ui-monospace,SFMono-Regular,monospace}' +
+    '.rate{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;background:var(--mx-surface2)}' +
+    '.rate .icon-btn{width:32px;height:32px;background:var(--mx-surface);color:var(--mx-text)}' +
+    '.rate .icon-btn:disabled{opacity:.35}' +
+    '.track{flex:1;display:flex;flex-direction:column;gap:2px}' +
+    'input[type=range]{width:100%;margin:0;accent-color:var(--mx-primary)}' +
+    '.ticks{display:flex;justify-content:space-between;color:var(--mx-text-muted);font-size:10px}' +
+    '.seg{display:flex;padding:3px;border-radius:12px;background:var(--mx-surface2);margin-bottom:10px}' +
+    '.seg button{flex:1;padding:7px 0;border:0;border-radius:9px;background:none;color:var(--mx-text-muted);' +
+    'font-size:13px;font-weight:600;transition:background .15s,color .15s}' +
+    '.seg button.on{background:var(--mx-surface);color:var(--mx-text);box-shadow:0 1px 4px rgba(0,0,0,.25)}' +
+    '.list{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow:auto;overscroll-behavior:contain}' +
+    '.voice{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;' +
+    'border:1.5px solid transparent;border-radius:14px;background:var(--mx-surface2);text-align:left}' +
+    '.voice::before{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--mx-primary);' +
+    'opacity:0;transition:opacity .15s}' +
+    '.voice.on{border-color:var(--mx-primary)}' +
+    '.voice.on::before{opacity:.14}' +
+    '.voice>*{position:relative}' +
+    '.avatar{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;flex:none;' +
+    'font-weight:700;font-size:15px;color:#fff}' +
+    '.avatar.female{background:#e17093}.avatar.male{background:#4a90d9}.avatar.none{background:var(--mx-text-muted)}' +
+    '.who{flex:1;min-width:0}' +
+    '.name{display:block;font-size:15px;font-weight:600;color:var(--mx-text);white-space:nowrap;overflow:hidden;' +
+    'text-overflow:ellipsis}' +
+    '.sex{display:block;font-size:12px;color:var(--mx-text-muted)}' +
+    '.tier{padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;' +
+    'background:var(--mx-surface);color:var(--mx-text-body)}' +
+    '.tier.pro{background:var(--mx-primary);color:#fff}' +
+    '.tier.prohd{background:linear-gradient(135deg,#f5b041,#e67e22);color:#fff}' +
+    '.tick{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;flex:none;' +
+    'background:var(--mx-primary);color:#fff;opacity:0}' +
+    '.tick svg{width:14px;height:14px}' +
+    '.voice.on .tick{opacity:1}' +
+    '.skeleton{height:58px;border-radius:14px;background:var(--mx-surface2);animation:pulse 1.2s ease-in-out infinite}' +
+    '@keyframes pulse{50%{opacity:.45}}' +
+    '.status{padding:18px 12px;border-radius:14px;background:var(--mx-surface2);color:var(--mx-text-muted);' +
+    'text-align:center;font-size:13px}' +
+    '.done{display:block;width:100%;margin-top:16px;padding:13px;border:0;border-radius:14px;' +
+    'background:var(--mx-primary);color:#fff;font-size:15px;font-weight:600}' +
+    '.done:active,.voice:active,.icon-btn:active{transform:scale(.98)}'
+  );
+  box.card.innerHTML =
+    '<div class="handle"></div>' +
+    '<div class="head">' +
+    '<div class="badge">' + ICON.voice + '</div>' +
+    '<div class="titles"><p class="title"></p><p class="sub">SpeechGen.io</p></div>' +
+    '<button class="icon-btn close">' + ICON.close + '</button>' +
+    '</div>' +
+    '<div class="note">' + ICON.info + '<span></span></div>' +
+    '<div class="section">' +
+    '<p class="section-title">' + ICON.speed + '<span class="grow rate-label"></span><span class="pill"></span></p>' +
+    '<div class="rate">' +
+    '<button class="icon-btn slower">' + ICON.minus + '</button>' +
+    '<div class="track"><input type="range" min="' + RATE_MIN + '" max="' + RATE_MAX + '" step="' + RATE_STEP + '">' +
+    '<div class="ticks"><span>0.5x</span><span>1x</span><span>1.5x</span><span>2x</span></div></div>' +
+    '<button class="icon-btn faster">' + ICON.plus + '</button>' +
+    '</div>' +
+    '</div>' +
+    '<div class="section">' +
+    '<p class="section-title">' + ICON.voice + '<span class="grow voice-label"></span></p>' +
+    '<div class="seg">' +
+    '<button data-f="">' + (th ? 'ทั้งหมด' : 'All') + '</button>' +
+    '<button data-f="female">' + (th ? 'หญิง' : 'Female') + '</button>' +
+    '<button data-f="male">' + (th ? 'ชาย' : 'Male') + '</button>' +
+    '</div>' +
+    '<div class="list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>' +
+    '</div>' +
+    '<button class="done"></button>';
+
+  var q = function (s) { return box.card.querySelector(s); };
+  q('.close').setAttribute('aria-label', th ? 'ปิด' : 'Close');
+  q('.slower').setAttribute('aria-label', th ? 'ช้าลง' : 'Slower');
+  q('.faster').setAttribute('aria-label', th ? 'เร็วขึ้น' : 'Faster');
+  q('.title').textContent = th ? 'อ่านออกเสียง' : 'Read aloud';
+  q('.note span').textContent = th
+    ? 'ทุกตัวอักษรใช้เครดิต SpeechGen (Standard ×0.5, PRO ×1, HD ×2) ผู้ใช้ใหม่ได้ฟรีประมาณ 1,000 ตัวอักษร หลังจากนั้นเข้าสู่ระบบหรือซื้อเพิ่มบนเว็บ'
+    : 'Every character uses SpeechGen credits (Standard ×0.5, PRO ×1, HD ×2). New visitors get about 1,000 characters free; after that sign in or buy more on the site.';
+  q('.rate-label').textContent = th ? 'ความเร็ว' : 'Speed';
+  q('.voice-label').textContent = th ? 'เสียง' : 'Voice';
+  q('.done').textContent = th ? 'เสร็จ' : 'Done';
+
+  var slider = q('input[type=range]');
+  var pill = q('.pill');
+  var list = q('.list');
+
+  function roundRate(r) {
     r = Math.round((Number(r) || 1) * 10) / 10;
-    slider.value = r;
-    value.textContent = r.toFixed(1) + 'x';
+    return Math.min(RATE_MAX, Math.max(RATE_MIN, r));
   }
 
-  function drawVoices() {
-    if (!voices) return;
-    var buttons = box.card.querySelectorAll('.filter button');
-    for (var i = 0; i < buttons.length; i++) buttons[i].className = buttons[i].getAttribute('data-f') === filter ? 'on' : '';
+  function showRate(r) {
+    r = roundRate(r);
+    slider.value = r;
+    pill.textContent = r.toFixed(1) + 'x';
+    q('.slower').disabled = r <= RATE_MIN;
+    q('.faster').disabled = r >= RATE_MAX;
+  }
+
+  function saveRate(r) {
+    r = roundRate(r);
+    showRate(r);
+    ctx.setOption('rate', r).catch(function () {});
+  }
+
+  function sexLabel(sex) {
+    if (sex === 'male') return th ? 'ชาย' : 'Male';
+    if (sex === 'female') return th ? 'หญิง' : 'Female';
+    return '';
+  }
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  function voiceRow(v, current) {
+    var tier = TIER[v.tier] || { name: v.tier, cost: '' };
+    var row = el('button', 'voice' + (v.value === current ? ' on' : ''));
+    row.setAttribute('data-v', v.value);
+    row.appendChild(el('span', 'avatar ' + (v.sex || 'none'), String(v.name || '?').charAt(0).toUpperCase()));
+    var who = el('span', 'who');
+    who.appendChild(el('span', 'name', v.name));
+    var sex = sexLabel(v.sex);
+    if (sex) who.appendChild(el('span', 'sex', sex));
+    row.appendChild(who);
+    row.appendChild(el('span', 'tier ' + (TIER[v.tier] ? v.tier : ''), tier.name + (tier.cost ? ' ' + tier.cost : '')));
+    var tick = el('span', 'tick');
+    tick.innerHTML = ICON.check;
+    row.appendChild(tick);
+    return row;
+  }
+
+  function showStatus(text) {
     list.textContent = '';
-    var current = chosen || voices.current;
-    voices.voices.forEach(function (v) {
-      if (filter && v.sex !== filter) return;
-      var b = document.createElement('button');
-      b.className = 'voice' + (v.value === current ? ' on' : '');
-      b.setAttribute('data-v', v.value);
-      var name = document.createElement('span');
-      name.textContent = v.name;
-      var tier = document.createElement('small');
-      tier.textContent = (TIER[v.tier] || v.tier) + (v.sex ? ' · ' + (v.sex === 'male' ? (th ? 'ชาย' : 'male') : (th ? 'หญิง' : 'female')) : '');
-      b.appendChild(name);
-      b.appendChild(tier);
-      list.appendChild(b);
-    });
-    if (!list.firstChild) {
-      var none = document.createElement('div');
-      none.className = 'status';
-      none.textContent = th ? 'ไม่มีเสียง' : 'No voices';
-      list.appendChild(none);
+    list.appendChild(el('div', 'status', text));
+  }
+
+  function drawFilter() {
+    var buttons = box.card.querySelectorAll('.seg button');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].className = buttons[i].getAttribute('data-f') === filter ? 'on' : '';
     }
   }
 
+  function drawVoices() {
+    drawFilter();
+    if (!voices) return;
+    var current = chosen || voices.current;
+    var shownVoices = voices.voices.filter(function (v) { return !filter || v.sex === filter; });
+    if (!shownVoices.length) return showStatus(th ? 'ไม่มีเสียงในกลุ่มนี้' : 'No voices here');
+    list.textContent = '';
+    shownVoices.forEach(function (v) { list.appendChild(voiceRow(v, current)); });
+    var on = list.querySelector('.voice.on');
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' });
+  }
+
   showRate(ctx.options.rate);
+  drawFilter();
   ctx.on(slider, 'input', function () { showRate(slider.value); });
-  ctx.on(slider, 'change', function () { ctx.setOption('rate', Math.round(Number(slider.value) * 10) / 10).catch(function () {}); });
-  ctx.on(q('.filter'), 'click', function (e) {
+  ctx.on(slider, 'change', function () { saveRate(slider.value); });
+  ctx.on(q('.slower'), 'click', function () { saveRate(Number(slider.value) - RATE_STEP); });
+  ctx.on(q('.faster'), 'click', function () { saveRate(Number(slider.value) + RATE_STEP); });
+  ctx.on(q('.seg'), 'click', function (e) {
     var b = e.target.closest('button');
     if (!b) return;
     filter = b.getAttribute('data-f') || '';
@@ -663,6 +812,7 @@ if (mangax.settings) mangax.settings(function (ctx) {
     drawVoices();
     ctx.setOption('voice', chosen).catch(function () {});
   });
+  ctx.on(q('.close'), 'click', function () { ctx.close(); });
   ctx.on(q('.done'), 'click', function () { ctx.close(); });
   ctx.onOptions(function (options) {
     showRate(options.rate);
@@ -677,11 +827,6 @@ if (mangax.settings) mangax.settings(function (ctx) {
     }
   });
 
-  function fail(text) {
-    var status = q('.status');
-    if (status) status.textContent = text;
-  }
-
   // The voices are the site's: ask the companion page, opening it (hidden) when reading is off.
   ctx.companion.state().then(function (s) {
     if (!s || !s.open) openedHere = true;
@@ -689,7 +834,7 @@ if (mangax.settings) mangax.settings(function (ctx) {
   }).then(function () {
     return ctx.companion.send({ type: 'voices' });
   }).catch(function (e) {
-    fail((th ? 'เปิด SpeechGen ไม่ได้: ' : 'Could not open SpeechGen: ') + ((e && e.message) || e));
+    showStatus((th ? 'เปิด SpeechGen ไม่ได้: ' : 'Could not open SpeechGen: ') + ((e && e.message) || e));
   });
 
   return function () {

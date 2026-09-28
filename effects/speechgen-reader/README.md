@@ -4,7 +4,7 @@ Reads a novel chapter aloud with the voices of [SpeechGen.io](https://speechgen.
 the paragraph on screen. The paragraph being read is highlighted and the page follows it down.
 
 - Switch it on from the effects sheet in novel mode. SpeechGen opens as a hidden companion page; it
-  only comes on screen when the site needs you (out of credits, sign in, a check).
+  only comes on screen when the site needs you (sign in, a check).
 - It reads the translation the app put on the page (scanned paragraphs); on a page not translated
   yet, the page's own paragraphs. Menus, headers and footers are skipped.
 - Switch it off, or close SpeechGen from its bar, to stop. At the end of the page it stops by itself.
@@ -24,10 +24,10 @@ https://github.com/redevrx/mangax-effects/tree/main/effects/speechgen-reader
 
 ## Credits
 
-SpeechGen charges per character read: Standard voices ×0.5, PRO ×1, HD ×2. A new visitor gets about
-2,000 free credits (a few thousand characters — part of one chapter); after that, sign in or buy
-credits on the site, in the companion page. The effect never gets around that and never reads or
-sends your SpeechGen account details.
+SpeechGen charges per character read: Standard voices ×0.5, PRO ×1, HD ×2. The site offers new visitors
+1,000 characters free (a piece or two of one chapter); after that, sign in or buy
+credits on speechgen.io. When the credits run out the effect says so and switches itself off; it never
+gets around that and never reads or sends your SpeechGen account details.
 
 ## How it works
 
@@ -48,6 +48,7 @@ speed from its speed marker, presses **สร้างเสียง** and wait
 | `{type:'stop'}` | `{type:'started' \| 'ended', id, credits}` |
 | `{type:'setVoice', voice}` · `{type:'setRate', rate}` | `{type:'error', id, message, needsUser}` |
 | `{type:'voices'}` | `{type:'voices', voices:[{value,name,tier,sex}], current, lang}` |
+| | `{type:'noCredits', id, credits}` — out of credits: the reading stops |
 | | `{type:'resumed', id}` · `{type:'notice', message}` |
 
 `needsUser` errors show the site full screen and pause reading; it carries on with the same piece
