@@ -27,6 +27,10 @@ const CATEGORIES = ['reading', 'cleanup', 'appearance', 'navigation', 'utility']
 const ENGINES = ['any', 'manga', 'novel'];
 const PERMISSIONS = ['toast', 'menu', 'engine', 'companion'];
 const RUN_AT = ['manual', 'pageLoad', 'documentStart'];
+// A drawn icon, as the app's EffectIcon reads it.
+const MAX_ICON_PATHS = 8;
+const MAX_ICON_PATH_CHARS = 4096;
+const PATH_DATA = /^\s*[Mm][MmZzLlHhVvCcSsQqTtAa0-9.,+\-eE\s]*$/;
 
 const isText = (t) => (typeof t === 'string' && t.trim() !== '') ||
   (t && typeof t === 'object' && Object.values(t).some((v) => typeof v === 'string' && v.trim() !== ''));
@@ -47,6 +51,27 @@ function covers(p, url) {
   return hostOk && re.test(u[3] || '/');
 }
 
+// What keeps "icon" from being shown: a Material name, or { viewBox, paths, fillRule }.
+function iconProblems(icon) {
+  if (icon === undefined || typeof icon === 'string') return [];
+  if (!icon || typeof icon !== 'object' || Array.isArray(icon)) return ['icon must be a Material icon name or { "paths": [...] }'];
+  const problems = [];
+  const { paths, viewBox, fillRule } = icon;
+  if (!Array.isArray(paths) || paths.some((p) => typeof p !== 'string')) return ['icon "paths" must be a list of SVG path strings'];
+  if (paths.length === 0) problems.push('icon has no paths');
+  if (paths.length > MAX_ICON_PATHS) problems.push(`icon has more than ${MAX_ICON_PATHS} paths`);
+  if (paths.join('').length > MAX_ICON_PATH_CHARS) problems.push(`icon paths are longer than ${MAX_ICON_PATH_CHARS} characters`);
+  paths.forEach((p, i) => { if (!PATH_DATA.test(p)) problems.push(`icon path ${i + 1} is not SVG path data (it must start with M)`); });
+  if (viewBox !== undefined) {
+    const box = typeof viewBox === 'number' ? [0, 0, viewBox, viewBox]
+      : typeof viewBox === 'string' ? viewBox.trim().split(/[\s,]+/).map(Number) : [];
+    if (box.length !== 4 || box.some((n) => !Number.isFinite(n))) problems.push('icon viewBox must be a number or "x y width height"');
+    else if (!(box[2] > 0 && box[3] > 0)) problems.push('icon viewBox must have a width and height above 0');
+  }
+  if (fillRule !== undefined && fillRule !== 'nonzero' && fillRule !== 'evenodd') problems.push('icon fillRule must be "nonzero" or "evenodd"');
+  return problems;
+}
+
 function check(dir) {
   const problems = [];
   const at = join(EFFECTS, dir);
@@ -62,6 +87,7 @@ function check(dir) {
   if (typeof m.id === 'string' && m.id.split('.').pop() !== dir) problems.push(`id should end with ".${dir}" to match its folder`);
   if (!VERSION.test(m.version ?? '')) problems.push(`version "${m.version}" must be semver`);
   if (!isText(m.name)) problems.push('name is empty');
+  problems.push(...iconProblems(m.icon));
   if (!TYPES.includes(m.type)) problems.push(`type must be one of ${TYPES.join(', ')}`);
   if (m.category !== undefined && !CATEGORIES.includes(m.category)) problems.push(`category "${m.category}" is unknown`);
   if (m.runAt !== undefined && !RUN_AT.includes(m.runAt)) problems.push(`runAt "${m.runAt}" is unknown`);

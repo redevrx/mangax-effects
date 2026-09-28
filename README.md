@@ -144,7 +144,7 @@ mangax.effect(function (ctx) {
 
 ### Icons
 
-`icon` takes one of these names. Any other name shows the default icon for the effect's `type`.
+`icon` takes one of these names, or an icon drawn from SVG path data (below). Any other name shows the default icon for the effect's `type`.
 
 | Category | Names |
 |---|---|
@@ -154,6 +154,22 @@ mangax.effect(function (ctx) {
 | Appearance | `brightness_6` `invert_colors` `format_color_fill` `blur_on` `crop` `image` `wallpaper` |
 | Navigation | `keyboard_double_arrow_down` `vertical_align_top` `arrow_downward` `swipe` `open_in_new` `link` |
 | Utility | `notifications` `download` `content_copy` `refresh` `settings` `pets` `emoji_emotions` `star` `favorite` |
+
+An icon of your own is drawn from SVG path data, in the one colour the app gives every icon:
+
+```json
+"icon": {
+  "viewBox": "0 0 24 24",
+  "paths": ["M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10l-4.5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"],
+  "fillRule": "evenodd"
+}
+```
+
+`paths` are the `d` of each `<path>` (1–8, at most 4096 characters together, starting with `M`).
+`viewBox` is SVG's `"x y width height"` or one number for a square; leave it out for 24. Material
+Symbols' `"0 -960 960 960"` works as is. `fillRule` is `nonzero` (default) or `evenodd`. Colours and
+strokes in the SVG are not drawn. Apps from before drawn icons refuse such a manifest, so use one only
+in an effect that needs a current app anyway.
 
 ### `ctx`
 

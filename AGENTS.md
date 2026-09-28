@@ -62,7 +62,7 @@ network API of the app's own.
 | `name`, `description` | a string, or `{ "en": ..., "th": ... }` |
 | `type` | `style` (CSS only, switch) · `action` (runs once, Run button) · `toggle` (runs until switched off) |
 | `category` | exactly one of `reading`, `cleanup`, `appearance`, `navigation`, `utility` |
-| `icon` | one of `swap_vert`, `block`, `visibility_off`, `dark_mode`, `light_mode`, `contrast`, `palette`, `speed`, `timer`, `text_fields`, `format_size`, `close`, `bolt`, `touch_app`, `skip_next`, `auto_fix_high`, `menu_book`, `auto_stories`, `translate`, `record_voice_over`, `volume_up`, `bookmark`, `zoom_in`, `fit_screen`, `cleaning_services`, `hide_image`, `filter_alt`, `delete_sweep`, `do_not_disturb`, `brightness_6`, `invert_colors`, `format_color_fill`, `blur_on`, `crop`, `image`, `wallpaper`, `keyboard_double_arrow_down`, `vertical_align_top`, `arrow_downward`, `swipe`, `open_in_new`, `link`, `notifications`, `download`, `content_copy`, `refresh`, `settings`, `pets`, `emoji_emotions`, `star`, `favorite`. Any other name shows a generic icon |
+| `icon` | one of `swap_vert`, `block`, `visibility_off`, `dark_mode`, `light_mode`, `contrast`, `palette`, `speed`, `timer`, `text_fields`, `format_size`, `close`, `bolt`, `touch_app`, `skip_next`, `auto_fix_high`, `menu_book`, `auto_stories`, `translate`, `record_voice_over`, `volume_up`, `bookmark`, `zoom_in`, `fit_screen`, `cleaning_services`, `hide_image`, `filter_alt`, `delete_sweep`, `do_not_disturb`, `brightness_6`, `invert_colors`, `format_color_fill`, `blur_on`, `crop`, `image`, `wallpaper`, `keyboard_double_arrow_down`, `vertical_align_top`, `arrow_downward`, `swipe`, `open_in_new`, `link`, `notifications`, `download`, `content_copy`, `refresh`, `settings`, `pets`, `emoji_emotions`, `star`, `favorite`. Any other name shows a generic icon. Or draw one: `{ "viewBox": "0 0 24 24", "paths": ["M…"], "fillRule": "evenodd" }` — see "Drawn icons" |
 | `matches` | URL patterns `scheme://host/path`. `*://*/*` = every site. `*.example.com` covers `example.com` **and** `www.example.com`; `example.com` alone does not cover `www.` |
 | `excludes` | same format; sites to skip |
 | `engines` | `["any"]` unless the effect truly only makes sense in one mode (`manga` or `novel`) |
@@ -71,6 +71,29 @@ network API of the app's own.
 | `options` | settings the app draws; see below |
 | `settingsUi` | `true` when the script also draws its own settings on the page with `mangax.settings(fn)`; the sheet then shows a settings button. Needs `entry`. See "Settings on the page" |
 | `companion` | `{ "url": "https://…", "matches": ["https://*.site.com/*"] }` — a second page the effect opens beside the one being read and runs `mangax.companion(fn)` in. Needs the `companion` permission and `entry`. `matches` defaults to the site of `url`, must name sites (not `*://*/*`) and must cover `url`. See "Companion pages" |
+
+### Drawn icons
+
+When no name fits, draw the icon from SVG path data. The app draws it itself, in one colour it picks
+(the category's or the badge's), so nothing is fetched and every effect still matches the list.
+
+```json
+"icon": {
+  "viewBox": "0 0 24 24",
+  "paths": ["M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10l-4.5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"],
+  "fillRule": "evenodd"
+}
+```
+
+- `paths` (required): the `d` of each `<path>`, 1–8 of them, at most 4096 characters together. Each
+  starts with `M`/`m` and holds only path commands and numbers.
+- `viewBox`: SVG's `"x y width height"`, or one number for a square from 0,0. Default `24`.
+  Material Symbols' `"0 -960 960 960"` works as is.
+- `fillRule`: `nonzero` (default) or `evenodd`, for holes cut into a shape.
+- Colours in the SVG are ignored. Strokes are not drawn: convert them to fills first.
+- Apps from before drawn icons cannot read the object and refuse the manifest. Use one only in an
+  effect that needs a current app anyway (for example one using `companion`).
+- `node tools/check.mjs` checks all of this.
 
 ### Options
 
